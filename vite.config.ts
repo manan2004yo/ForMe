@@ -17,5 +17,6 @@ export default defineConfig({
   build: {
     // Firebase + Recharts = large bundle; acknowledged and acceptable for now
     chunkSizeWarningLimit: 1600,
+    cssTarget: 'chrome61',
   },
 })

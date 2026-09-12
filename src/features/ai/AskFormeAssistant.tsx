@@ -83,7 +83,7 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
       <div className="flex-1 sm:flex-none" />
 
       {/* Chat Window */}
-      <div className="bg-bg w-full h-[85vh] sm:h-[600px] sm:w-[400px] sm:rounded-2xl sm:shadow-2xl flex flex-col pointer-events-auto border-t sm:border border-border/50 self-end transition-transform animate-slide-up sm:animate-fade-in relative z-10 overflow-hidden">
+      <div className="bot-window bg-bg flex flex-col pointer-events-auto border-border/50 self-end transition-transform animate-slide-up sm:animate-fade-in relative z-10 overflow-hidden">
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-bg-surface">
