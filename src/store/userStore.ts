@@ -50,6 +50,7 @@ interface UserState {
   metrics: BodyMetrics | null
   isLoading: boolean
   isDemoMode: boolean
+  error: string | null
 
   // Actions
   loadProfile: (uid: string) => Promise<void>
@@ -65,15 +66,20 @@ export const useUserStore = create<UserState>((set, get) => ({
   metrics: null,
   isLoading: false,
   isDemoMode: false,
+  error: null,
 
   loadProfile: async (uid: string) => {
-    set({ isLoading: true })
+    set({ isLoading: true, error: null })
     try {
       const profile = await getUserProfile(uid)
       if (profile) {
         const metrics = calculateBodyMetrics(profile)
         set({ profile, metrics, isDemoMode: false })
+      } else {
+        set({ error: 'Profile not found. Please check your Firestore Database rules and ensure it is created.' })
       }
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to load profile.' })
     } finally {
       set({ isLoading: false })
     }

@@ -21,14 +21,29 @@ import { ProgressDashboard } from '@/features/progress/ProgressDashboard'
 import { ProfilePage } from '@/features/profile/ProfilePage'
 
 function AuthenticatedApp() {
-  const { user } = useAuthStore()
-  const { profile, loadProfile, loadDemoProfile } = useUserStore()
+  const { user, logout } = useAuthStore()
+  const { profile, loadProfile, error } = useUserStore()
 
   useEffect(() => {
     if (user && user.uid !== 'demo') {
       loadProfile(user.uid)
     }
   }, [user, loadProfile])
+
+  if (error) {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-bg p-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-error/10 flex items-center justify-center mb-4">
+          <span className="text-error text-2xl font-bold">!</span>
+        </div>
+        <h2 className="text-text-primary font-heading font-bold text-xl mb-2">Database Error</h2>
+        <p className="text-text-secondary text-sm mb-6 max-w-sm">{error}</p>
+        <button onClick={() => logout()} className="btn btn-secondary">
+          Sign Out & Try Again
+        </button>
+      </div>
+    )
+  }
 
   if (!profile) {
     return (
