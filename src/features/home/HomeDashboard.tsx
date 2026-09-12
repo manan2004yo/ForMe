@@ -319,9 +319,15 @@ export function HomeDashboard() {
             <div className="text-sm font-medium text-text-secondary mb-1">Today's Nutrition</div>
             <div className="flex flex-col gap-2">
               <MacroBar label="Protein" consumed={totals.protein} target={metrics.proteinTarget} color="#7C6AF4" />
-              <MacroBar label="Carbs" consumed={totals.carbs} target={metrics.carbTarget} color="#F4A26A" />
-              <MacroBar label="Fat" consumed={totals.fat} target={metrics.fatTarget} color="#6ABFF4" />
-              <MacroBar label="Fiber" consumed={totals.fiber} target={metrics.fiberTarget} color="#6AF4A2" />
+              {profile.complexityMode !== 'easy' && (
+                <>
+                  <MacroBar label="Carbs" consumed={totals.carbs} target={metrics.carbTarget} color="#F4A26A" />
+                  <MacroBar label="Fat" consumed={totals.fat} target={metrics.fatTarget} color="#6ABFF4" />
+                </>
+              )}
+              {profile.complexityMode === 'precision' && (
+                <MacroBar label="Fiber" consumed={totals.fiber} target={metrics.fiberTarget} color="#6AF4A2" />
+              )}
             </div>
           </div>
         </div>
@@ -366,65 +372,71 @@ export function HomeDashboard() {
       {/* Water Tracker */}
       <WaterTracker />
 
-      {/* Targets Summary */}
-      <div className="card p-4 mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-heading font-semibold text-text-primary">Your Targets</h2>
-          <span className="text-xs text-text-tertiary capitalize">
-            {metrics.caloricStrategy === 'deficit' ? '🔥 Cutting' : metrics.caloricStrategy === 'surplus' ? '📈 Bulking' : '⚖️ Maintaining'}
-          </span>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: 'Calories', value: metrics.caloricTarget, unit: 'kcal', icon: Flame, color: 'text-accent' },
-            { label: 'Protein', value: metrics.proteinTarget, unit: 'g/day', icon: Beef, color: 'macro-protein' },
-            { label: 'Carbs', value: metrics.carbTarget, unit: 'g/day', icon: Wheat, color: 'macro-carbs' },
-            { label: 'Fat', value: metrics.fatTarget, unit: 'g/day', icon: Droplets, color: 'macro-fat' },
-          ].map(({ label, value, unit, icon: Icon, color }) => (
-            <div key={label} className="bg-bg-surface2 rounded-xl p-3">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Icon size={12} className={color} />
-                <span className="text-xs text-text-tertiary">{label}</span>
+      {/* Targets Summary (Hidden in Easy Mode) */}
+      {profile.complexityMode !== 'easy' && (
+        <div className="card p-4 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading font-semibold text-text-primary">Your Targets</h2>
+            <span className="text-xs text-text-tertiary capitalize">
+              {metrics.caloricStrategy === 'deficit' ? '🔥 Cutting' : metrics.caloricStrategy === 'surplus' ? '📈 Bulking' : '⚖️ Maintaining'}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: 'Calories', value: metrics.caloricTarget, unit: 'kcal', icon: Flame, color: 'text-accent' },
+              { label: 'Protein', value: metrics.proteinTarget, unit: 'g/day', icon: Beef, color: 'macro-protein' },
+              { label: 'Carbs', value: metrics.carbTarget, unit: 'g/day', icon: Wheat, color: 'macro-carbs' },
+              { label: 'Fat', value: metrics.fatTarget, unit: 'g/day', icon: Droplets, color: 'macro-fat' },
+            ].map(({ label, value, unit, icon: Icon, color }) => (
+              <div key={label} className="bg-bg-surface2 rounded-xl p-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Icon size={12} className={color} />
+                  <span className="text-xs text-text-tertiary">{label}</span>
+                </div>
+                <div className="font-heading font-bold text-lg text-text-primary tabular-nums">{value}</div>
+                <div className="text-xs text-text-tertiary">{unit}</div>
               </div>
-              <div className="font-heading font-bold text-lg text-text-primary tabular-nums">{value}</div>
-              <div className="text-xs text-text-tertiary">{unit}</div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Body Stats */}
-      <div className="card p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-heading font-semibold text-text-primary">Body Stats</h2>
-          <button onClick={() => navigate('/progress')} className="text-xs text-accent font-medium">
-            View all
-          </button>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center">
-            <div className="font-heading font-bold text-xl text-text-primary">{profile.weightKg}</div>
-            <div className="text-xs text-text-tertiary">kg</div>
+      {/* Body Stats (Precision Mode / Smart Mode only) */}
+      {profile.complexityMode !== 'easy' && (
+        <div className="card p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-heading font-semibold text-text-primary">Body Stats</h2>
+            <button onClick={() => navigate('/progress')} className="text-xs text-accent font-medium">
+              View all
+            </button>
           </div>
-          <div className="text-center">
-            <div className="font-heading font-bold text-xl text-text-primary">{metrics.bmi}</div>
-            <div className="text-xs text-text-tertiary">BMI</div>
-          </div>
-          <div className="text-center">
-            <div className="font-heading font-bold text-xl text-text-primary">{metrics.tdee}</div>
-            <div className="text-xs text-text-tertiary">TDEE</div>
-          </div>
-        </div>
-        {metrics.bodyFatRange && (
-          <div className="mt-3 px-3 py-2 bg-bg-surface2 rounded-xl">
-            <div className="text-xs text-text-tertiary">
-              Estimated Body Fat: <span className="font-medium text-text-primary">
-                {metrics.bodyFatRange.low}–{metrics.bodyFatRange.high}%
-              </span>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center">
+              <div className="font-heading font-bold text-xl text-text-primary">{profile.weightKg}</div>
+              <div className="text-xs text-text-tertiary">kg</div>
             </div>
+            <div className="text-center">
+              <div className="font-heading font-bold text-xl text-text-primary">{metrics.bmi}</div>
+              <div className="text-xs text-text-tertiary">BMI</div>
+            </div>
+            {profile.complexityMode === 'precision' && (
+              <div className="text-center">
+                <div className="font-heading font-bold text-xl text-text-primary">{metrics.tdee}</div>
+                <div className="text-xs text-text-tertiary">TDEE</div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+          {metrics.bodyFatRange && profile.complexityMode === 'precision' && (
+            <div className="mt-3 px-3 py-2 bg-bg-surface2 rounded-xl">
+              <div className="text-xs text-text-tertiary">
+                Estimated Body Fat: <span className="font-medium text-text-primary">
+                  {metrics.bodyFatRange.low}–{metrics.bodyFatRange.high}%
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Smart Insight */}
       <InsightCard insight={generateInsight(profile, metrics, totals)} />
