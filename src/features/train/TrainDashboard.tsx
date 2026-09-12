@@ -5,9 +5,11 @@
 
 import { useState, useEffect } from 'react'
 import { useUserStore } from '@/store/userStore'
+import { useAuthStore } from '@/store/authStore'
 import { generateWorkoutPlan, EXERCISES, getAlternatives } from '@/lib/engines/workoutEngine'
+import { getWorkoutPlan, saveWorkoutPlan } from '@/lib/firebase/dataService'
 import type { WorkoutPlan, WorkoutDay, PlannedExercise } from '@/types'
-import { Clock, Dumbbell, RotateCcw, ChevronDown, ChevronUp, PlayCircle, ArrowLeftRight, Sparkles } from 'lucide-react'
+import { Clock, Dumbbell, RotateCcw, ChevronDown, ChevronUp, PlayCircle, ArrowLeftRight, Sparkles, Trash2, Plus, Search, FileX } from 'lucide-react'
 import { WorkoutLogger } from './WorkoutLogger'
 import { format } from 'date-fns'
 
@@ -43,12 +45,12 @@ function RIRBadge({ rir }: { rir: number }) {
   )
 }
 
-function ExerciseCard({ exercise, index, onRequestSwap }: { exercise: PlannedExercise; index: number; onRequestSwap?: () => void }) {
+function ExerciseCard({ exercise, index, onRequestSwap, onRemove }: { exercise: PlannedExercise; index: number; onRequestSwap?: () => void, onRemove?: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const exData = EXERCISES[exercise.exerciseId]
 
   return (
-    <div className="card overflow-hidden">
+    <div className="card overflow-hidden border border-border">
       <div
         className="flex items-center gap-3 p-4 cursor-pointer"
         onClick={() => setExpanded(e => !e)}
@@ -66,7 +68,7 @@ function ExerciseCard({ exercise, index, onRequestSwap }: { exercise: PlannedExe
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`badge text-xs ${MUSCLE_COLORS[exercise.muscleGroup] || 'badge-neutral'}`}>
+          <span className={`badge text-xs hidden sm:inline-flex ${MUSCLE_COLORS[exercise.muscleGroup] || 'badge-neutral'}`}>
             {exercise.muscleGroup}
           </span>
           {expanded ? <ChevronUp size={14} className="text-text-tertiary" /> : <ChevronDown size={14} className="text-text-tertiary" />}
@@ -95,23 +97,46 @@ function ExerciseCard({ exercise, index, onRequestSwap }: { exercise: PlannedExe
             </div>
           )}
           
-          {onRequestSwap && (
-            <button 
-              onClick={(e) => { e.stopPropagation(); onRequestSwap(); }}
-              className="mt-4 w-full py-2.5 rounded-xl border border-accent/30 text-accent font-medium text-sm flex items-center justify-center gap-2 hover:bg-accent/5 transition-colors"
-            >
-              <ArrowLeftRight size={14} />
-              AI Swap Exercise
-            </button>
-          )}
+          <div className="flex gap-2 mt-4">
+            {onRequestSwap && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onRequestSwap(); }}
+                className="flex-1 py-2.5 rounded-xl border border-accent/30 text-accent font-medium text-sm flex items-center justify-center gap-2 hover:bg-accent/5 transition-colors"
+              >
+                <ArrowLeftRight size={14} />
+                AI Swap
+              </button>
+            )}
+            {onRemove && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                className="py-2.5 px-4 rounded-xl border border-error/30 text-error font-medium text-sm flex items-center justify-center hover:bg-error/5 transition-colors"
+                aria-label="Remove exercise"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-function WorkoutDayCard({ day, isToday, onSwapExercise }: { day: WorkoutDay; isToday: boolean; onSwapExercise?: (index: number, currentId: string) => void }) {
-  const [expanded, setExpanded] = useState(isToday)
+function WorkoutDayCard({ 
+  day, 
+  isToday, 
+  onSwapExercise,
+  onRemoveExercise,
+  onAddExercise
+}: { 
+  day: WorkoutDay; 
+  isToday: boolean; 
+  onSwapExercise: (index: number, currentId: string) => void;
+  onRemoveExercise: (index: number) => void;
+  onAddExercise: () => void;
+}) {
+  const [expanded, setExpanded] = useState(isToday || day.exercises.length > 0)
 
   return (
     <div className={`card overflow-hidden ${isToday ? 'ring-2 ring-accent' : ''}`}>
@@ -151,14 +176,29 @@ function WorkoutDayCard({ day, isToday, onSwapExercise }: { day: WorkoutDay; isT
       {expanded && (
         <div className="px-4 pb-4 border-t border-border animate-fade-in">
           <div className="flex flex-col gap-3 mt-3">
-            {day.exercises.map((exercise, i) => (
-              <ExerciseCard 
-                key={exercise.exerciseId} 
-                exercise={exercise} 
-                index={i} 
-                onRequestSwap={onSwapExercise ? () => onSwapExercise(i, exercise.exerciseId) : undefined}
-              />
-            ))}
+            {day.exercises.length === 0 ? (
+              <div className="text-center py-6 text-sm text-text-secondary bg-bg-surface2 rounded-xl">
+                Rest day. Or add exercises to build a custom routine!
+              </div>
+            ) : (
+              day.exercises.map((exercise, i) => (
+                <ExerciseCard 
+                  key={`${exercise.exerciseId}-${i}`} 
+                  exercise={exercise} 
+                  index={i} 
+                  onRequestSwap={() => onSwapExercise(i, exercise.exerciseId)}
+                  onRemove={() => onRemoveExercise(i)}
+                />
+              ))
+            )}
+            
+            <button
+              onClick={(e) => { e.stopPropagation(); onAddExercise(); }}
+              className="mt-2 w-full py-3 rounded-xl border border-dashed border-border-strong text-text-secondary font-medium text-sm flex items-center justify-center gap-2 hover:bg-bg-surface2 hover:text-text-primary transition-colors"
+            >
+              <Plus size={16} />
+              Add Exercise
+            </button>
           </div>
         </div>
       )}
@@ -180,7 +220,6 @@ function ExerciseSwapModal({
   
   useEffect(() => {
     setIsSwapping(true)
-    // Simulate AI loading delay to feel like "AI is thinking"
     const timer = setTimeout(() => {
       setAlternatives(getAlternatives(currentExerciseId, 3))
       setIsSwapping(false)
@@ -250,66 +289,239 @@ function ExerciseSwapModal({
   )
 }
 
+function ExerciseLibraryModal({
+  onClose,
+  onSelect
+}: {
+  onClose: () => void;
+  onSelect: (exId: string) => void;
+}) {
+  const [search, setSearch] = useState('')
+  
+  const allExercises = Object.entries(EXERCISES).map(([id, data]) => ({ id, ...data }))
+  const filtered = allExercises.filter(ex => 
+    ex.name.toLowerCase().includes(search.toLowerCase()) || 
+    ex.muscleGroup.toLowerCase().includes(search.toLowerCase())
+  )
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-content flex flex-col h-[85vh]" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b border-border sticky top-0 bg-bg-surface z-10 rounded-t-2xl">
+          <h2 className="font-heading font-bold text-lg text-text-primary mb-3">Add Exercise</h2>
+          <div className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+            <input 
+              type="text" 
+              placeholder="Search exercise or muscle..." 
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="input-field pl-10"
+              autoFocus
+            />
+          </div>
+        </div>
+        
+        <div className="p-4 overflow-y-auto flex-1">
+          <div className="flex flex-col gap-2">
+            {filtered.map(ex => (
+              <button
+                key={ex.id}
+                onClick={() => onSelect(ex.id)}
+                className="text-left p-3 rounded-xl hover:bg-bg-surface2 transition-colors flex items-center justify-between group border border-transparent hover:border-border"
+              >
+                <div>
+                  <div className="font-medium text-text-primary text-sm">{ex.name}</div>
+                  <div className="flex gap-2 mt-1">
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-text-secondary bg-bg-surface2 px-1.5 py-0.5 rounded">
+                      {ex.muscleGroup}
+                    </span>
+                    <span className="text-[10px] text-text-tertiary bg-bg-surface2 px-1.5 py-0.5 rounded capitalize">
+                      {ex.difficulty}
+                    </span>
+                  </div>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-bg-surface2 flex items-center justify-center text-text-secondary group-hover:bg-accent group-hover:text-white transition-colors">
+                  <Plus size={16} />
+                </div>
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <div className="text-center py-10 text-text-secondary text-sm">
+                No exercises found.
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="p-4 border-t border-border">
+          <button onClick={onClose} className="btn btn-secondary w-full">Cancel</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function TrainDashboard() {
+  const { user } = useAuthStore()
   const { profile } = useUserStore()
   const [plan, setPlan] = useState<WorkoutPlan | null>(null)
   const [activeLogger, setActiveLogger] = useState<WorkoutDay | null>(null)
   const [lastCompleted, setLastCompleted] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   
-  // Swap state
+  // Modals state
   const [swappingTarget, setSwappingTarget] = useState<{ dayOfWeek: number, exerciseIndex: number, currentId: string } | null>(null)
+  const [addingToDay, setAddingToDay] = useState<number | null>(null)
 
   useEffect(() => {
-    if (profile) {
-      setPlan(generateWorkoutPlan(profile))
+    const loadPlan = async () => {
+      if (!user || !profile) return
+      setIsLoading(true)
+      let currentPlan = await getWorkoutPlan(user.uid)
+      
+      if (!currentPlan) {
+        currentPlan = generateWorkoutPlan(profile)
+        await saveWorkoutPlan(user.uid, currentPlan)
+      }
+      setPlan(currentPlan)
+      setIsLoading(false)
     }
-  }, [profile])
+    
+    loadPlan()
+  }, [user, profile])
 
-  if (!profile || !plan) {
+  if (!profile || isLoading || !plan) {
     return (
-      <div className="page flex items-center justify-center">
-        <div className="text-text-tertiary">Building your workout plan...</div>
+      <div className="page flex items-center justify-center min-h-[50vh]">
+        <div className="text-text-tertiary animate-pulse flex flex-col items-center">
+          <Dumbbell size={24} className="mb-2 opacity-50" />
+          Building your workout plan...
+        </div>
       </div>
     )
   }
 
   const todayDow = new Date().getDay()
   const todayDay = plan.days.find(d => d.dayOfWeek === todayDow)
-  const isRestDay = !todayDay
+  const isRestDay = !todayDay || todayDay.exercises.length === 0
 
-  const regenerate = () => {
-    if (profile) setPlan(generateWorkoutPlan(profile))
+  const handleSavePlan = async (newPlan: WorkoutPlan) => {
+    setPlan(newPlan)
+    if (user) {
+      await saveWorkoutPlan(user.uid, newPlan)
+    }
   }
 
-  const handleConfirmSwap = (newExerciseId: string) => {
+  const handleRegenerate = async () => {
+    if (!profile) return
+    const newPlan = generateWorkoutPlan(profile)
+    await handleSavePlan(newPlan)
+  }
+  
+  const handleClearPlan = async () => {
+    const blankPlan: WorkoutPlan = {
+      ...plan,
+      splitName: 'Custom Plan',
+      daysPerWeek: 0,
+      days: Array.from({ length: 7 }, (_, i) => ({
+        dayOfWeek: i,
+        dayLabel: 'Custom Day',
+        muscleGroups: [],
+        exercises: [],
+        estimatedDurationMin: 0
+      }))
+    }
+    await handleSavePlan(blankPlan)
+  }
+
+  const handleConfirmSwap = async (newExerciseId: string) => {
     if (!swappingTarget || !plan) return
     
-    setPlan(prev => {
-      if (!prev) return prev
-      const newPlan = { ...prev, days: [...prev.days] }
-      
-      const dayIndex = newPlan.days.findIndex(d => d.dayOfWeek === swappingTarget.dayOfWeek)
-      if (dayIndex >= 0) {
-        const day = { ...newPlan.days[dayIndex] }
-        const exList = [...day.exercises]
-        
-        const newExData = EXERCISES[newExerciseId]
-        if (newExData) {
-          exList[swappingTarget.exerciseIndex] = {
-            ...exList[swappingTarget.exerciseIndex],
-            exerciseId: newExerciseId,
-            exerciseName: newExData.name,
-            muscleGroup: newExData.muscleGroup,
-            difficulty: newExData.difficulty as any,
-          }
-          day.exercises = exList
-          newPlan.days[dayIndex] = day
-        }
-      }
-      return newPlan
-    })
+    const newPlan = { ...plan, days: [...plan.days] }
+    const dayIndex = newPlan.days.findIndex(d => d.dayOfWeek === swappingTarget.dayOfWeek)
     
+    if (dayIndex >= 0) {
+      const day = { ...newPlan.days[dayIndex] }
+      const exList = [...day.exercises]
+      
+      const newExData = EXERCISES[newExerciseId]
+      if (newExData) {
+        exList[swappingTarget.exerciseIndex] = {
+          ...exList[swappingTarget.exerciseIndex],
+          exerciseId: newExerciseId,
+          exerciseName: newExData.name,
+          muscleGroup: newExData.muscleGroup,
+          difficulty: newExData.difficulty as any,
+        }
+        day.exercises = exList
+        newPlan.days[dayIndex] = day
+        await handleSavePlan(newPlan)
+      }
+    }
     setSwappingTarget(null)
+  }
+  
+  const handleRemoveExercise = async (dayOfWeek: number, exerciseIndex: number) => {
+    if (!plan) return
+    const newPlan = { ...plan, days: [...plan.days] }
+    const dayIndex = newPlan.days.findIndex(d => d.dayOfWeek === dayOfWeek)
+    
+    if (dayIndex >= 0) {
+      const day = { ...newPlan.days[dayIndex] }
+      const exList = [...day.exercises]
+      exList.splice(exerciseIndex, 1)
+      
+      // Update duration and muscle groups
+      day.exercises = exList
+      day.estimatedDurationMin = Math.max(0, day.estimatedDurationMin - 5)
+      
+      // Recompute muscle groups for the day
+      const mgSet = new Set<string>()
+      exList.forEach(e => mgSet.add(e.muscleGroup))
+      day.muscleGroups = Array.from(mgSet) as any
+      
+      newPlan.days[dayIndex] = day
+      await handleSavePlan(newPlan)
+    }
+  }
+  
+  const handleAddExercise = async (exerciseId: string) => {
+    if (addingToDay === null || !plan) return
+    
+    const exData = EXERCISES[exerciseId]
+    if (!exData) return
+    
+    const newPlan = { ...plan, days: [...plan.days] }
+    const dayIndex = newPlan.days.findIndex(d => d.dayOfWeek === addingToDay)
+    
+    if (dayIndex >= 0) {
+      const day = { ...newPlan.days[dayIndex] }
+      const exList = [...day.exercises]
+      
+      // Default parameters for new exercise
+      exList.push({
+        exerciseId,
+        exerciseName: exData.name,
+        muscleGroup: exData.muscleGroup,
+        sets: 3,
+        repRange: exData.repRange,
+        restSeconds: exData.restSec,
+        rir: exData.rir,
+        difficulty: exData.difficulty as any
+      })
+      
+      day.exercises = exList
+      day.estimatedDurationMin += 5
+      if (!day.muscleGroups.includes(exData.muscleGroup as any)) {
+        day.muscleGroups.push(exData.muscleGroup as any)
+      }
+      
+      newPlan.days[dayIndex] = day
+      await handleSavePlan(newPlan)
+    }
+    
+    setAddingToDay(null)
   }
 
   return (
@@ -318,12 +530,17 @@ export function TrainDashboard() {
         <div>
           <h1 className="font-heading font-bold text-2xl text-text-primary">Your Workout 💪</h1>
           <p className="text-text-secondary text-sm mt-1">
-            {plan.splitName} · {plan.daysPerWeek} days/week
+            {plan.splitName}
           </p>
         </div>
-        <button onClick={regenerate} className="btn btn-ghost p-2 rounded-xl">
-          <RotateCcw size={18} className="text-text-secondary" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handleClearPlan} className="btn btn-ghost p-2 rounded-xl text-error hover:bg-error/10 hover:text-error" aria-label="Clear Plan">
+            <FileX size={18} />
+          </button>
+          <button onClick={handleRegenerate} className="btn btn-ghost p-2 rounded-xl text-accent hover:bg-accent/10 hover:text-accent" aria-label="Auto Generate">
+            <Sparkles size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Today's Status */}
@@ -389,15 +606,17 @@ export function TrainDashboard() {
           {Array.from({ length: 7 }, (_, i) => {
             const day = plan.days.find(d => d.dayOfWeek === i)
             const isToday = i === todayDow
+            const hasExercises = day && day.exercises.length > 0
+            
             return (
               <div key={i} className={`flex-1 rounded-xl p-2 text-center ${
-                day ? (isToday ? 'bg-accent text-white' : 'bg-accent-light') : 'bg-bg-surface2'
+                hasExercises ? (isToday ? 'bg-accent text-white' : 'bg-accent-light') : 'bg-bg-surface2'
               }`}>
-                <div className={`text-xs font-medium ${day && !isToday ? 'text-accent-dark' : day && isToday ? 'text-white' : 'text-text-tertiary'}`}>
+                <div className={`text-xs font-medium ${hasExercises && !isToday ? 'text-accent-dark' : hasExercises && isToday ? 'text-white' : 'text-text-tertiary'}`}>
                   {DAY_NAMES[i]}
                 </div>
-                <div className={`text-[10px] mt-0.5 ${!day ? 'text-text-tertiary' : isToday ? 'text-white/80' : 'text-accent'}`}>
-                  {day ? '💪' : '😴'}
+                <div className={`text-[10px] mt-0.5 ${!hasExercises ? 'text-text-tertiary' : isToday ? 'text-white/80' : 'text-accent'}`}>
+                  {hasExercises ? '💪' : '😴'}
                 </div>
               </div>
             )
@@ -434,8 +653,10 @@ export function TrainDashboard() {
               day={day}
               isToday={day.dayOfWeek === todayDow}
               onSwapExercise={(index, currentId) => setSwappingTarget({ dayOfWeek: day.dayOfWeek, exerciseIndex: index, currentId })}
+              onRemoveExercise={(index) => handleRemoveExercise(day.dayOfWeek, index)}
+              onAddExercise={() => setAddingToDay(day.dayOfWeek)}
             />
-            {day.dayOfWeek === todayDow && lastCompleted !== day.dayLabel && (
+            {day.dayOfWeek === todayDow && lastCompleted !== day.dayLabel && day.exercises.length > 0 && (
               <button
                 onClick={() => setActiveLogger(day)}
                 className="btn btn-secondary btn-sm w-full mt-2 mb-1"
@@ -465,6 +686,14 @@ export function TrainDashboard() {
           currentExerciseId={swappingTarget.currentId}
           onClose={() => setSwappingTarget(null)}
           onConfirm={handleConfirmSwap}
+        />
+      )}
+      
+      {/* Add Exercise Modal */}
+      {addingToDay !== null && (
+        <ExerciseLibraryModal
+          onClose={() => setAddingToDay(null)}
+          onSelect={handleAddExercise}
         />
       )}
     </div>
