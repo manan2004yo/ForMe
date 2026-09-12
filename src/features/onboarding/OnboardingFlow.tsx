@@ -518,7 +518,7 @@ const DEFAULT_ONBOARDING: Partial<UserProfile> = {
 }
 
 export function OnboardingFlow() {
-  const { user } = useAuthStore()
+  const { user, logout } = useAuthStore()
   const { saveProfile } = useUserStore()
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
@@ -567,8 +567,16 @@ export function OnboardingFlow() {
             <span className="text-white font-heading font-bold text-sm">F</span>
           </div>
           <span className="font-heading font-bold text-lg text-text-primary">FORME</span>
-          <div className="ml-auto text-sm text-text-tertiary">
-            {step + 1} / {STEPS.length}
+          <div className="ml-auto flex items-center gap-4">
+            <button 
+              onClick={() => logout()}
+              className="text-xs font-medium text-text-tertiary hover:text-error transition-colors"
+            >
+              Sign Out
+            </button>
+            <div className="text-sm text-text-tertiary">
+              {step + 1} / {STEPS.length}
+            </div>
           </div>
         </div>
 
