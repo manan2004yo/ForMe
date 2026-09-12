@@ -84,7 +84,7 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
       <div className="bot-window fixed bottom-0 right-0 sm:bottom-4 sm:right-4 z-[70] bg-bg flex flex-col border-border/50 transition-transform animate-slide-up sm:animate-fade-in overflow-hidden">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border bg-bg-surface">
+        <div className="flex items-center justify-between p-4 border-b border-border bg-bg-surface shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
               <Sparkles size={16} className="text-accent" />
@@ -144,7 +144,7 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-border bg-bg">
+        <div className="p-4 border-t border-border bg-bg shrink-0">
           <div className="relative flex items-center">
             <input
               type="text"
