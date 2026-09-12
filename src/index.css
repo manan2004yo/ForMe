@@ -1,5 +1,6 @@
 /* ============================================================
    FORME — Global Styles & Design System (Tailwind v4)
+   Premium Redesign
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
@@ -7,63 +8,157 @@
 @import "tailwindcss";
 @source "./";
 
-/* ─── Design Tokens (Tailwind v4 theme) ────────────────────── */
+/* ─── Design Tokens ─────────────────────────────────────────── */
+
+:root {
+  /* LIGHT THEME */
+  --bg: #FAFAF8;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #FFFFFF;
+  --bg-surface-floating: #FFFFFF;
+  
+  --text-primary: #1A1A18;
+  --text-secondary: #6B6B65;
+  --text-tertiary: #9B9B92;
+  --text-inverse: #FFFFFF;
+
+  --accent: #C17B3F;
+  --accent-light: #FDF3E8;
+  --accent-muted: #E8C99A;
+  --accent-dark: #9B5E28;
+
+  --border-subtle: #F0EFEA;
+  --border-strong: #E8E7E3;
+
+  /* Macros & Status */
+  --macro-protein: #7C6AF4;
+  --macro-protein-start: #8A7BF5;
+  --macro-protein-end: #6551F3;
+  
+  --macro-carbs: #F4A26A;
+  --macro-carbs-start: #F5B080;
+  --macro-carbs-end: #F29051;
+  
+  --macro-fat: #6ABFF4;
+  --macro-fat-start: #85CBF5;
+  --macro-fat-end: #4CBAF2;
+  
+  --macro-fiber: #6AF4A2;
+  --macro-fiber-start: #85F5B3;
+  --macro-fiber-end: #4CF28F;
+
+  --status-good: #2D7A4F;
+  --status-warning: #B45309;
+  --status-bad: #C0392B;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-hero: 24px;
+  --radius-pill: 9999px;
+
+  /* Shadows (Material Depth) */
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.02);
+  --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.04);
+  --shadow-floating: 0 8px 32px rgba(0,0,0,0.12), 0 24px 64px rgba(0,0,0,0.08);
+  --shadow-accent: 0 4px 16px rgba(193, 123, 63, 0.24);
+  
+  /* Motion Tokens */
+  --motion-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-standard: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --spring-snappy: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --spring-gentle: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark {
+  /* DARK THEME */
+  --bg: #121211;
+  --bg-surface: #1A1A18;
+  --bg-surface-elevated: #242422;
+  --bg-surface-floating: #2A2A28;
+  
+  --text-primary: #F0EFEA;
+  --text-secondary: #9B9B92;
+  --text-tertiary: #6B6B65;
+  --text-inverse: #1A1A18;
+
+  --accent: #D2945D;
+  --accent-light: #3D2919;
+  --accent-muted: #9B5E28;
+  --accent-dark: #E8C99A;
+
+  --border-subtle: #2A2A28;
+  --border-strong: #3D3D39;
+
+  /* Shadows (Dark mode shadows are softer/atmospheric) */
+  --shadow-card: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.6);
+  --shadow-floating: 0 16px 48px rgba(0,0,0,0.8);
+  --shadow-accent: 0 4px 16px rgba(210, 148, 93, 0.15);
+}
+
+/* ─── Tailwind v4 Theme Variables ────────────────────────────── */
 
 @theme {
-  /* Colors */
-  --color-bg: #FAFAF8;
-  --color-bg-surface: #FFFFFF;
-  --color-bg-surface2: #F5F4F0;
-  --color-bg-surface3: #EEECEA;
+  --color-bg: var(--bg);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-surface-elevated);
+  --color-bg-floating: var(--bg-surface-floating);
 
-  --color-text-primary: #1A1A18;
-  --color-text-secondary: #6B6B65;
-  --color-text-tertiary: #9B9B92;
-  --color-text-inverse: #FFFFFF;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-inverse: var(--text-inverse);
 
-  --color-accent: #C17B3F;
-  --color-accent-light: #FDF3E8;
-  --color-accent-muted: #E8C99A;
-  --color-accent-dark: #9B5E28;
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-dark: var(--accent-dark);
 
-  --color-border: #E8E7E3;
-  --color-border-strong: #D4D3CE;
+  --color-border: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
 
-  --color-success: #2D7A4F;
-  --color-success-light: #E8F5EE;
+  --color-protein: var(--macro-protein);
+  --color-protein-start: var(--macro-protein-start);
+  --color-protein-end: var(--macro-protein-end);
 
-  --color-warning: #B45309;
-  --color-warning-light: #FEF3C7;
+  --color-carbs: var(--macro-carbs);
+  --color-carbs-start: var(--macro-carbs-start);
+  --color-carbs-end: var(--macro-carbs-end);
 
-  --color-error: #C0392B;
-  --color-error-light: #FDECEA;
+  --color-fat: var(--macro-fat);
+  --color-fat-start: var(--macro-fat-start);
+  --color-fat-end: var(--macro-fat-end);
 
-  --color-protein: #7C6AF4;
-  --color-carbs: #F4A26A;
-  --color-fat: #6ABFF4;
-  --color-fiber: #6AF4A2;
+  --color-fiber: var(--macro-fiber);
+  --color-fiber-start: var(--macro-fiber-start);
+  --color-fiber-end: var(--macro-fiber-end);
 
-  /* Fonts */
-  --font-family-sans: 'DM Sans', 'Inter', system-ui, sans-serif;
-  --font-family-heading: 'Inter', 'DM Sans', system-ui, sans-serif;
-  --font-family-mono: 'JetBrains Mono', monospace;
+  --color-status-good: var(--status-good);
+  --color-status-warning: var(--status-warning);
+  --color-status-bad: var(--status-bad);
 
-  /* Border radius */
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-3xl: 24px;
-  --radius-4xl: 32px;
+  --font-sans: 'DM Sans', 'Inter', system-ui, sans-serif;
+  --font-heading: 'Inter', 'DM Sans', system-ui, sans-serif;
 
-  /* Shadows */
-  --shadow-soft: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
-  --shadow-card: 0 2px 8px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.04);
-  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.10), 0 16px 48px rgba(0,0,0,0.06);
-  --shadow-accent: 0 4px 16px rgba(193, 123, 63, 0.24);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-hero: var(--radius-hero);
+  --radius-pill: var(--radius-pill);
 
-  /* Animations */
-  --animate-fade-in: fadeIn 0.3s ease-out;
-  --animate-slide-up: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-scale-in: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+  --shadow-floating: var(--shadow-floating);
+  --shadow-accent: var(--shadow-accent);
+
+  --animate-fade-in: fadeIn var(--motion-standard);
+  --animate-slide-up: slideUp var(--spring-gentle);
+  --animate-scale-in: scaleIn var(--spring-snappy);
 }
 
 /* ─── Keyframes ──────────────────────────────────────────────── */
@@ -138,9 +233,65 @@ body {
 
 /* ─── Utility Classes ─────────────────────────────────────────── */
 
-.font-heading { font-family: var(--font-family-heading); }
-.font-body { font-family: var(--font-family-sans); }
+.font-heading { font-family: var(--font-heading); }
+.font-body { font-family: var(--font-sans); }
 .tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Typography System */
+.text-hero {
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-display {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.text-section {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.text-body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.text-label {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.text-caption {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+}
+
+.text-micro {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 
 /* ─── Card Component ─────────────────────────────────────────── */
 
