@@ -76,12 +76,12 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
     <>
       {/* Backdrop for mobile */}
       <div 
-        className="fixed inset-0 z-40 bg-black/20 sm:hidden transition-opacity" 
+        className="fixed inset-0 z-[60] bg-black/20 sm:hidden transition-opacity" 
         onClick={onClose}
       />
 
       {/* Chat Window */}
-      <div className="bot-window fixed bottom-0 right-0 sm:bottom-4 sm:right-4 z-50 bg-bg flex flex-col border-border/50 transition-transform animate-slide-up sm:animate-fade-in overflow-hidden">
+      <div className="bot-window fixed bottom-0 right-0 sm:bottom-4 sm:right-4 z-[70] bg-bg flex flex-col border-border/50 transition-transform animate-slide-up sm:animate-fade-in overflow-hidden">
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-bg-surface">
