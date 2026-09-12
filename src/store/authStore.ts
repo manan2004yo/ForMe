@@ -25,12 +25,14 @@ interface AuthState {
   setDemoUser: () => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isLoading: false,
-  isInitialized: false,
-  error: null,
-  isDemo: false,
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      isLoading: false,
+      isInitialized: false,
+      error: null,
+      isDemo: false,
 
   setDemoUser: () => {
     set({
@@ -120,7 +122,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearError: () => set({ error: null }),
-}))
+}), { name: 'forme-auth-storage' }))
 
 function parseFirebaseError(code: string): string {
   switch (code) {

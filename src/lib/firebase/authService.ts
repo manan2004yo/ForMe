@@ -23,8 +23,6 @@ import { auth, googleProvider, db } from './config'
 // ─── Auth State Observer ─────────────────────────────────────
 
 export function observeAuthState(callback: (user: User | null) => void) {
-  // Explicitly set persistence to local storage to prevent getting signed out when closing the tab
-  setPersistence(auth, browserLocalPersistence).catch(console.error)
   return onAuthStateChanged(auth, callback)
 }
 

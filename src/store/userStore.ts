@@ -65,13 +65,17 @@ interface UserState {
   setContext: (context: ActiveContext) => void
 }
 
-export const useUserStore = create<UserState>((set, get) => ({
-  profile: null,
-  metrics: null,
-  isLoading: false,
-  isDemoMode: false,
-  error: null,
-  activeContext: 'normal',
+import { persist } from 'zustand/middleware'
+
+export const useUserStore = create<UserState>()(
+  persist(
+    (set, get) => ({
+      profile: null,
+      metrics: null,
+      isLoading: false,
+      isDemoMode: false,
+      error: null,
+      activeContext: 'normal',
 
   setContext: (context) => {
     const { profile } = get()
@@ -129,4 +133,4 @@ export const useUserStore = create<UserState>((set, get) => ({
       set({ metrics: calculateBodyMetrics(profile, activeContext) })
     }
   },
-}))
+}), { name: 'forme-user-storage' }))
