@@ -1097,3 +1097,58 @@ select {
     transform: none !important;
   }
 }
+
+/* ─── Bug Fixes: Missing Utilities ────────────────────────────── */
+
+/* Backgrounds */
+.bg-bg-surface2 { background-color: var(--bg-surface-elevated); }
+.bg-bg-surface3 { background-color: var(--bg-surface-floating); }
+
+/* Shadows */
+.shadow-card { box-shadow: var(--shadow-card); }
+.shadow-card-hover { box-shadow: var(--shadow-card-hover); }
+.shadow-floating { box-shadow: var(--shadow-floating); }
+.shadow-accent { box-shadow: var(--shadow-accent); }
+
+/* Radii */
+.rounded-hero { border-radius: var(--radius-hero); }
+.rounded-pill { border-radius: var(--radius-pill); }
+
+/* Typography */
+.text-hero {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-family: var(--font-heading);
+}
+
+.text-display {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-family: var(--font-heading);
+}
+
+.text-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.text-caption {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Layout & Spacing */
+.pb-safe-area {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* Fix for main bottom padding so nav doesn't overlap */
+.pb-28 {
+  padding-bottom: 7rem; /* 112px */
+}
