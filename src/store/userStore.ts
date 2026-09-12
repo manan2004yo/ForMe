@@ -1,0 +1,112 @@
+// ============================================================
+// FORME — User Profile Store
+// ============================================================
+
+import { create } from 'zustand'
+import type { UserProfile, BodyMetrics } from '@/types'
+import { calculateBodyMetrics } from '@/lib/calculations/bodyMetrics'
+import { saveUserProfile, getUserProfile } from '@/lib/firebase/dataService'
+
+// Demo profile for exploration
+export const DEMO_PROFILE: UserProfile = {
+  id: 'demo',
+  email: 'demo@forme.app',
+  name: 'Arjun (Demo)',
+  age: 26,
+  gender: 'male',
+  heightCm: 176,
+  weightKg: 70,
+  activityLevel: 'moderately_active',
+  lifestyle: 'student',
+  dietType: 'vegetarian',
+  eatsEggs: true,
+  eatsMeat: false,
+  eatsFish: false,
+  eatsDairy: true,
+  allergies: '',
+  monthlyFoodBudget: 3000,
+  cookingAbility: 'basic',
+  eatingEnvironment: 'hostel',
+  foodAvailability: ['eggs', 'dahi', 'roti', 'dal', 'rice', 'banana', 'peanuts'],
+  fitnessGoal: 'body_recomposition',
+  trainingExperience: 'beginner',
+  trainingLocation: 'gym',
+  availableEquipment: [],
+  trainingDays: [1, 2, 4, 5, 6], // Mon Tue Thu Fri Sat
+  gymClosedDays: [0],
+  workoutDuration: '45-60',
+  physicalLimitations: '',
+  complexityMode: 'smart',
+  mealFrequency: 3,
+  preferredKatoriGrams: 150,
+  waistCm: 82,
+  onboardingComplete: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+}
+
+interface UserState {
+  profile: UserProfile | null
+  metrics: BodyMetrics | null
+  isLoading: boolean
+  isDemoMode: boolean
+
+  // Actions
+  loadProfile: (uid: string) => Promise<void>
+  saveProfile: (updates: Partial<UserProfile>) => Promise<void>
+  setProfile: (profile: UserProfile) => void
+  clearProfile: () => void
+  loadDemoProfile: () => void
+  recalculateMetrics: () => void
+}
+
+export const useUserStore = create<UserState>((set, get) => ({
+  profile: null,
+  metrics: null,
+  isLoading: false,
+  isDemoMode: false,
+
+  loadProfile: async (uid: string) => {
+    set({ isLoading: true })
+    try {
+      const profile = await getUserProfile(uid)
+      if (profile) {
+        const metrics = calculateBodyMetrics(profile)
+        set({ profile, metrics, isDemoMode: false })
+      }
+    } finally {
+      set({ isLoading: false })
+    }
+  },
+
+  saveProfile: async (updates: Partial<UserProfile>) => {
+    const { profile, isDemoMode } = get()
+    if (!profile) return
+
+    const updated = { ...profile, ...updates, updatedAt: new Date().toISOString() }
+    set({ profile: updated, metrics: calculateBodyMetrics(updated) })
+
+    if (!isDemoMode) {
+      await saveUserProfile(profile.id, updates)
+    }
+  },
+
+  setProfile: (profile: UserProfile) => {
+    const metrics = calculateBodyMetrics(profile)
+    set({ profile, metrics })
+  },
+
+  clearProfile: () => set({ profile: null, metrics: null, isDemoMode: false }),
+
+  loadDemoProfile: () => {
+    const metrics = calculateBodyMetrics(DEMO_PROFILE)
+    set({ profile: DEMO_PROFILE, metrics, isDemoMode: true })
+  },
+
+  recalculateMetrics: () => {
+    const { profile } = get()
+    if (profile) {
+      set({ metrics: calculateBodyMetrics(profile) })
+    }
+  },
+}))
