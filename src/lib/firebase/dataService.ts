@@ -20,10 +20,14 @@ import type {
 
 export async function saveUserProfile(uid: string, profile: Partial<UserProfile>): Promise<void> {
   const ref = doc(db, 'users', uid)
-  await setDoc(ref, {
-    ...profile,
-    updatedAt: serverTimestamp(),
-  }, { merge: true })
+  try {
+    await setDoc(ref, {
+      ...profile,
+      updatedAt: serverTimestamp(),
+    }, { merge: true })
+  } catch (error) {
+    console.warn('Firestore write error (saveUserProfile):', error)
+  }
   
   // Also save to localStorage as offline backup
   const existing = getLocalProfile(uid)
@@ -55,7 +59,11 @@ function getLocalProfile(uid: string): UserProfile | null {
 
 export async function saveFoodLog(uid: string, entry: FoodLogEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'foodLogs', entry.id)
-  await setDoc(ref, { ...entry, updatedAt: serverTimestamp() })
+  try {
+    await setDoc(ref, { ...entry, updatedAt: serverTimestamp() })
+  } catch (error) {
+    console.warn('Firestore write error (saveFoodLog):', error)
+  }
   saveLocalFoodLog(uid, entry)
 }
 
@@ -73,7 +81,11 @@ export async function getFoodLogsByDate(uid: string, date: string): Promise<Food
 }
 
 export async function deleteFoodLog(uid: string, entryId: string): Promise<void> {
-  await deleteDoc(doc(db, 'users', uid, 'foodLogs', entryId))
+  try {
+    await deleteDoc(doc(db, 'users', uid, 'foodLogs', entryId))
+  } catch (error) {
+    console.warn('Firestore write error (deleteFoodLog):', error)
+  }
   deleteLocalFoodLog(uid, entryId)
 }
 
@@ -107,7 +119,11 @@ function deleteLocalFoodLog(uid: string, entryId: string) {
 
 export async function saveWeightEntry(uid: string, entry: WeightEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'weightHistory', entry.id)
-  await setDoc(ref, entry)
+  try {
+    await setDoc(ref, entry)
+  } catch (error) {
+    console.warn('Firestore write error (saveWeightEntry):', error)
+  }
   const local = getLocalWeightHistory(uid)
   const updated = local.filter(e => e.id !== entry.id)
   updated.push(entry)
@@ -136,7 +152,11 @@ function getLocalWeightHistory(uid: string): WeightEntry[] {
 
 export async function saveWaistEntry(uid: string, entry: WaistEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'waistHistory', entry.id)
-  await setDoc(ref, entry)
+  try {
+    await setDoc(ref, entry)
+  } catch (error) {
+    console.warn('Firestore write error (saveWaistEntry):', error)
+  }
   const local = getLocalWaistHistory(uid)
   const updated = local.filter(e => e.id !== entry.id)
   updated.push(entry)
@@ -163,7 +183,11 @@ function getLocalWaistHistory(uid: string): WaistEntry[] {
 
 export async function saveWorkoutLog(uid: string, entry: WorkoutLogEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'workoutLogs', entry.id)
-  await setDoc(ref, entry)
+  try {
+    await setDoc(ref, entry)
+  } catch (error) {
+    console.warn('Firestore write error (saveWorkoutLog):', error)
+  }
   const local = getLocalWorkoutLogs(uid)
   const updated = local.filter(e => e.id !== entry.id)
   updated.push(entry)
@@ -192,7 +216,11 @@ function getLocalWorkoutLogs(uid: string): WorkoutLogEntry[] {
 
 export async function saveMeal(uid: string, meal: SavedMeal): Promise<void> {
   const ref = doc(db, 'users', uid, 'savedMeals', meal.id)
-  await setDoc(ref, meal)
+  try {
+    await setDoc(ref, meal)
+  } catch (error) {
+    console.warn('Firestore write error (saveMeal):', error)
+  }
   const local = getLocalSavedMeals(uid)
   const updated = local.filter(m => m.id !== meal.id)
   updated.push(meal)
@@ -218,7 +246,11 @@ function getLocalSavedMeals(uid: string): SavedMeal[] {
 
 export async function saveWorkoutPlan(uid: string, plan: WorkoutPlan): Promise<void> {
   const ref = doc(db, 'users', uid, 'workoutPlan', 'current')
-  await setDoc(ref, plan)
+  try {
+    await setDoc(ref, plan)
+  } catch (error) {
+    console.warn('Firestore write error (saveWorkoutPlan):', error)
+  }
   localStorage.setItem(`forme_workoutplan_${uid}`, JSON.stringify(plan))
 }
 
@@ -241,7 +273,11 @@ function getLocalWorkoutPlan(uid: string): WorkoutPlan | null {
 
 export async function saveDietPlan(uid: string, plan: DailyDietPlan): Promise<void> {
   const ref = doc(db, 'users', uid, 'dietPlan', 'current')
-  await setDoc(ref, plan)
+  try {
+    await setDoc(ref, plan)
+  } catch (error) {
+    console.warn('Firestore write error (saveDietPlan):', error)
+  }
   localStorage.setItem(`forme_dietplan_${uid}`, JSON.stringify(plan))
 }
 
