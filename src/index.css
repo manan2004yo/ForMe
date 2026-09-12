@@ -1059,3 +1059,41 @@ body {
 
 /* Gap for heatmap */
 .gap-1 { gap: 4px; }
+
+
+/* ─── Phase 7: Polish (Accessibility & Performance) ─────────── */
+
+/* Hardware Acceleration for Animations */
+.animate-slide-up,
+.animate-fade-in,
+.animate-pulse {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Touch targets & Tap Highlights for Mobile */
+button, 
+a, 
+input, 
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Reduced Motion Settings */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+    transform: none !important;
+  }
+}
