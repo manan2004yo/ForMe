@@ -12,6 +12,8 @@ import {
   sendEmailVerification,
   updateProfile,
   onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
   User,
   UserCredential,
 } from 'firebase/auth'
@@ -21,6 +23,8 @@ import { auth, googleProvider, db } from './config'
 // ─── Auth State Observer ─────────────────────────────────────
 
 export function observeAuthState(callback: (user: User | null) => void) {
+  // Explicitly set persistence to local storage to prevent getting signed out when closing the tab
+  setPersistence(auth, browserLocalPersistence).catch(console.error)
   return onAuthStateChanged(auth, callback)
 }
 
@@ -91,6 +95,7 @@ async function createUserDocument(
   const userRef = doc(db, 'users', user.uid)
   
   await setDoc(userRef, {
+    id: user.uid,
     uid: user.uid,
     email: user.email,
     name: additionalData.name || user.displayName || 'FORME User',

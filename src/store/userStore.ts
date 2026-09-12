@@ -106,7 +106,8 @@ export const useUserStore = create<UserState>((set, get) => ({
     set({ profile: updated, metrics })
 
     if (!isDemoMode) {
-      await saveUserProfile(profile.id, updates)
+      const targetId = profile.id || updates.id || (profile as any).uid
+      if (targetId) await saveUserProfile(targetId, updates)
     }
   },
 

@@ -36,6 +36,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     const snap = await getDoc(ref)
     if (snap.exists()) {
       const data = snap.data() as UserProfile
+      if (!data.id) data.id = uid
       localStorage.setItem(`forme_profile_${uid}`, JSON.stringify(data))
       return data
     }
