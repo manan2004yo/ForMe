@@ -399,4 +399,43 @@ export function generateWorkoutPlan(profile: UserProfile): WorkoutPlan {
   }
 }
 
+export function getAlternatives(exerciseId: string, limit: number = 3): { id: string; name: string; equipment: string[]; difficulty: string; muscleGroup: string }[] {
+  const original = EXERCISES[exerciseId]
+  if (!original) return []
+
+  const alternatives = Object.entries(EXERCISES)
+    .filter(([id, ex]) => 
+      id !== exerciseId && 
+      (ex.muscleGroup === original.muscleGroup || ex.secondary.includes(original.muscleGroup))
+    )
+    .map(([id, ex]) => ({
+      id,
+      name: ex.name,
+      equipment: ex.equipment,
+      difficulty: ex.difficulty,
+      muscleGroup: ex.muscleGroup
+    }))
+  
+  // Simple scoring: same muscle group > same equipment > same difficulty
+  alternatives.sort((a, b) => {
+    let scoreA = 0
+    let scoreB = 0
+    
+    if (a.muscleGroup === original.muscleGroup) scoreA += 10
+    if (b.muscleGroup === original.muscleGroup) scoreB += 10
+    
+    const overlapEquipA = a.equipment.filter(eq => original.equipment.includes(eq)).length
+    const overlapEquipB = b.equipment.filter(eq => original.equipment.includes(eq)).length
+    scoreA += overlapEquipA
+    scoreB += overlapEquipB
+    
+    if (a.difficulty === original.difficulty) scoreA += 2
+    if (b.difficulty === original.difficulty) scoreB += 2
+    
+    return scoreB - scoreA
+  })
+
+  return alternatives.slice(0, limit)
+}
+
 export { EXERCISES }

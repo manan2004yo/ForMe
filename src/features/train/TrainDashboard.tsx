@@ -5,9 +5,9 @@
 
 import { useState, useEffect } from 'react'
 import { useUserStore } from '@/store/userStore'
-import { generateWorkoutPlan, EXERCISES } from '@/lib/engines/workoutEngine'
+import { generateWorkoutPlan, EXERCISES, getAlternatives } from '@/lib/engines/workoutEngine'
 import type { WorkoutPlan, WorkoutDay, PlannedExercise } from '@/types'
-import { Clock, Dumbbell, RotateCcw, ChevronDown, ChevronUp, PlayCircle } from 'lucide-react'
+import { Clock, Dumbbell, RotateCcw, ChevronDown, ChevronUp, PlayCircle, ArrowLeftRight, Sparkles } from 'lucide-react'
 import { WorkoutLogger } from './WorkoutLogger'
 import { format } from 'date-fns'
 
@@ -43,7 +43,7 @@ function RIRBadge({ rir }: { rir: number }) {
   )
 }
 
-function ExerciseCard({ exercise, index }: { exercise: PlannedExercise; index: number }) {
+function ExerciseCard({ exercise, index, onRequestSwap }: { exercise: PlannedExercise; index: number; onRequestSwap?: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const exData = EXERCISES[exercise.exerciseId]
 
@@ -94,13 +94,23 @@ function ExerciseCard({ exercise, index }: { exercise: PlannedExercise; index: n
               🏠 Home alternative: <span className="font-medium text-text-primary">{EXERCISES[exData.homeAlternative].name}</span>
             </div>
           )}
+          
+          {onRequestSwap && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onRequestSwap(); }}
+              className="mt-4 w-full py-2.5 rounded-xl border border-accent/30 text-accent font-medium text-sm flex items-center justify-center gap-2 hover:bg-accent/5 transition-colors"
+            >
+              <ArrowLeftRight size={14} />
+              AI Swap Exercise
+            </button>
+          )}
         </div>
       )}
     </div>
   )
 }
 
-function WorkoutDayCard({ day, isToday }: { day: WorkoutDay; isToday: boolean }) {
+function WorkoutDayCard({ day, isToday, onSwapExercise }: { day: WorkoutDay; isToday: boolean; onSwapExercise?: (index: number, currentId: string) => void }) {
   const [expanded, setExpanded] = useState(isToday)
 
   return (
@@ -142,11 +152,100 @@ function WorkoutDayCard({ day, isToday }: { day: WorkoutDay; isToday: boolean })
         <div className="px-4 pb-4 border-t border-border animate-fade-in">
           <div className="flex flex-col gap-3 mt-3">
             {day.exercises.map((exercise, i) => (
-              <ExerciseCard key={exercise.exerciseId} exercise={exercise} index={i} />
+              <ExerciseCard 
+                key={exercise.exerciseId} 
+                exercise={exercise} 
+                index={i} 
+                onRequestSwap={onSwapExercise ? () => onSwapExercise(i, exercise.exerciseId) : undefined}
+              />
             ))}
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function ExerciseSwapModal({ 
+  currentExerciseId, 
+  onClose, 
+  onConfirm 
+}: { 
+  currentExerciseId: string; 
+  onClose: () => void; 
+  onConfirm: (newId: string) => void;
+}) {
+  const [isSwapping, setIsSwapping] = useState(false)
+  const [alternatives, setAlternatives] = useState<any[]>([])
+  
+  useEffect(() => {
+    setIsSwapping(true)
+    // Simulate AI loading delay to feel like "AI is thinking"
+    const timer = setTimeout(() => {
+      setAlternatives(getAlternatives(currentExerciseId, 3))
+      setIsSwapping(false)
+    }, 1200)
+    return () => clearTimeout(timer)
+  }, [currentExerciseId])
+
+  const original = EXERCISES[currentExerciseId]
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <h2 className="font-heading font-bold text-lg text-text-primary">AI Exercise Swap</h2>
+              <div className="text-xs text-text-tertiary">Swapping: {original?.name}</div>
+            </div>
+          </div>
+
+          {isSwapping ? (
+            <div className="py-8 flex flex-col items-center justify-center">
+              <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4" />
+              <div className="text-sm font-medium text-text-primary">Analyzing biomechanics...</div>
+              <div className="text-xs text-text-tertiary mt-1">Finding the best {original?.muscleGroup} alternatives</div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {alternatives.length > 0 ? alternatives.map((alt) => (
+                <button
+                  key={alt.id}
+                  onClick={() => onConfirm(alt.id)}
+                  className="card-pressable p-4 text-left flex items-center justify-between group border border-border hover:border-accent/50"
+                >
+                  <div>
+                    <div className="font-medium text-text-primary text-sm">{alt.name}</div>
+                    <div className="flex gap-2 mt-1.5">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-text-secondary bg-bg-surface2 px-1.5 py-0.5 rounded">
+                        {alt.muscleGroup}
+                      </span>
+                      <span className="text-[10px] text-text-tertiary bg-bg-surface2 px-1.5 py-0.5 rounded capitalize">
+                        {alt.difficulty}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-accent opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium bg-accent/10 px-3 py-1.5 rounded-lg">
+                    Select
+                  </div>
+                </button>
+              )) : (
+                <div className="text-center py-6 text-sm text-text-secondary">
+                  No direct alternatives found for this exercise.
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="mt-5">
+            <button onClick={onClose} className="btn btn-secondary w-full">Cancel</button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -156,6 +255,9 @@ export function TrainDashboard() {
   const [plan, setPlan] = useState<WorkoutPlan | null>(null)
   const [activeLogger, setActiveLogger] = useState<WorkoutDay | null>(null)
   const [lastCompleted, setLastCompleted] = useState<string | null>(null)
+  
+  // Swap state
+  const [swappingTarget, setSwappingTarget] = useState<{ dayOfWeek: number, exerciseIndex: number, currentId: string } | null>(null)
 
   useEffect(() => {
     if (profile) {
@@ -177,6 +279,37 @@ export function TrainDashboard() {
 
   const regenerate = () => {
     if (profile) setPlan(generateWorkoutPlan(profile))
+  }
+
+  const handleConfirmSwap = (newExerciseId: string) => {
+    if (!swappingTarget || !plan) return
+    
+    setPlan(prev => {
+      if (!prev) return prev
+      const newPlan = { ...prev, days: [...prev.days] }
+      
+      const dayIndex = newPlan.days.findIndex(d => d.dayOfWeek === swappingTarget.dayOfWeek)
+      if (dayIndex >= 0) {
+        const day = { ...newPlan.days[dayIndex] }
+        const exList = [...day.exercises]
+        
+        const newExData = EXERCISES[newExerciseId]
+        if (newExData) {
+          exList[swappingTarget.exerciseIndex] = {
+            ...exList[swappingTarget.exerciseIndex],
+            exerciseId: newExerciseId,
+            exerciseName: newExData.name,
+            muscleGroup: newExData.muscleGroup,
+            difficulty: newExData.difficulty as any,
+          }
+          day.exercises = exList
+          newPlan.days[dayIndex] = day
+        }
+      }
+      return newPlan
+    })
+    
+    setSwappingTarget(null)
   }
 
   return (
@@ -300,6 +433,7 @@ export function TrainDashboard() {
             <WorkoutDayCard
               day={day}
               isToday={day.dayOfWeek === todayDow}
+              onSwapExercise={(index, currentId) => setSwappingTarget({ dayOfWeek: day.dayOfWeek, exerciseIndex: index, currentId })}
             />
             {day.dayOfWeek === todayDow && lastCompleted !== day.dayLabel && (
               <button
@@ -322,6 +456,15 @@ export function TrainDashboard() {
             setLastCompleted(activeLogger.dayLabel)
             setActiveLogger(null)
           }}
+        />
+      )}
+      
+      {/* Exercise Swap Modal */}
+      {swappingTarget && (
+        <ExerciseSwapModal
+          currentExerciseId={swappingTarget.currentId}
+          onClose={() => setSwappingTarget(null)}
+          onConfirm={handleConfirmSwap}
         />
       )}
     </div>

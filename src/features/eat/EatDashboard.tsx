@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { format, subDays, addDays, isToday } from 'date-fns'
-import { Plus, Search, ChevronDown, ChevronUp, Trash2, Loader2, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import { Plus, Search, ChevronDown, ChevronUp, Trash2, Loader2, ChevronLeft, ChevronRight, Calendar, Camera, ImageIcon } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
@@ -35,12 +35,13 @@ function NutritionChip({ label, value, unit, color }: { label: string; value: nu
   )
 }
 
-function MealCard({ config, entries, onAdd, onDelete, onBrowse }: {
+function MealCard({ config, entries, onAdd, onDelete, onBrowse, onVision }: {
   config: typeof MEAL_CONFIG[0]
   entries: FoodLogEntry[]
   onAdd: (slot: MealSlot) => void
   onDelete: (entryId: string) => void
   onBrowse: (slot: MealSlot) => void
+  onVision: (slot: MealSlot) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const { user } = useAuthStore()
@@ -81,6 +82,14 @@ function MealCard({ config, entries, onAdd, onDelete, onBrowse }: {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={e => { e.stopPropagation(); onVision(config.slot) }}
+            className="btn btn-ghost p-2 rounded-xl"
+            id={`vision-food-${config.slot}`}
+            aria-label="Scan food with camera"
+          >
+            <Camera size={16} className="text-text-secondary hover:text-accent transition-colors" />
+          </button>
+          <button
             onClick={e => { e.stopPropagation(); onBrowse(config.slot) }}
             className="btn btn-ghost p-2 rounded-xl"
             id={`browse-food-${config.slot}`}
@@ -89,7 +98,7 @@ function MealCard({ config, entries, onAdd, onDelete, onBrowse }: {
           </button>
           <button
             onClick={e => { e.stopPropagation(); onAdd(config.slot) }}
-            className="btn btn-ghost p-2 rounded-xl"
+            className="btn btn-ghost p-2 rounded-xl bg-accent/10"
             id={`add-food-${config.slot}`}
           >
             <Plus size={18} className="text-accent" />
@@ -305,9 +314,180 @@ function FoodLogger({ slot, onClose }: { slot: MealSlot; onClose: () => void }) 
   )
 }
 
+function VisionLogger({ slot, onClose }: { slot: MealSlot; onClose: () => void }) {
+  const [image, setImage] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [parsedItems, setParsedItems] = useState<LoggedFoodItem[]>([])
+  
+  const { user } = useAuthStore()
+  const { addFoodEntry } = useFoodLogStore()
+  const toast = useToastStore()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const url = URL.createObjectURL(file)
+    setImage(url)
+    
+    // Simulate Vision API
+    setIsAnalyzing(true)
+    setTimeout(() => {
+      // MOCK VISION AI RESPONSE
+      const mockResultText = "2 roti, 1 katori dal makhani, 1 katori palak paneer"
+      const result = parseNaturalLanguageFoodEntry(mockResultText)
+      
+      const items: LoggedFoodItem[] = result.parsedItems
+        .filter(item => item.foodItem)
+        .map(item => {
+          const food = item.foodItem!
+          const unit = item.unit as any
+          let grams = item.quantity
+          if (unit !== 'gram') {
+            grams = (food.gramsPerUnit[unit] || food.gramsPerUnit['serving'] || 100) * item.quantity
+          }
+          const nutrition = getNutritionForGrams(food, grams)
+          return {
+            id: uuidv4(),
+            foodItemId: food.id,
+            foodName: food.name,
+            quantity: item.quantity,
+            unit,
+            gramsConsumed: grams,
+            nutrition,
+            confidence: 'high',
+          }
+        })
+        
+      setParsedItems(items)
+      setIsAnalyzing(false)
+    }, 2500)
+  }
+
+  const handleLog = async () => {
+    if (!user || parsedItems.length === 0) return
+    const totalCal = Math.round(parsedItems.reduce((s, i) => s + i.nutrition.calories, 0))
+    await addFoodEntry(user.uid, slot, parsedItems)
+    toast.success(`Vision AI logged ${parsedItems.length} item${parsedItems.length > 1 ? 's' : ''} · ${totalCal} kcal`)
+    if (image) URL.revokeObjectURL(image)
+    onClose()
+  }
+
+  const handleCancel = () => {
+    if (image) URL.revokeObjectURL(image)
+    onClose()
+  }
+
+  const mealConfig = MEAL_CONFIG.find(m => m.slot === slot)!
+
+  return (
+    <div className="modal-backdrop" onClick={handleCancel}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <span className="text-2xl">📸</span>
+            <h2 className="font-heading font-bold text-xl text-text-primary">Vision AI for {mealConfig.label}</h2>
+          </div>
+
+          {!image ? (
+            <div 
+              className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-all text-center mb-5"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <div className="w-16 h-16 rounded-full bg-accent/10 text-accent flex items-center justify-center mb-4">
+                <Camera size={32} />
+              </div>
+              <h3 className="font-heading font-semibold text-text-primary mb-1">Take a photo of your food</h3>
+              <p className="text-sm text-text-tertiary">Our AI will automatically identify the items and portion sizes.</p>
+              <input 
+                type="file" 
+                accept="image/*" 
+                capture="environment" 
+                className="hidden" 
+                ref={fileInputRef}
+                onChange={handleImageSelect}
+              />
+            </div>
+          ) : (
+            <div className="mb-5">
+              <div className="relative rounded-xl overflow-hidden mb-4 border border-border bg-black/5 aspect-video flex items-center justify-center">
+                <img src={image} alt="Food" className="w-full h-full object-cover" />
+                {isAnalyzing && (
+                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white backdrop-blur-sm">
+                    <Loader2 size={32} className="animate-spin text-accent mb-3" />
+                    <div className="font-heading font-semibold text-lg">Vision AI Analyzing...</div>
+                    <div className="text-sm text-white/70">Identifying ingredients & portions</div>
+                  </div>
+                )}
+              </div>
+              
+              {!isAnalyzing && parsedItems.length > 0 && (
+                <div className="animate-slide-up">
+                  <div className="text-sm font-medium text-text-secondary mb-2 flex items-center gap-2">
+                    <span className="text-accent">✨</span> AI Recognized:
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {parsedItems.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between py-2 px-3 bg-accent/10 border border-accent/20 rounded-xl">
+                        <div>
+                          <div className="text-sm font-medium text-text-primary">{item.foodName}</div>
+                          <div className="text-xs text-text-tertiary">
+                            {item.quantity} {item.unit} · {Math.round(item.nutrition.calories)} kcal
+                          </div>
+                        </div>
+                        <div className="badge badge-accent text-xs">High Confidence</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 px-3 py-2 bg-bg-surface2 rounded-xl text-sm flex justify-between">
+                    <span className="font-medium text-text-primary">Total Calories:</span>
+                    <span className="font-bold text-accent">
+                      {Math.round(parsedItems.reduce((s, i) => s + i.nutrition.calories, 0))} kcal
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button onClick={handleCancel} className="btn btn-secondary btn-md flex-1">
+              Cancel
+            </button>
+            {image && !isAnalyzing && parsedItems.length > 0 && (
+              <button
+                onClick={handleLog}
+                className="btn btn-accent btn-md flex-1"
+                id="confirm-vision-log"
+              >
+                Log {parsedItems.length} item{parsedItems.length > 1 ? 's' : ''}
+              </button>
+            )}
+            {image && !isAnalyzing && (
+               <button
+                 onClick={() => {
+                   setImage(null);
+                   setParsedItems([]);
+                   fileInputRef.current?.click();
+                 }}
+                 className="btn btn-secondary btn-md"
+               >
+                 Retake
+               </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function EatDashboard() {
   const [activeLogger, setActiveLogger] = useState<MealSlot | null>(null)
   const [activeBrowser, setActiveBrowser] = useState<MealSlot | null>(null)
+  const [activeVision, setActiveVision] = useState<MealSlot | null>(null)
   const { user } = useAuthStore()
   const { profile, metrics } = useUserStore()
   const { entries, selectedDate, todayTotals, loadLogs, removeEntry, entriesForMeal, setDate } = useFoodLogStore()
@@ -425,6 +605,7 @@ export function EatDashboard() {
             onAdd={(slot) => setActiveLogger(slot)}
             onDelete={handleDelete}
             onBrowse={(slot) => setActiveBrowser(slot)}
+            onVision={(slot) => setActiveVision(slot)}
           />
         ))}
       </div>
@@ -441,6 +622,14 @@ export function EatDashboard() {
         <FoodSearch
           slot={activeBrowser}
           onClose={() => setActiveBrowser(null)}
+        />
+      )}
+
+      {/* Vision Logger Modal */}
+      {activeVision && (
+        <VisionLogger
+          slot={activeVision}
+          onClose={() => setActiveVision(null)}
         />
       )}
     </div>

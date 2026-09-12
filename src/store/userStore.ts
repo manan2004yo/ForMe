@@ -45,12 +45,15 @@ export const DEMO_PROFILE: UserProfile = {
   updatedAt: new Date().toISOString(),
 }
 
+export type ActiveContext = 'normal' | 'travel' | 'restaurant' | 'family_dinner' | 'recovery'
+
 interface UserState {
   profile: UserProfile | null
   metrics: BodyMetrics | null
   isLoading: boolean
   isDemoMode: boolean
   error: string | null
+  activeContext: ActiveContext
 
   // Actions
   loadProfile: (uid: string) => Promise<void>
@@ -59,6 +62,7 @@ interface UserState {
   clearProfile: () => void
   loadDemoProfile: () => void
   recalculateMetrics: () => void
+  setContext: (context: ActiveContext) => void
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
@@ -67,13 +71,21 @@ export const useUserStore = create<UserState>((set, get) => ({
   isLoading: false,
   isDemoMode: false,
   error: null,
+  activeContext: 'normal',
+
+  setContext: (context) => {
+    const { profile } = get()
+    if (!profile) return
+    const metrics = calculateBodyMetrics(profile, context)
+    set({ activeContext: context, metrics })
+  },
 
   loadProfile: async (uid: string) => {
     set({ isLoading: true, error: null })
     try {
       const profile = await getUserProfile(uid)
       if (profile) {
-        const metrics = calculateBodyMetrics(profile)
+        const metrics = calculateBodyMetrics(profile, get().activeContext)
         set({ profile, metrics, isDemoMode: false })
       } else {
         set({ error: 'Profile not found. Please check your Firestore Database rules and ensure it is created.' })
@@ -86,11 +98,12 @@ export const useUserStore = create<UserState>((set, get) => ({
   },
 
   saveProfile: async (updates: Partial<UserProfile>) => {
-    const { profile, isDemoMode } = get()
+    const { profile, activeContext, isDemoMode } = get()
     if (!profile) return
 
-    const updated = { ...profile, ...updates, updatedAt: new Date().toISOString() }
-    set({ profile: updated, metrics: calculateBodyMetrics(updated) })
+    const updated = { ...profile, ...updates, updatedAt: new Date().toISOString() } as UserProfile
+    const metrics = calculateBodyMetrics(updated, activeContext)
+    set({ profile: updated, metrics })
 
     if (!isDemoMode) {
       await saveUserProfile(profile.id, updates)
@@ -98,21 +111,21 @@ export const useUserStore = create<UserState>((set, get) => ({
   },
 
   setProfile: (profile: UserProfile) => {
-    const metrics = calculateBodyMetrics(profile)
+    const metrics = calculateBodyMetrics(profile, get().activeContext)
     set({ profile, metrics })
   },
 
   clearProfile: () => set({ profile: null, metrics: null, isDemoMode: false }),
 
   loadDemoProfile: () => {
-    const metrics = calculateBodyMetrics(DEMO_PROFILE)
-    set({ profile: DEMO_PROFILE, metrics, isDemoMode: true })
+    const metrics = calculateBodyMetrics(DEMO_PROFILE, get().activeContext)
+    set({ profile: DEMO_PROFILE, metrics, isDemoMode: true, error: null })
   },
 
   recalculateMetrics: () => {
-    const { profile } = get()
+    const { profile, activeContext } = get()
     if (profile) {
-      set({ metrics: calculateBodyMetrics(profile) })
+      set({ metrics: calculateBodyMetrics(profile, activeContext) })
     }
   },
 }))

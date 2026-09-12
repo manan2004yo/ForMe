@@ -4,6 +4,7 @@
 // ============================================================
 
 import type { UserProfile, BodyMetrics, FitnessGoal, ActivityLevel } from '@/types'
+import type { ActiveContext } from '@/store/userStore'
 
 // ─── Activity Multipliers ─────────────────────────────────────
 
@@ -162,14 +163,31 @@ function getBMIBasedBodyFatRange(weightKg: number, heightCm: number, age: number
 
 // ─── Full Body Metrics Calculation ───────────────────────────
 
-export function calculateBodyMetrics(profile: UserProfile): BodyMetrics {
+export function calculateBodyMetrics(profile: UserProfile, context: ActiveContext = 'normal'): BodyMetrics {
   const bmr = calculateBMR(profile)
   const tdee = calculateTDEE(bmr, profile.activityLevel)
   const bmi = calculateBMI(profile.weightKg, profile.heightCm)
   const bmiCategory = getBMICategory(bmi)
   
-  const { target: caloricTarget, strategy: caloricStrategy, deficitOrSurplus } = getCaloricTarget(tdee, profile.fitnessGoal)
-  const proteinTarget = getProteinTarget(profile.weightKg, profile.fitnessGoal)
+  let { target: caloricTarget, strategy: caloricStrategy, deficitOrSurplus } = getCaloricTarget(tdee, profile.fitnessGoal)
+  let proteinTarget = getProteinTarget(profile.weightKg, profile.fitnessGoal)
+
+  // ─── CONTEXT ADJUSTMENTS ───
+  if (context === 'travel' || context === 'restaurant' || context === 'family_dinner') {
+    // When out of routine, shift to maintenance to reduce guilt and increase sustainability
+    caloricTarget = tdee
+    caloricStrategy = 'maintenance'
+    deficitOrSurplus = 0
+    // Slightly relax protein target (1.4g/kg) during these contexts
+    proteinTarget = Math.round(profile.weightKg * 1.4)
+  } else if (context === 'recovery') {
+    // Recovery/sick days require maintenance or slight surplus for healing
+    caloricTarget = Math.round(tdee * 1.05)
+    caloricStrategy = 'maintenance'
+    deficitOrSurplus = Math.round(tdee * 0.05)
+    proteinTarget = Math.round(profile.weightKg * 1.8)
+  }
+
   const { carbTarget, fatTarget, fiberTarget } = getMacroTargets(caloricTarget, proteinTarget)
 
   const bodyFatEst = estimateBodyFat(profile as any)

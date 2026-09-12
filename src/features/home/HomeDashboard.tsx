@@ -14,6 +14,7 @@ import { Bell, ChevronRight, Flame, Beef, Wheat, Droplets, Zap, Droplet, Plus, M
 import {
   BarChart, Bar, XAxis, ResponsiveContainer, Cell
 } from 'recharts'
+import { ContextSelector } from './ContextSelector'
 
 function MacroRing({ calories, target }: { calories: number; target: number }) {
   const pct = Math.min(1, calories / target)
@@ -310,6 +311,9 @@ export function HomeDashboard() {
           <Bell size={20} className="text-text-secondary" />
         </button>
       </div>
+
+      {/* Context Selector */}
+      <ContextSelector />
 
       {/* Daily Calories Card */}
       <div className="card p-5 mb-4">
