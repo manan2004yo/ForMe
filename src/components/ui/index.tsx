@@ -25,13 +25,14 @@ export function Button({
   ...props
 }: ButtonProps) {
   const base = clsx(
-    'btn',
-    variant === 'primary' && 'btn-primary',
-    variant === 'accent' && 'btn-accent',
-    variant === 'secondary' && 'btn-secondary',
-    variant === 'ghost' && 'btn-ghost',
-    size === 'sm' && 'btn-sm',
-    size === 'lg' && 'btn-lg',
+    'btn inline-flex items-center justify-center gap-2 rounded-xl font-medium font-sans transition-all duration-200 cursor-pointer active:scale-[0.97]',
+    variant === 'primary' && 'bg-text-primary text-text-inverse hover:opacity-90',
+    variant === 'accent' && 'bg-accent text-white shadow-accent hover:bg-accent-dark',
+    variant === 'secondary' && 'bg-bg-surface2 text-text-primary border border-border hover:bg-bg-surface3',
+    variant === 'ghost' && 'bg-transparent text-text-secondary hover:bg-bg-surface2 hover:text-text-primary',
+    size === 'sm' && 'px-3 py-1.5 text-sm',
+    size === 'md' && 'px-5 py-2.5 text-sm',
+    size === 'lg' && 'px-6 py-3 text-base',
     fullWidth && 'w-full',
     className,
   )
@@ -50,32 +51,52 @@ export function Button({
   )
 }
 
-// ─── Card ─────────────────────────────────────────────────────
+// ─── Card / StatCard ────────────────────────────────────────────
 
-interface CardProps {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'hero' | 'standard' | 'interactive' | 'insight';
   children: React.ReactNode
   className?: string
   hover?: boolean
   selected?: boolean
-  onClick?: () => void
   padding?: 'none' | 'sm' | 'md' | 'lg'
 }
 
-export function Card({ children, className, hover, selected, onClick, padding = 'md' }: CardProps) {
+export function Card({ 
+  variant = 'standard',
+  children, 
+  className, 
+  hover, 
+  selected, 
+  onClick, 
+  padding = 'md',
+  ...props 
+}: CardProps) {
+  const isInteractive = variant === 'interactive' || hover || onClick;
+  
   const base = clsx(
-    'bg-bg-surface border border-border shadow-soft rounded-2xl',
+    // Base surface & transition
+    'bg-bg-surface border border-border transition-all duration-300 relative overflow-hidden',
+    // Padding
     padding === 'none' && 'p-0',
     padding === 'sm' && 'p-3',
     padding === 'md' && 'p-5',
-    padding === 'lg' && 'p-7',
-    hover && 'transition-all duration-200 hover:shadow-card hover:-translate-y-0.5 cursor-pointer',
+    padding === 'lg' && 'p-6',
+    // Variants
+    variant === 'hero' && 'rounded-hero shadow-floating',
+    (variant === 'standard' || variant === 'insight') && 'rounded-xl shadow-card',
+    // Selected state
     selected && 'border-accent bg-accent-light shadow-accent',
-    onClick && 'cursor-pointer',
-    className,
+    // Interactive state (tactile press)
+    isInteractive && 'cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 active:shadow-card',
+    className
   )
 
   return (
-    <div className={base} onClick={onClick} role={onClick ? 'button' : undefined}>
+    <div className={base} onClick={onClick} role={onClick ? 'button' : undefined} tabIndex={onClick ? 0 : undefined} {...props}>
+      {variant === 'hero' && (
+        <div className="absolute top-0 right-0 -mt-16 -mr-16 w-32 h-32 bg-accent opacity-5 blur-3xl rounded-full pointer-events-none" />
+      )}
       {children}
     </div>
   )
@@ -321,7 +342,14 @@ export function Toggle({ checked, onChange, label, description }: ToggleProps) {
 // ─── Skeleton Loader ──────────────────────────────────────────
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={clsx('skeleton', className)} />
+  return (
+    <div 
+      className={clsx(
+        'bg-border-strong/30 rounded-md animate-pulse', 
+        className
+      )} 
+    />
+  )
 }
 
 // ─── Toast / Alert ────────────────────────────────────────────
@@ -362,11 +390,15 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center px-6 animate-fade-in">
-      {icon && <div className="text-4xl mb-4">{icon}</div>}
-      <h3 className="font-semibold text-text-primary mb-2">{title}</h3>
-      {description && <p className="text-sm text-text-secondary mb-6 max-w-xs">{description}</p>}
-      {action}
+    <div className="flex flex-col items-center justify-center py-16 text-center px-6 animate-fade-in w-full max-w-sm mx-auto">
+      {icon && (
+        <div className="w-16 h-16 bg-bg-surface2 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-sm border border-border">
+          {icon}
+        </div>
+      )}
+      <h3 className="text-section text-text-primary mb-2">{title}</h3>
+      {description && <p className="text-body text-text-secondary mb-8">{description}</p>}
+      {action && <div className="w-full">{action}</div>}
     </div>
   )
 }

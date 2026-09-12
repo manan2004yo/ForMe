@@ -4,6 +4,7 @@ import { useUserStore } from '@/store/userStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { askForme, type AIContext } from '@/lib/ai/modelRouter'
 import { v4 as uuidv4 } from 'uuid'
+import { clsx } from 'clsx'
 
 interface Message {
   id: string
@@ -29,9 +30,7 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
   }
 
   useEffect(() => {
-    if (isOpen) {
-      scrollToBottom()
-    }
+    if (isOpen) scrollToBottom()
   }, [messages, isOpen])
 
   if (!isOpen) return null
@@ -49,7 +48,7 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
         profile,
         metrics,
         todayFood: todayTotals(),
-        todayWorkout: null // TODO: Hook up to training store
+        todayWorkout: null
       }
 
       const response = await askForme(userQuery, context, 'mock')
@@ -76,53 +75,55 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
     <>
       {/* Backdrop for mobile */}
       <div 
-        className="fixed inset-0 z-[60] bg-black/20 sm:hidden transition-opacity" 
+        className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm sm:hidden transition-all duration-300 animate-fade-in" 
         onClick={onClose}
       />
 
       {/* Chat Window */}
-      <div className="bot-window fixed bottom-0 right-0 sm:bottom-4 sm:right-4 z-[70] bg-bg flex flex-col border-border/50 transition-transform animate-slide-up sm:animate-fade-in overflow-hidden">
+      <div className="fixed bottom-0 right-0 sm:bottom-[88px] sm:right-4 z-[70] w-full sm:w-[380px] h-[85dvh] sm:h-[600px] bg-bg flex flex-col sm:rounded-3xl rounded-t-3xl border border-border shadow-floating transition-transform animate-slide-up overflow-hidden">
         
+        {/* Ambient Glow behind header */}
+        <div className="absolute top-0 left-0 right-0 h-32 bg-accent opacity-5 blur-2xl pointer-events-none" />
+
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border bg-bg-surface shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
-              <Sparkles size={16} className="text-accent" />
+        <div className="relative flex items-center justify-between p-5 border-b border-border bg-bg-surface/80 backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-accent-light shadow-sm flex items-center justify-center border border-accent/20">
+              <Sparkles size={18} className="text-accent" />
             </div>
             <div>
-              <h2 className="font-heading font-bold text-text-primary text-sm">Ask FORME</h2>
-              <div className="text-[10px] text-text-tertiary">Personal AI Assistant</div>
+              <h2 className="text-body font-bold text-text-primary">Ask FORME</h2>
+              <div className="text-micro text-accent uppercase tracking-wider font-semibold mt-0.5">Personal AI</div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-text-secondary hover:bg-bg-surface2 rounded-xl transition-colors">
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:bg-bg-surface2 hover:text-text-primary transition-colors active:scale-95">
             <X size={18} />
           </button>
         </div>
 
         {/* Message List */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 min-h-0">
+        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5 min-h-0 relative">
           {messages.map(msg => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+            <div key={msg.id} className={clsx("flex w-full", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+              <div className={clsx(
+                "max-w-[85%] px-4 py-3 text-sm shadow-sm animate-fade-in",
                 msg.role === 'user' 
-                  ? 'bg-text-primary text-bg rounded-br-sm' 
-                  : 'bg-bg-surface2 text-text-primary rounded-bl-sm border border-border/50'
-              }`}>
-                {msg.content}
+                  ? 'bg-text-primary text-bg rounded-2xl rounded-br-sm' 
+                  : 'bg-bg-surface2 text-text-primary rounded-2xl rounded-bl-sm border border-border'
+              )}>
+                <div className="leading-relaxed">{msg.content}</div>
                 
-                {/* Confidence Badge */}
                 {msg.confidence && msg.role === 'assistant' && (
-                  <div className="mt-2 flex items-center gap-1 text-[10px] text-text-tertiary">
-                    <Info size={10} />
-                    Confidence: <span className="capitalize">{msg.confidence}</span>
+                  <div className="mt-3 flex items-center gap-1.5 text-micro text-text-tertiary">
+                    <Info size={12} />
+                    Confidence: <span className={clsx("capitalize font-semibold", msg.confidence === 'high' ? 'text-status-good' : 'text-status-warning')}>{msg.confidence}</span>
                   </div>
                 )}
 
-                {/* Suggested Actions */}
                 {msg.actions && msg.role === 'assistant' && (
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-4 flex flex-wrap gap-2">
                     {msg.actions.map(action => (
-                      <button key={action.action} className="badge badge-accent bg-accent/10 text-accent hover:bg-accent/20 cursor-pointer transition-colors text-xs py-1.5 px-3">
+                      <button key={action.action} className="px-3 py-1.5 bg-bg-surface border border-accent/20 rounded-pill text-accent hover:bg-accent-light hover:border-accent cursor-pointer transition-all text-xs font-semibold shadow-sm active:scale-95">
                         {action.label}
                       </button>
                     ))}
@@ -133,33 +134,33 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
           ))}
           
           {isTyping && (
-            <div className="flex justify-start">
-              <div className="bg-bg-surface2 text-text-primary rounded-2xl rounded-bl-sm border border-border/50 px-4 py-3 flex items-center gap-2">
-                <Loader2 size={14} className="animate-spin text-accent" />
-                <span className="text-xs text-text-tertiary">FORME is thinking...</span>
+            <div className="flex justify-start animate-fade-in">
+              <div className="bg-bg-surface2 text-text-primary rounded-2xl rounded-bl-sm border border-border px-5 py-4 flex items-center gap-3 shadow-sm">
+                <Loader2 size={16} className="animate-spin text-accent" />
+                <span className="text-xs font-medium text-text-secondary">FORME is thinking...</span>
               </div>
             </div>
           )}
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-2" />
         </div>
 
         {/* Input Area */}
         <div className="p-4 border-t border-border bg-bg shrink-0">
-          <div className="relative flex items-center">
+          <div className="relative flex items-center shadow-sm rounded-full bg-bg-surface border border-border focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/10 transition-all">
             <input
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
-              placeholder="Ask anything..."
-              className="w-full bg-bg-surface2 border border-border/50 rounded-full pl-4 pr-12 py-3 text-sm focus:outline-none focus:border-accent/50 transition-colors placeholder:text-text-tertiary"
+              placeholder="Ask me anything..."
+              className="w-full bg-transparent pl-5 pr-14 py-3.5 text-sm text-text-primary focus:outline-none placeholder:text-text-tertiary"
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
-              className="absolute right-2 p-2 rounded-full text-accent disabled:text-text-tertiary disabled:opacity-50 hover:bg-accent/10 transition-colors"
+              className="absolute right-2 w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center disabled:bg-bg-surface2 disabled:text-text-tertiary transition-all active:scale-90"
             >
-              <Send size={16} />
+              <Send size={16} className={input.trim() ? "translate-x-[-1px] translate-y-[1px]" : ""} />
             </button>
           </div>
         </div>
