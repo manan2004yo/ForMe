@@ -5,6 +5,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
 
 @import "tailwindcss";
+@source "./";
 
 /* ─── Design Tokens (Tailwind v4 theme) ────────────────────── */
 
@@ -446,8 +447,25 @@ body {
 
 /* ─── Safe Area ──────────────────────────────────────────────── */
 
-.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
-.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-bottom, 0px); }
+.pt-safe { padding-top: env(safe-area-top, 0px); }
+
+/* ─── Custom Heights ────────────────────────────────────────── */
+.h-\[85vh\] { height: 85vh; }
+.min-h-0 { min-height: 0; }
+
+/* ─── Desktop (sm) Utilities for Bot ────────────────────────── */
+@media (min-width: 640px) {
+  .sm\:h-\[600px\] { height: 600px; }
+  .sm\:w-\[400px\] { width: 400px; }
+  .sm\:rounded-2xl { border-radius: 1rem; }
+  .sm\:shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+  .sm\:border { border-width: 1px; }
+  .sm\:hidden { display: none; }
+  .sm\:flex-none { flex: none; }
+  .sm\:p-4 { padding: 1rem; }
+  .sm\:animate-fade-in { animation: fadeIn 0.3s ease-out; }
+}
 
 /* ─── Tailwind v4 Utility Extensions ─────────────────────────── */
 
