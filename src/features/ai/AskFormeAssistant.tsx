@@ -73,17 +73,15 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col sm:p-4 pointer-events-none">
+    <>
       {/* Backdrop for mobile */}
       <div 
-        className="absolute inset-0 bg-black/20 sm:hidden pointer-events-auto transition-opacity" 
+        className="fixed inset-0 z-40 bg-black/20 sm:hidden transition-opacity" 
         onClick={onClose}
       />
 
-      <div className="flex-1 sm:flex-none" />
-
       {/* Chat Window */}
-      <div className="bot-window bg-bg flex flex-col pointer-events-auto border-border/50 self-end transition-transform animate-slide-up sm:animate-fade-in relative z-10 overflow-hidden">
+      <div className="bot-window fixed bottom-0 right-0 sm:bottom-4 sm:right-4 z-50 bg-bg flex flex-col border-border/50 transition-transform animate-slide-up sm:animate-fade-in overflow-hidden">
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-bg-surface">
@@ -166,6 +164,6 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
