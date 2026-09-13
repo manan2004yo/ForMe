@@ -936,3 +936,13 @@ body {
   transform: scale(1.1);
   mix-blend-mode: hard-light;
 }
+
+/*  3D Scroll Utilities  */
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+}

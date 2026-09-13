@@ -21,6 +21,9 @@ import { PageTransition } from '@/components/layout/PageTransition'
 import { FadeUpReveal } from '@/components/animations/Motion'
 import { ParallaxLayer } from '@/components/layout/ParallaxScroll'
 import { HeroVisual } from './HeroVisual'
+import { ScrollScene } from '@/components/animations/ScrollScene'
+import { DepthCard } from '@/components/animations/DepthCard'
+
 
 function MacroBar({ label, consumed, target, colorClass }: { label: string; consumed: number; target: number; colorClass: string }) {
   return (
@@ -259,55 +262,64 @@ export function HomeDashboard() {
 
   return (
     <PageTransition>
-      <div className="page bg-bg pt-6">
-        <FadeUpReveal delay={0.1}>
-          <div className="page-header flex items-start justify-between mb-6">
-          <div>
-            {isDemoMode && <div className="badge badge-accent mb-2 text-micro">Demo Mode</div>}
-            <div className="text-label text-text-tertiary mb-1 uppercase tracking-wider">{todayDate}</div>
-            <h1 className="text-display text-text-primary">
-              {greeting}, <br/><span className="text-accent">{profile.name.split(' ')[0]}</span> 👋
-            </h1>
+            <div className="page bg-bg pt-6 perspective-1000">
+        
+        {/* HERO / GREETING */}
+        <ScrollScene initialScale={0.98} targetScale={1} yOffset={20}>
+          <div className="page-header flex items-start justify-between mb-6 transform-style-3d">
+            <div style={{ transform: "translateZ(10px)" }}>
+              {isDemoMode && <div className="badge badge-accent mb-2 text-micro">Demo Mode</div>}
+              <div className="text-label text-text-tertiary mb-1 uppercase tracking-wider">{todayDate}</div>
+              <h1 className="text-display text-text-primary">
+                {greeting}, <br/><span className="text-accent animate-fade-in inline-block" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>{profile.name.split(' ')[0]}</span> 👋
+              </h1>
+            </div>
+            <button className="w-10 h-10 rounded-full bg-bg-surface border border-border flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors shadow-sm active:scale-95" style={{ transform: "translateZ(5px)" }}>
+              <Bell size={20} />
+            </button>
           </div>
-          <button className="w-10 h-10 rounded-full bg-bg-surface border border-border flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors shadow-sm active:scale-95">
-            <Bell size={20} />
-          </button>
-          </div>
-        </FadeUpReveal>
+        </ScrollScene>
 
-        <FadeUpReveal delay={0.2}>
+        {/* CURRENT CONTEXT */}
+        <ScrollScene initialScale={0.96} targetScale={1} yOffset={30}>
           <ContextSelector />
-        </FadeUpReveal>
+        </ScrollScene>
 
-        {/* ONE MOMENT HERO: The SVG Hero Visual */}
-        <ParallaxLayer offset={20}>
-          <HeroVisual 
-            score={formeScore}
-          totalCalories={totals.calories}
-          calorieTarget={metrics.caloricTarget}
-          protein={totals.protein}
-          />
-        </ParallaxLayer>
+        {/* FORM SCORE - THE FEATURE MOMENT */}
+        <ScrollScene initialScale={0.92} targetScale={1} yOffset={50}>
+          <div className="relative transform-style-3d">
+            <div className="absolute inset-0 bg-accent/5 blur-3xl rounded-full" style={{ transform: "translateZ(-50px)" }} />
+            <HeroVisual 
+              score={formeScore}
+              totalCalories={totals.calories}
+              calorieTarget={metrics.caloricTarget}
+              protein={totals.protein}
+            />
+          </div>
+        </ScrollScene>
 
-      <FadeUpReveal delay={0.3}>
-          <div className="grid grid-cols-2 gap-3 mb-4">
-        <StatCard variant="interactive" onClick={() => navigate('/eat')} padding="md">
-          <div className="w-10 h-10 rounded-xl bg-[#E8F5EE] flex items-center justify-center mb-3">
-            <span className="text-2xl">🥗</span>
-          </div>
-          <div className="text-label text-text-primary">Log Food</div>
-          <div className="text-caption">Track your meals</div>
-        </StatCard>
-        <StatCard variant="interactive" onClick={() => navigate('/train')} padding="md">
-          <div className="w-10 h-10 rounded-xl bg-accent-light flex items-center justify-center mb-3">
-            <span className="text-2xl">💪</span>
-          </div>
-          <div className="text-label text-text-primary">Workout</div>
-          <div className="text-caption">Today's training</div>
-        </StatCard>
-          </div>
-        </FadeUpReveal>
+        {/* LOG FOOD + WORKOUT (Floating Objects) */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <ScrollScene initialScale={0.95} targetScale={1} yOffset={40}>
+            <DepthCard onClick={() => navigate('/eat')} raised>
+              <div className="w-10 h-10 rounded-xl bg-[#E8F5EE] flex items-center justify-center mb-3 shadow-soft border border-black/5">
+                <span className="text-2xl drop-shadow-md">🥗</span>
+              </div>
+              <div className="text-label text-text-primary">Log Food</div>
+              <div className="text-caption">Track your meals</div>
+            </DepthCard>
+          </ScrollScene>
 
+          <ScrollScene initialScale={0.95} targetScale={1} yOffset={40}>
+            <DepthCard onClick={() => navigate('/train')} raised>
+              <div className="w-10 h-10 rounded-xl bg-accent-light flex items-center justify-center mb-3 shadow-soft border border-black/5">
+                <span className="text-2xl drop-shadow-md">💪</span>
+              </div>
+              <div className="text-label text-text-primary">Workout</div>
+              <div className="text-caption">Today's training</div>
+            </DepthCard>
+          </ScrollScene>
+        </div>
       <FadeUpReveal delay={0.4}><DailyActivityCard /></FadeUpReveal>
       <FadeUpReveal delay={0.45}><StreakCard /></FadeUpReveal>
       <FadeUpReveal delay={0.5}><WeeklyCalorieChart calTarget={metrics.caloricTarget} /></FadeUpReveal>
