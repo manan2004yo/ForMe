@@ -2,6 +2,7 @@
 // FORME — Main App with Routing & Auth Guard
 // ============================================================
 
+import { SplashIntro } from '@/components/animations/SplashIntro'
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
@@ -129,9 +130,11 @@ function AppRoutes() {
   )
 }
 
+
 export default function App() {
   return (
     <BrowserRouter>
+      <SplashIntro />
       <AppRoutes />
     </BrowserRouter>
   )
