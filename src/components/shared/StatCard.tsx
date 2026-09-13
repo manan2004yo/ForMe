@@ -1,5 +1,6 @@
 import React from 'react';
 import { clsx } from 'clsx';
+import { InteractivePress } from '../animations/Motion';
 
 interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'hero' | 'standard' | 'interactive' | 'insight';
@@ -16,7 +17,7 @@ export function StatCard({
 }: StatCardProps) {
   const isInteractive = variant === 'interactive' || props.onClick;
 
-  return (
+  const content = (
     <div 
       className={clsx(
         // Padding
@@ -28,7 +29,7 @@ export function StatCard({
         variant === 'hero' && 'glass-panel-intense relative overflow-hidden',
         (variant === 'standard' || variant === 'insight') && 'glass-panel',
         // Interactive state (tactile press)
-        isInteractive && 'card-pressable cursor-pointer',
+        isInteractive && 'card-pressable cursor-pointer w-full text-left',
         className
       )}
       role={props.onClick ? 'button' : undefined}
@@ -43,4 +44,10 @@ export function StatCard({
       {children}
     </div>
   );
+
+  if (isInteractive) {
+    return <InteractivePress>{content}</InteractivePress>
+  }
+
+  return content;
 }

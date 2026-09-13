@@ -18,6 +18,8 @@ import { Button } from '@/components/ui'
 import { clsx } from 'clsx'
 import { useIntegrationStore } from '@/store/integrationStore'
 import { PageTransition } from '@/components/layout/PageTransition'
+import { FadeUpReveal } from '@/components/animations/Motion'
+import { ParallaxLayer } from '@/components/layout/ParallaxScroll'
 import { HeroVisual } from './HeroVisual'
 
 function MacroBar({ label, consumed, target, colorClass }: { label: string; consumed: number; target: number; colorClass: string }) {
@@ -204,7 +206,7 @@ function WeeklyCalorieChart({ calTarget }: { calTarget: number }) {
   }, [entries])
 
   return (
-    <StatCard className="mb-4 animate-slide-up" style={{ animationDelay: '250ms' }}>
+    <StatCard className="mb-4">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center text-accent">
@@ -258,7 +260,8 @@ export function HomeDashboard() {
   return (
     <PageTransition>
       <div className="page bg-bg pt-6">
-        <div className="page-header flex items-start justify-between mb-6 animate-fade-in">
+        <FadeUpReveal delay={0.1}>
+          <div className="page-header flex items-start justify-between mb-6">
           <div>
             {isDemoMode && <div className="badge badge-accent mb-2 text-micro">Demo Mode</div>}
             <div className="text-label text-text-tertiary mb-1 uppercase tracking-wider">{todayDate}</div>
@@ -269,19 +272,25 @@ export function HomeDashboard() {
           <button className="w-10 h-10 rounded-full bg-bg-surface border border-border flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors shadow-sm active:scale-95">
             <Bell size={20} />
           </button>
-        </div>
+          </div>
+        </FadeUpReveal>
 
-        <ContextSelector />
+        <FadeUpReveal delay={0.2}>
+          <ContextSelector />
+        </FadeUpReveal>
 
         {/* ONE MOMENT HERO: The SVG Hero Visual */}
-        <HeroVisual 
-          score={formeScore}
+        <ParallaxLayer offset={20}>
+          <HeroVisual 
+            score={formeScore}
           totalCalories={totals.calories}
           calorieTarget={metrics.caloricTarget}
           protein={totals.protein}
-        />
+          />
+        </ParallaxLayer>
 
-      <div className="grid grid-cols-2 gap-3 mb-4 animate-slide-up" style={{ animationDelay: '50ms' }}>
+      <FadeUpReveal delay={0.3}>
+          <div className="grid grid-cols-2 gap-3 mb-4">
         <StatCard variant="interactive" onClick={() => navigate('/eat')} padding="md">
           <div className="w-10 h-10 rounded-xl bg-[#E8F5EE] flex items-center justify-center mb-3">
             <span className="text-2xl">🥗</span>
@@ -296,18 +305,20 @@ export function HomeDashboard() {
           <div className="text-label text-text-primary">Workout</div>
           <div className="text-caption">Today's training</div>
         </StatCard>
-      </div>
+          </div>
+        </FadeUpReveal>
 
-      <DailyActivityCard />
-      <StreakCard />
-      <WeeklyCalorieChart calTarget={metrics.caloricTarget} />
-      <WaterTracker />
+      <FadeUpReveal delay={0.4}><DailyActivityCard /></FadeUpReveal>
+      <FadeUpReveal delay={0.45}><StreakCard /></FadeUpReveal>
+      <FadeUpReveal delay={0.5}><WeeklyCalorieChart calTarget={metrics.caloricTarget} /></FadeUpReveal>
+      <FadeUpReveal delay={0.55}><WaterTracker /></FadeUpReveal>
       
       {/* Smart Insight */}
-      <InsightCard insight={generateInsight(profile, metrics, totals)} />
+      <FadeUpReveal delay={0.6}><InsightCard insight={generateInsight(profile, metrics, totals)} /></FadeUpReveal>
 
       {/* Plan shortcuts */}
-      <div className="mt-4 flex flex-col gap-3 pb-8 animate-slide-up" style={{ animationDelay: '300ms' }}>
+      <FadeUpReveal delay={0.65}>
+        <div className="mt-4 flex flex-col gap-3 pb-8">
         {[
           { label: "View Today's Diet Plan", path: '/plan', emoji: '📋' },
           { label: 'See Workout Plan', path: '/train', emoji: '🏋️' },
@@ -321,7 +332,8 @@ export function HomeDashboard() {
             <ChevronRight size={18} className="text-text-tertiary" />
           </StatCard>
         ))}
-      </div>
+        </div>
+        </FadeUpReveal>
       </div>
     </PageTransition>
   )
