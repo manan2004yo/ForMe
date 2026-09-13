@@ -37,6 +37,9 @@ const app = initializeApp(firebaseConfig)
 
 // Auth
 export const auth = getAuth(app)
+import { setPersistence, browserLocalPersistence } from 'firebase/auth'
+setPersistence(auth, browserLocalPersistence).catch(console.error)
+
 export const googleProvider = new GoogleAuthProvider()
 googleProvider.setCustomParameters({
   prompt: 'select_account',

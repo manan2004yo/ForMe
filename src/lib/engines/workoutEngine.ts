@@ -236,7 +236,108 @@ const EXERCISES: Record<string, {
     equipment: ['pull_up_bar'], isCompound: false, difficulty: 'intermediate',
     instructions: ['Hang from bar', 'Bring knees to chest', 'Control the descent'],
     repRange: [10, 20], restSec: 60, rir: 2
+  },/ EXTENDED CHEST
+  machine_chest_press: {
+    name: 'Machine Chest Press', muscleGroup: 'chest', secondary: ['triceps', 'shoulders'],
+    equipment: ['machine'], isCompound: true, difficulty: 'beginner',
+    instructions: ['Sit with back flat against pad', 'Press handles forward', 'Control the return'],
+    repRange: [10, 15], restSec: 60, rir: 2
   },
+  pec_deck: {
+    name: 'Pec Deck Machine', muscleGroup: 'chest', secondary: [],
+    equipment: ['machine'], isCompound: false, difficulty: 'beginner',
+    instructions: ['Keep elbows slightly bent', 'Squeeze chest at the center', 'Control the stretch'],
+    repRange: [12, 15], restSec: 60, rir: 1
+  },
+  decline_bench_press: {
+    name: 'Decline Bench Press', muscleGroup: 'chest', secondary: ['triceps'],
+    equipment: ['barbell', 'bench'], isCompound: true, difficulty: 'intermediate',
+    instructions: ['Lie on decline bench', 'Lower bar to lower chest', 'Press up'],
+    repRange: [8, 12], restSec: 90, rir: 2
+  },
+  // EXTENDED BACK
+  t_bar_row: {
+    name: 'T-Bar Row', muscleGroup: 'back', secondary: ['biceps', 'core'],
+    equipment: ['barbell'], isCompound: true, difficulty: 'intermediate',
+    instructions: ['Straddle the bar', 'Hinge at hips', 'Pull bar to chest'],
+    repRange: [8, 12], restSec: 90, rir: 2
+  },
+  straight_arm_pulldown: {
+    name: 'Straight Arm Pulldown', muscleGroup: 'back', secondary: [],
+    equipment: ['cable'], isCompound: false, difficulty: 'beginner',
+    instructions: ['Keep arms straight', 'Pull bar down to thighs', 'Squeeze lats'],
+    repRange: [12, 15], restSec: 60, rir: 2
+  },
+  // EXTENDED SHOULDERS
+  front_raise: {
+    name: 'Dumbbell Front Raise', muscleGroup: 'shoulders', secondary: [],
+    equipment: ['dumbbell'], isCompound: false, difficulty: 'beginner',
+    instructions: ['Raise dumbbells to front shoulder height', 'Control descent'],
+    repRange: [12, 15], restSec: 60, rir: 2
+  },
+  reverse_pec_deck: {
+    name: 'Reverse Pec Deck', muscleGroup: 'shoulders', secondary: ['back'],
+    equipment: ['machine'], isCompound: false, difficulty: 'beginner',
+    instructions: ['Face the pad', 'Pull handles back', 'Squeeze rear delts'],
+    repRange: [12, 15], restSec: 60, rir: 2
+  },
+  // EXTENDED LEGS
+  hack_squat: {
+    name: 'Machine Hack Squat', muscleGroup: 'quads', secondary: ['glutes'],
+    equipment: ['machine'], isCompound: true, difficulty: 'intermediate',
+    instructions: ['Back flat against pad', 'Lower until knees 90 degrees', 'Push through heels'],
+    repRange: [8, 12], restSec: 90, rir: 2
+  },
+  bulgarian_split_squat: {
+    name: 'Bulgarian Split Squat', muscleGroup: 'quads', secondary: ['glutes', 'hamstrings'],
+    equipment: ['dumbbell', 'bench'], isCompound: true, difficulty: 'advanced',
+    instructions: ['Rear foot elevated on bench', 'Squat down on front leg', 'Keep chest up'],
+    repRange: [8, 12], restSec: 90, rir: 2
+  },
+  seated_leg_curl: {
+    name: 'Seated Leg Curl', muscleGroup: 'hamstrings', secondary: [],
+    equipment: ['machine'], isCompound: false, difficulty: 'beginner',
+    instructions: ['Sit in machine', 'Curl weight down and back', 'Squeeze at bottom'],
+    repRange: [12, 15], restSec: 60, rir: 1
+  },
+  seated_calf_raise: {
+    name: 'Seated Calf Raise', muscleGroup: 'calves', secondary: [],
+    equipment: ['machine'], isCompound: false, difficulty: 'beginner',
+    instructions: ['Sit with pads on knees', 'Raise heels', 'Stretch fully at bottom'],
+    repRange: [15, 20], restSec: 45, rir: 1
+  },
+  // EXTENDED ARMS
+  preacher_curl: {
+    name: 'Preacher Curl', muscleGroup: 'biceps', secondary: [],
+    equipment: ['machine', 'barbell'], isCompound: false, difficulty: 'beginner',
+    instructions: ['Rest arms on pad', 'Curl up fully', 'Lower under control'],
+    repRange: [10, 15], restSec: 60, rir: 2
+  },
+  cable_curl: {
+    name: 'Cable Bicep Curl', muscleGroup: 'biceps', secondary: [],
+    equipment: ['cable'], isCompound: false, difficulty: 'beginner',
+    instructions: ['Stand facing cable', 'Curl bar up', 'Constant tension'],
+    repRange: [12, 15], restSec: 60, rir: 2
+  },
+  overhead_tricep_extension: {
+    name: 'Overhead Tricep Extension', muscleGroup: 'triceps', secondary: [],
+    equipment: ['dumbbell', 'cable'], isCompound: false, difficulty: 'intermediate',
+    instructions: ['Hold weight overhead', 'Lower behind head', 'Extend fully'],
+    repRange: [10, 15], restSec: 60, rir: 2
+  },
+  // EXTENDED CORE
+  cable_crunch: {
+    name: 'Cable Crunch', muscleGroup: 'core', secondary: [],
+    equipment: ['cable'], isCompound: false, difficulty: 'intermediate',
+    instructions: ['Kneel facing cable', 'Hold rope behind neck', 'Crunch down'],
+    repRange: [15, 20], restSec: 60, rir: 2
+  },
+  ab_wheel_rollout: {
+    name: 'Ab Wheel Rollout', muscleGroup: 'core', secondary: [],
+    equipment: ['bodyweight'], isCompound: true, difficulty: 'advanced',
+    instructions: ['Kneel holding wheel', 'Roll forward keeping core tight', 'Pull back'],
+    repRange: [8, 15], restSec: 90, rir: 2
+  }
 }
 
 // ─── Split Templates ──────────────────────────────────────────
@@ -357,41 +458,26 @@ function buildWorkoutDay(
 // ─── Main Workout Plan Generator ─────────────────────────────
 
 export function generateWorkoutPlan(profile: UserProfile): WorkoutPlan {
-  const days = profile.trainingDays.length > 0 ? profile.trainingDays : [1, 3, 5]
+  const days = profile.trainingDays.length > 0 ? profile.trainingDays : [1, 2, 3, 4, 5, 6, 0]
   const numDays = days.length
-  const isHome = profile.trainingLocation === 'home'
 
-  let splitName: string
-  let splitDays: SplitDay[]
-
-  if (numDays <= 2) {
-    splitName = 'Full Body'
-    splitDays = [getFullBodyDay(true), getFullBodyDay(false)]
-  } else if (numDays === 3) {
-    splitName = 'Full Body'
-    splitDays = [getFullBodyDay(true), getFullBodyDay(false), getFullBodyDay(true)]
-  } else if (numDays === 4) {
-    splitName = 'Upper Lower'
-    splitDays = [getUpperDay('A'), getLowerDay('A'), getUpperDay('B'), getLowerDay('B')]
-  } else if (numDays === 5) {
-    splitName = 'Upper Lower + Full Body'
-    splitDays = [getUpperDay('A'), getLowerDay('A'), getUpperDay('B'), getLowerDay('B'), getFullBodyDay(true)]
-  } else {
-    splitName = 'Push Pull Legs'
-    splitDays = [
-      getPPLDay('push', 'A'), getPPLDay('pull', 'A'), getPPLDay('legs', 'A'),
-      getPPLDay('push', 'B'), getPPLDay('pull', 'B'), getPPLDay('legs', 'B'),
-    ]
-  }
-
-  const workoutDays: WorkoutDay[] = days.slice(0, splitDays.length).map((day, i) =>
-    buildWorkoutDay(splitDays[i], day, profile, isHome)
-  )
+  const workoutDays: WorkoutDay[] = days.map((dayOfWeek) => {
+    // Provide a simple label based on day of week
+    const labels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    
+    return {
+      dayLabel: `${labels[dayOfWeek]} Workout`,
+      dayOfWeek,
+      muscleGroups: [],
+      exercises: [],
+      estimatedDurationMin: 0,
+    }
+  })
 
   return {
     id: `workout_${Date.now()}`,
     userId: profile.id,
-    splitName,
+    splitName: 'Manual Plan',
     days: workoutDays,
     daysPerWeek: numDays,
     goal: profile.fitnessGoal,

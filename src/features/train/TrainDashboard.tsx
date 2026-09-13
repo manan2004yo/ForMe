@@ -112,7 +112,7 @@ function ExerciseCard({ exercise, index, onRequestSwap, onRemove }: { exercise: 
                   className="flex-1 py-2.5 rounded-xl border border-accent/30 text-accent font-medium text-sm flex items-center justify-center gap-2 hover:bg-accent/5 transition-colors"
                 >
                   <ArrowLeftRight size={14} />
-                  AI Swap
+                  Swap
                 </button>
               )}
               {onRemove && (

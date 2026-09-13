@@ -1101,6 +1101,37 @@ export const INDIAN_FOODS: FoodItem[] = [
     isIndian: false,
     estimatedCostPer100g: 50,
   },
+// EXTENDED GLOBAL & GENERIC FOODS
+  { id: 'f_chicken_breast_raw', name: 'Chicken Breast (Raw)', calories: 120, protein: 22.5, carbs: 0, fat: 2.6, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_chicken_breast_cooked', name: 'Chicken Breast (Cooked)', calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_eggs_whole', name: 'Whole Egg (Large)', calories: 72, protein: 6.3, carbs: 0.4, fat: 4.8, fiber: 0, defaultUnit: '1 egg', defaultAmount: 1 },
+  { id: 'f_egg_whites', name: 'Egg Whites', calories: 17, protein: 3.6, carbs: 0.2, fat: 0.1, fiber: 0, defaultUnit: '1 egg white', defaultAmount: 1 },
+  { id: 'f_salmon_raw', name: 'Salmon (Raw)', calories: 208, protein: 20, carbs: 0, fat: 13, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_white_rice_cooked', name: 'White Rice (Cooked)', calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_brown_rice_cooked', name: 'Brown Rice (Cooked)', calories: 112, protein: 2.6, carbs: 24, fat: 0.9, fiber: 1.8, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_oats_raw', name: 'Rolled Oats (Raw)', calories: 389, protein: 16.9, carbs: 66, fat: 6.9, fiber: 10.6, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_sweet_potato_cooked', name: 'Sweet Potato (Cooked)', calories: 90, protein: 2, carbs: 21, fat: 0.2, fiber: 3.3, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_potato_cooked', name: 'White Potato (Cooked)', calories: 87, protein: 1.9, carbs: 20, fat: 0.1, fiber: 1.8, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_banana', name: 'Banana', calories: 89, protein: 1.1, carbs: 22.8, fat: 0.3, fiber: 2.6, defaultUnit: '1 medium', defaultAmount: 1 },
+  { id: 'f_apple', name: 'Apple', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4, defaultUnit: '1 medium', defaultAmount: 1 },
+  { id: 'f_peanut_butter', name: 'Peanut Butter', calories: 588, protein: 25, carbs: 20, fat: 50, fiber: 6, defaultUnit: '1 tbsp (15g)', defaultAmount: 1 },
+  { id: 'f_almonds', name: 'Almonds', calories: 579, protein: 21, carbs: 22, fat: 50, fiber: 12.5, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_whey_protein', name: 'Whey Protein Powder', calories: 120, protein: 24, carbs: 3, fat: 1.5, fiber: 0, defaultUnit: '1 scoop (30g)', defaultAmount: 1 },
+  { id: 'f_olive_oil', name: 'Olive Oil', calories: 884, protein: 0, carbs: 0, fat: 100, fiber: 0, defaultUnit: '1 tbsp (15g)', defaultAmount: 1 },
+  { id: 'f_broccoli_steamed', name: 'Broccoli (Steamed)', calories: 35, protein: 2.4, carbs: 7.2, fat: 0.4, fiber: 3.3, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_spinach_raw', name: 'Spinach (Raw)', calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, fiber: 2.2, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_avocado', name: 'Avocado', calories: 160, protein: 2, carbs: 8.5, fat: 14.7, fiber: 6.7, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_greek_yogurt', name: 'Greek Yogurt (Plain, 0%)', calories: 59, protein: 10.3, carbs: 3.6, fat: 0.4, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_milk_whole', name: 'Whole Milk (3.25%)', calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, fiber: 0, defaultUnit: '100ml', defaultAmount: 100 },
+  { id: 'f_milk_skim', name: 'Skim Milk', calories: 35, protein: 3.4, carbs: 5, fat: 0.1, fiber: 0, defaultUnit: '100ml', defaultAmount: 100 },
+  { id: 'f_tofu_firm', name: 'Tofu (Firm)', calories: 144, protein: 15.8, carbs: 2.8, fat: 8.7, fiber: 2.3, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_lentils_cooked', name: 'Lentils (Cooked)', calories: 116, protein: 9, carbs: 20, fat: 0.4, fiber: 7.9, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_chickpeas_cooked', name: 'Chickpeas (Cooked)', calories: 164, protein: 8.9, carbs: 27.4, fat: 2.6, fiber: 7.6, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_black_beans_cooked', name: 'Black Beans (Cooked)', calories: 132, protein: 8.9, carbs: 23.7, fat: 0.5, fiber: 8.7, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_ground_beef_8020', name: 'Ground Beef (80/20, Cooked)', calories: 254, protein: 24.4, carbs: 0, fat: 16.5, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_tuna_canned', name: 'Tuna (Canned in Water)', calories: 86, protein: 19.4, carbs: 0, fat: 0.5, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_chia_seeds', name: 'Chia Seeds', calories: 486, protein: 16.5, carbs: 42, fat: 30.7, fiber: 34.4, defaultUnit: '1 tbsp (15g)', defaultAmount: 1 },
+  { id: 'f_flax_seeds', name: 'Flax Seeds', calories: 534, protein: 18.3, carbs: 28.9, fat: 42.2, fiber: 27.3, defaultUnit: '1 tbsp (15g)', defaultAmount: 1 },
 ]
 
 // ─── Food Database Lookup ─────────────────────────────────────
@@ -1125,7 +1156,38 @@ export function searchFoods(query: string): FoodItem[] {
 }
 
 export function getFoodById(id: string): FoodItem | undefined {
-  return FOOD_MAP[id]
+  return FOOD_MAP[id// EXTENDED GLOBAL & GENERIC FOODS
+  { id: 'f_chicken_breast_raw', name: 'Chicken Breast (Raw)', calories: 120, protein: 22.5, carbs: 0, fat: 2.6, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_chicken_breast_cooked', name: 'Chicken Breast (Cooked)', calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_eggs_whole', name: 'Whole Egg (Large)', calories: 72, protein: 6.3, carbs: 0.4, fat: 4.8, fiber: 0, defaultUnit: '1 egg', defaultAmount: 1 },
+  { id: 'f_egg_whites', name: 'Egg Whites', calories: 17, protein: 3.6, carbs: 0.2, fat: 0.1, fiber: 0, defaultUnit: '1 egg white', defaultAmount: 1 },
+  { id: 'f_salmon_raw', name: 'Salmon (Raw)', calories: 208, protein: 20, carbs: 0, fat: 13, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_white_rice_cooked', name: 'White Rice (Cooked)', calories: 130, protein: 2.7, carbs: 28, fat: 0.3, fiber: 0.4, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_brown_rice_cooked', name: 'Brown Rice (Cooked)', calories: 112, protein: 2.6, carbs: 24, fat: 0.9, fiber: 1.8, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_oats_raw', name: 'Rolled Oats (Raw)', calories: 389, protein: 16.9, carbs: 66, fat: 6.9, fiber: 10.6, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_sweet_potato_cooked', name: 'Sweet Potato (Cooked)', calories: 90, protein: 2, carbs: 21, fat: 0.2, fiber: 3.3, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_potato_cooked', name: 'White Potato (Cooked)', calories: 87, protein: 1.9, carbs: 20, fat: 0.1, fiber: 1.8, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_banana', name: 'Banana', calories: 89, protein: 1.1, carbs: 22.8, fat: 0.3, fiber: 2.6, defaultUnit: '1 medium', defaultAmount: 1 },
+  { id: 'f_apple', name: 'Apple', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4, defaultUnit: '1 medium', defaultAmount: 1 },
+  { id: 'f_peanut_butter', name: 'Peanut Butter', calories: 588, protein: 25, carbs: 20, fat: 50, fiber: 6, defaultUnit: '1 tbsp (15g)', defaultAmount: 1 },
+  { id: 'f_almonds', name: 'Almonds', calories: 579, protein: 21, carbs: 22, fat: 50, fiber: 12.5, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_whey_protein', name: 'Whey Protein Powder', calories: 120, protein: 24, carbs: 3, fat: 1.5, fiber: 0, defaultUnit: '1 scoop (30g)', defaultAmount: 1 },
+  { id: 'f_olive_oil', name: 'Olive Oil', calories: 884, protein: 0, carbs: 0, fat: 100, fiber: 0, defaultUnit: '1 tbsp (15g)', defaultAmount: 1 },
+  { id: 'f_broccoli_steamed', name: 'Broccoli (Steamed)', calories: 35, protein: 2.4, carbs: 7.2, fat: 0.4, fiber: 3.3, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_spinach_raw', name: 'Spinach (Raw)', calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, fiber: 2.2, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_avocado', name: 'Avocado', calories: 160, protein: 2, carbs: 8.5, fat: 14.7, fiber: 6.7, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_greek_yogurt', name: 'Greek Yogurt (Plain, 0%)', calories: 59, protein: 10.3, carbs: 3.6, fat: 0.4, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_milk_whole', name: 'Whole Milk (3.25%)', calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, fiber: 0, defaultUnit: '100ml', defaultAmount: 100 },
+  { id: 'f_milk_skim', name: 'Skim Milk', calories: 35, protein: 3.4, carbs: 5, fat: 0.1, fiber: 0, defaultUnit: '100ml', defaultAmount: 100 },
+  { id: 'f_tofu_firm', name: 'Tofu (Firm)', calories: 144, protein: 15.8, carbs: 2.8, fat: 8.7, fiber: 2.3, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_lentils_cooked', name: 'Lentils (Cooked)', calories: 116, protein: 9, carbs: 20, fat: 0.4, fiber: 7.9, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_chickpeas_cooked', name: 'Chickpeas (Cooked)', calories: 164, protein: 8.9, carbs: 27.4, fat: 2.6, fiber: 7.6, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_black_beans_cooked', name: 'Black Beans (Cooked)', calories: 132, protein: 8.9, carbs: 23.7, fat: 0.5, fiber: 8.7, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_ground_beef_8020', name: 'Ground Beef (80/20, Cooked)', calories: 254, protein: 24.4, carbs: 0, fat: 16.5, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_tuna_canned', name: 'Tuna (Canned in Water)', calories: 86, protein: 19.4, carbs: 0, fat: 0.5, fiber: 0, defaultUnit: '100g', defaultAmount: 100 },
+  { id: 'f_chia_seeds', name: 'Chia Seeds', calories: 486, protein: 16.5, carbs: 42, fat: 30.7, fiber: 34.4, defaultUnit: '1 tbsp (15g)', defaultAmount: 1 },
+  { id: 'f_flax_seeds', name: 'Flax Seeds', calories: 534, protein: 18.3, carbs: 28.9, fat: 42.2, fiber: 27.3, defaultUnit: '1 tbsp (15g)', defaultAmount: 1 },
+]
 }
 
 // ─── Nutrition per gram ───────────────────────────────────────

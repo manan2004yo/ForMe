@@ -122,7 +122,10 @@ export const useAuthStore = create<AuthState>()(
   },
 
   clearError: () => set({ error: null }),
-}), { name: 'forme-auth-storage' }))
+}), { 
+  name: 'forme-auth-storage',
+  partialize: (state) => ({ user: state.user, isDemo: state.isDemo }) // DO NOT persist isInitialized or isLoading
+}))
 
 function parseFirebaseError(code: string): string {
   switch (code) {

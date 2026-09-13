@@ -258,9 +258,9 @@ export function ProfilePage() {
         {[
           { icon: Medal, label: 'Achievements & Badges', action: () => navigate('/profile/achievements') },
           { icon: Smartphone, label: 'Connected Apps & Devices', action: () => navigate('/profile/integrations') },
-          { icon: User, label: 'Edit Profile', action: () => {} },
-          { icon: Settings, label: 'App Settings', action: () => {} },
-          { icon: Shield, label: 'Privacy', action: () => {} },
+          { icon: User, label: 'Edit Profile', action: openEditModal },
+          { icon: Settings, label: 'App Settings', action: () => toast.info('App settings coming soon') },
+          { icon: Shield, label: 'Privacy', action: () => toast.info('Privacy settings coming soon') },
         ].map(({ icon: Icon, label, action }, i) => (
           <button
             key={label}
