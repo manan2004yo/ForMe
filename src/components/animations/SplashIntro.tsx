@@ -5,6 +5,7 @@ import { X } from 'lucide-react'
 export function SplashIntro() {
   const [isVisible, setIsVisible] = useState(false)
   const [phase, setPhase] = useState<'idle' | 'brand' | 'glitch' | 'slice'>('idle')
+  const [midGlitch, setMidGlitch] = useState<'none' | 'glitch' | 'flash'>('none')
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -29,6 +30,36 @@ export function SplashIntro() {
       return () => clearTimeout(fallback)
     }
   }, [isVisible])
+
+  // Random mid-video anime glitch effects
+  useEffect(() => {
+    if (!isVisible || phase !== 'idle') return
+
+    let timeout: ReturnType<typeof setTimeout>
+    
+    const triggerRandomGlitch = () => {
+      // Pick a random delay between 1s and 2.5s
+      const delay = Math.random() * 1500 + 1000
+      
+      timeout = setTimeout(() => {
+        if (phase === 'idle') {
+          // 50/50 chance for glitch vs flash
+          const type = Math.random() > 0.5 ? 'glitch' : 'flash'
+          setMidGlitch(type)
+          
+          // Clear glitch rapidly (0.1s to 0.2s)
+          setTimeout(() => {
+            setMidGlitch('none')
+            triggerRandomGlitch()
+          }, Math.random() * 100 + 100)
+        }
+      }, delay)
+    }
+
+    triggerRandomGlitch()
+
+    return () => clearTimeout(timeout)
+  }, [isVisible, phase])
 
   // Track video progress
   const handleTimeUpdate = () => {
@@ -91,7 +122,7 @@ export function SplashIntro() {
                   onTimeUpdate={handleTimeUpdate}
                   className={`w-full h-full object-cover transition-all ${
                     phase === 'glitch' ? 'video-glitch' : ''
-                  }`}
+                  } ${midGlitch === 'glitch' ? 'mid-video-glitch' : ''} ${midGlitch === 'flash' ? 'mid-video-flash' : ''}`}
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none" />
                 
