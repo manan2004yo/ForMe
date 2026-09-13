@@ -19,18 +19,16 @@ export function StatCard({
   return (
     <div 
       className={clsx(
-        // Base
-        'bg-bg-surface border border-border transition-all duration-300',
         // Padding
         padding === 'none' && 'p-0',
         padding === 'sm' && 'p-3',
         padding === 'md' && 'p-5',
         padding === 'lg' && 'p-6',
         // Variants
-        variant === 'hero' && 'rounded-hero shadow-floating relative overflow-hidden',
-        (variant === 'standard' || variant === 'insight') && 'rounded-xl shadow-card',
+        variant === 'hero' && 'glass-panel-intense relative overflow-hidden',
+        (variant === 'standard' || variant === 'insight') && 'glass-panel',
         // Interactive state (tactile press)
-        isInteractive && 'cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 active:shadow-card',
+        isInteractive && 'card-pressable cursor-pointer',
         className
       )}
       role={props.onClick ? 'button' : undefined}
@@ -39,7 +37,7 @@ export function StatCard({
     >
       {/* Subtle Glow for Hero */}
       {variant === 'hero' && (
-        <div className="absolute top-0 right-0 -mt-16 -mr-16 w-32 h-32 bg-accent opacity-5 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-0 -mt-16 -mr-16 w-32 h-32 bg-accent opacity-20 blur-[50px] rounded-full pointer-events-none" />
       )}
       
       {children}

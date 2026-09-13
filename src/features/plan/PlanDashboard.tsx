@@ -66,8 +66,13 @@ function MealPlanCard({ meal, expanded, onToggle }: {
         <div className="px-4 pb-4 border-t border-black/5 animate-fade-in">
           <div className="flex flex-col gap-2 mt-3">
             {meal.items.length === 0 ? (
-              <div className="text-center py-4 text-xs text-text-tertiary bg-black/5 rounded-xl">
-                Manual builder coming soon. Use the 'Eat' tab to log food.
+              <div className="flex flex-col items-center justify-center py-8 px-4 bg-bg-surface2/30 rounded-2xl border border-dashed border-border-strong relative overflow-hidden group">
+                <div className="absolute inset-0 bg-accent/5 blur-2xl group-hover:bg-accent/10 transition-colors animate-pulse-glow" />
+                <span className="text-3xl mb-2 relative z-10 opacity-80 filter drop-shadow-sm">🍽️</span>
+                <span className="text-sm font-semibold text-text-primary relative z-10">Slot is Empty</span>
+                <p className="text-xs text-text-secondary text-center mt-1 max-w-[200px] relative z-10 leading-relaxed">
+                  Head over to the <strong className="text-accent px-1 py-0.5 bg-accent/10 rounded">Eat</strong> tab to start logging meals.
+                </p>
               </div>
             ) : (
               meal.items.map((item, i) => (

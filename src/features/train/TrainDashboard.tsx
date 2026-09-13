@@ -186,8 +186,13 @@ function WorkoutDayCard({
         <div className="px-4 pb-4 border-t border-border animate-fade-in">
           <div className="flex flex-col gap-3 mt-3">
             {day.exercises.length === 0 ? (
-              <div className="text-center py-6 text-sm text-text-secondary bg-bg-surface2 rounded-xl">
-                Rest day. Or add exercises to build a custom routine!
+              <div className="flex flex-col items-center justify-center py-8 px-4 bg-bg-surface2/30 rounded-2xl border border-dashed border-border-strong relative overflow-hidden group">
+                <div className="absolute inset-0 bg-accent/5 blur-2xl group-hover:bg-accent/10 transition-colors animate-pulse-glow" />
+                <span className="text-3xl mb-2 relative z-10 opacity-80 filter drop-shadow-sm">😴</span>
+                <span className="text-sm font-semibold text-text-primary relative z-10">Rest Day</span>
+                <p className="text-xs text-text-secondary text-center mt-1 max-w-[220px] relative z-10 leading-relaxed">
+                  Enjoy your recovery! Or use the button below to add exercises and build a custom routine.
+                </p>
               </div>
             ) : (
               day.exercises.map((exercise, i) => (
