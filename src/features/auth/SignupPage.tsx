@@ -35,7 +35,9 @@ export function SignupPage() {
     } catch {
       // handled
     }
-  }  return (
+  }
+
+  return (
     <div className="relative min-h-dvh flex items-center justify-center">
       {/* Background Video */}
       <div className="fixed inset-0 z-0">
@@ -67,7 +69,7 @@ export function SignupPage() {
           </div>
 
           <h1 className="font-heading font-bold text-3xl text-white drop-shadow-md mb-2">Create your account</h1>
-          <p className="text-text-secondary drop-shadow">Start your transformation today ?" free forever.</p>
+          <p className="text-text-secondary drop-shadow">Start your transformation today — free forever.</p>
         </div>
 
         {/* Form */}
@@ -194,5 +196,4 @@ export function SignupPage() {
       </div>
     </div>
   )
-
 }
