@@ -14,6 +14,7 @@ import {
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
+  browserSessionPersistence,
   User,
   UserCredential,
 } from 'firebase/auth'
@@ -31,8 +32,10 @@ export function observeAuthState(callback: (user: User | null) => void) {
 export async function signUpWithEmail(
   email: string,
   password: string,
-  name: string
+  name: string,
+  rememberMe: boolean = true
 ): Promise<UserCredential> {
+  await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence)
   const credential = await createUserWithEmailAndPassword(auth, email, password)
   
   // Update display name
@@ -51,14 +54,17 @@ export async function signUpWithEmail(
 
 export async function signInWithEmail(
   email: string,
-  password: string
+  password: string,
+  rememberMe: boolean = true
 ): Promise<UserCredential> {
+  await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence)
   return signInWithEmailAndPassword(auth, email, password)
 }
 
 // ─── Sign In with Google ──────────────────────────────────────
 
-export async function signInWithGoogle(): Promise<UserCredential> {
+export async function signInWithGoogle(rememberMe: boolean = true): Promise<UserCredential> {
+  await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence)
   const credential = await signInWithPopup(auth, googleProvider)
   
   // Create user document if it doesn't exist

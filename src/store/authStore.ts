@@ -16,9 +16,9 @@ interface AuthState {
 
   // Actions
   initialize: () => () => void
-  loginWithEmail: (email: string, password: string) => Promise<void>
-  loginWithGoogle: () => Promise<void>
-  signup: (email: string, password: string, name: string) => Promise<void>
+  loginWithEmail: (email: string, password: string, rememberMe?: boolean) => Promise<void>
+  loginWithGoogle: (rememberMe?: boolean) => Promise<void>
+  signup: (email: string, password: string, name: string, rememberMe?: boolean) => Promise<void>
   logout: () => Promise<void>
   sendPasswordReset: (email: string) => Promise<void>
   clearError: () => void
@@ -60,10 +60,10 @@ export const useAuthStore = create<AuthState>()(
     return unsubscribe
   },
 
-  loginWithEmail: async (email, password) => {
+  loginWithEmail: async (email, password, rememberMe = true) => {
     set({ isLoading: true, error: null })
     try {
-      await signInWithEmail(email, password)
+      await signInWithEmail(email, password, rememberMe)
     } catch (err: any) {
       const msg = parseFirebaseError(err.code)
       set({ error: msg })
@@ -73,10 +73,10 @@ export const useAuthStore = create<AuthState>()(
     }
   },
 
-  loginWithGoogle: async () => {
+  loginWithGoogle: async (rememberMe = true) => {
     set({ isLoading: true, error: null })
     try {
-      await signInWithGoogle()
+      await signInWithGoogle(rememberMe)
     } catch (err: any) {
       const msg = parseFirebaseError(err.code)
       set({ error: msg })
@@ -86,10 +86,10 @@ export const useAuthStore = create<AuthState>()(
     }
   },
 
-  signup: async (email, password, name) => {
+  signup: async (email, password, name, rememberMe = true) => {
     set({ isLoading: true, error: null })
     try {
-      await signUpWithEmail(email, password, name)
+      await signUpWithEmail(email, password, name, rememberMe)
     } catch (err: any) {
       const msg = parseFirebaseError(err.code)
       set({ error: msg })

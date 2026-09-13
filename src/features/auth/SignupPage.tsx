@@ -14,12 +14,13 @@ export function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     clearError()
     try {
-      await signup(email, password, name)
+      await signup(email, password, name, rememberMe)
       navigate('/')
     } catch {
       // handled in store
@@ -29,7 +30,7 @@ export function SignupPage() {
   const handleGoogle = async () => {
     clearError()
     try {
-      await loginWithGoogle()
+      await loginWithGoogle(rememberMe)
       navigate('/')
     } catch {
       // handled
@@ -114,6 +115,19 @@ export function SignupPage() {
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 mt-1">
+          <input
+            type="checkbox"
+            id="remember-me"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="w-4 h-4 rounded border-border text-accent focus:ring-accent bg-bg-surface"
+          />
+          <label htmlFor="remember-me" className="text-sm text-text-secondary">
+            Keep me signed in
+          </label>
         </div>
 
         <button
