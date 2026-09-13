@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 
 export function SplashIntro() {
   const [isVisible, setIsVisible] = useState(false)
-  const [showBranding, setShowBranding] = useState(false)
+  const [phase, setPhase] = useState<'idle' | 'brand' | 'glitch' | 'slice'>('idle')
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -20,23 +20,32 @@ export function SplashIntro() {
     setIsVisible(false)
   }
 
-  // Force a fallback timeout just in case video fails to load
+  // Fallback
   useEffect(() => {
     if (isVisible) {
       const fallback = setTimeout(() => {
         handleFinish()
-      }, 15000) // 15 seconds absolute max
+      }, 15000)
       return () => clearTimeout(fallback)
     }
   }, [isVisible])
 
-  // Track video progress to trigger branding animations towards the end
+  // Track video progress
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       const { currentTime, duration } = videoRef.current
-      // If we are within 2.5 seconds of the end, show branding
-      if (duration && (duration - currentTime <= 2.5)) {
-        setShowBranding(true)
+      if (!duration) return
+      
+      const timeLeft = duration - currentTime
+      
+      if (timeLeft <= 0.4 && phase !== 'slice') {
+        setPhase('slice')
+        // Automatically hide component shortly after slice starts
+        setTimeout(handleFinish, 500)
+      } else if (timeLeft <= 0.6 && timeLeft > 0.4 && phase !== 'glitch') {
+        setPhase('glitch')
+      } else if (timeLeft <= 2.8 && timeLeft > 0.6 && phase === 'idle') {
+        setPhase('brand')
       }
     }
   }
@@ -46,15 +55,10 @@ export function SplashIntro() {
       {isVisible && (
         <motion.div
           key="splash-screen"
-          initial={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-          // Animate style transition: Scale up, blur out, and fade away
-          exit={{ 
-            opacity: 0, 
-            scale: 1.1, 
-            filter: 'blur(20px)',
-            transition: { duration: 1.5, ease: [0.16, 1, 0.3, 1] } 
-          }}
           className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden"
+          // If the slice triggers, we want the whole container to stay while the internals animate.
+          // The final exit just cleans up instantly since the slice covers the exit.
+          exit={{ opacity: 0, transition: { duration: 0.1 } }}
         >
           {/* Skip Button */}
           <button 
@@ -65,50 +69,77 @@ export function SplashIntro() {
             <X size={20} />
           </button>
 
-          {/* Cinematic CSS Filters on Video */}
-          <video
-            ref={videoRef}
-            src="/intro.mp4"
-            autoPlay
-            muted
-            playsInline
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={handleFinish}
-            className="w-full h-full object-cover saturate-150 contrast-125 brightness-90"
-          >
-            Your browser does not support the video tag.
-          </video>
-          
-          {/* subtle gradient overlay so the skip button is always visible */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none" />
-
-          {/* Branding Overlay */}
+          {/* The Katana Slice layers */}
           <AnimatePresence>
-            {showBranding && (
+            {phase !== 'slice' && (
               <motion.div 
-                className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20"
-                initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.1 }}
-                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute inset-0 w-full h-full"
+                exit={{ 
+                  clipPath: 'polygon(0 0, 100% 0, 100% 0, 0 100%)', // Becomes top triangle
+                  y: '-100vh', 
+                  x: '50vw',
+                  opacity: 0,
+                  transition: { duration: 0.6, ease: [0.8, 0, 0.2, 1] } 
+                }}
               >
-                {/* Glowing F */}
-                <div className="font-heading font-black text-white text-[12rem] leading-none tracking-tighter drop-shadow-[0_0_40px_rgba(255,255,255,0.6)]">
-                  F
-                </div>
-                {/* Tagline */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                  className="mt-2 text-xl md:text-2xl font-sans tracking-[0.2em] uppercase text-white/90 drop-shadow-md"
-                >
-                  Design Your Forme
-                </motion.div>
+                <video
+                  ref={videoRef}
+                  src="/intro.mp4"
+                  autoPlay
+                  muted
+                  playsInline
+                  onTimeUpdate={handleTimeUpdate}
+                  className={`w-full h-full object-cover saturate-150 contrast-125 brightness-90 transition-all ${
+                    phase === 'glitch' ? 'video-glitch' : ''
+                  }`}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none" />
+                
+                {/* Branding Overlay */}
+                {phase === 'brand' || phase === 'glitch' ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20">
+                    <div className={`font-heading font-black text-white text-[6rem] md:text-[10rem] leading-none tracking-tighter ${phase === 'brand' ? 'glitch-text' : 'glitch-text-stable'}`}>
+                      ForMe
+                    </div>
+                    {/* The tagline drops in */}
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 1.1 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.2, delay: 0.3 }}
+                      className="mt-2 text-lg md:text-2xl font-sans font-bold tracking-[0.25em] uppercase text-white drop-shadow-md"
+                    >
+                      UNLEASH YOUR ULTIMATE FORME
+                    </motion.div>
+                  </div>
+                ) : null}
               </motion.div>
             )}
           </AnimatePresence>
-          
+
+          {/* The bottom slice clone - only visible when slicing */}
+          <AnimatePresence>
+            {phase === 'slice' && (
+              <>
+                <motion.div 
+                  className="absolute inset-0 w-full h-full bg-black" // fallback background clone
+                  initial={{ clipPath: 'polygon(0 100%, 100% 0, 100% 100%, 0 100%)' }}
+                  animate={{ 
+                    y: '100vh', 
+                    x: '-50vw',
+                    opacity: 0,
+                    transition: { duration: 0.6, ease: [0.8, 0, 0.2, 1] } 
+                  }}
+                >
+                    <video
+                      src="/intro.mp4"
+                      className="w-full h-full object-cover saturate-150 contrast-125 brightness-90"
+                    />
+                </motion.div>
+                <div className="slash-line" />
+              </>
+            )}
+          </AnimatePresence>
+
         </motion.div>
       )}
     </AnimatePresence>

@@ -871,3 +871,56 @@ body {
 .bg-blue-500 { background: #3b82f6; }
 .text-red-500 { color: #ef4444; }
 .text-blue-500 { color: #3b82f6; }
+
+/* Anime Glitch & Slice Effects */
+
+.glitch-text {
+  position: relative;
+  animation: glitch-anim 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+}
+
+@keyframes glitch-anim {
+  0% { text-shadow: 4px 4px 0px rgba(255,0,0,0.8), -4px -4px 0px rgba(0,255,255,0.8); transform: translate(0); }
+  20% { text-shadow: -4px 4px 0px rgba(255,0,0,0.8), 4px -4px 0px rgba(0,255,255,0.8); transform: translate(-2px, 2px); }
+  40% { text-shadow: 4px -4px 0px rgba(255,0,0,0.8), -4px 4px 0px rgba(0,255,255,0.8); transform: translate(2px, -2px); }
+  60% { text-shadow: -4px -4px 0px rgba(255,0,0,0.8), 4px 4px 0px rgba(0,255,255,0.8); transform: translate(-2px, -2px); }
+  80% { text-shadow: 2px 2px 0px rgba(255,0,0,0.8), -2px -2px 0px rgba(0,255,255,0.8); transform: translate(2px, 2px); }
+  100% { text-shadow: 0px 0px 0px rgba(255,0,0,0.8), 0px 0px 0px rgba(0,255,255,0.8); transform: translate(0); }
+}
+
+.glitch-text-stable {
+  text-shadow: 0 0 30px rgba(255,255,255,0.8);
+  transition: text-shadow 0.2s ease-out;
+}
+
+.video-glitch {
+  animation: video-shake 0.2s cubic-bezier(.36,.07,.19,.97) both infinite;
+  filter: saturate(200%) contrast(150%) hue-rotate(10deg) brightness(1.2);
+}
+
+@keyframes video-shake {
+  10%, 90% { transform: translate3d(-4px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+  40%, 60% { transform: translate3d(8px, 0, 0); }
+}
+
+.slash-line {
+  position: absolute;
+  top: 50%;
+  left: -20%;
+  width: 140%;
+  height: 4px;
+  background: white;
+  box-shadow: 0 0 20px 5px rgba(255,255,255,0.8);
+  transform-origin: center;
+  transform: rotate(-15deg) scaleX(0);
+  z-index: 10000;
+  animation: slash-anim 0.4s cubic-bezier(0.8, 0, 0.2, 1) forwards;
+}
+
+@keyframes slash-anim {
+  0% { transform: rotate(-15deg) scaleX(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: rotate(-15deg) scaleX(1); opacity: 0; height: 100vh; } /* Blows out to white */
+}
