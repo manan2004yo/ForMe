@@ -19,6 +19,7 @@ import { PlanDashboard } from '@/features/plan/PlanDashboard'
 import { TrainDashboard } from '@/features/train/TrainDashboard'
 import { ProgressDashboard } from '@/features/progress/ProgressDashboard'
 import { ProfilePage } from '@/features/profile/ProfilePage'
+import { IntegrationsPage } from '@/features/profile/IntegrationsPage'
 
 function AuthenticatedApp() {
   const { user, logout } = useAuthStore()
@@ -75,6 +76,7 @@ function AuthenticatedApp() {
         <Route path="/train" element={<TrainDashboard />} />
         <Route path="/progress" element={<ProgressDashboard />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/integrations" element={<IntegrationsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

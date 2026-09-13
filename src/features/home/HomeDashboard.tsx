@@ -16,6 +16,7 @@ import { ContextSelector } from './ContextSelector'
 import { AnimatedProgressRing, ProgressBar, StatCard, AnimatedNumber } from '@/components/shared'
 import { Button } from '@/components/ui'
 import { clsx } from 'clsx'
+import { useIntegrationStore } from '@/store/integrationStore'
 
 function MacroBar({ label, consumed, target, colorClass }: { label: string; consumed: number; target: number; colorClass: string }) {
   return (
@@ -134,6 +135,48 @@ function StreakCard() {
           )}
         </div>
         <Trophy size={24} className="text-accent/40" />
+      </div>
+    </StatCard>
+  )
+}
+
+function DailyActivityCard() {
+  const { connectedPlatforms, dailyActivity } = useIntegrationStore()
+
+  if (connectedPlatforms.length === 0 || !dailyActivity) return null
+
+  return (
+    <StatCard className="mb-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+            <Flame size={16} className="text-orange-500" />
+          </div>
+          <h2 className="text-section text-text-primary">Daily Activity</h2>
+        </div>
+        <span className="px-2 py-1 bg-bg-surface2 rounded-md text-micro font-medium text-text-secondary border border-border">
+          Synced {format(new Date(dailyActivity.lastSynced), 'HH:mm')}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-bg-surface2 rounded-xl p-3">
+          <div className="text-caption text-text-tertiary mb-1">Steps</div>
+          <div className="flex items-baseline gap-1">
+            <AnimatedNumber value={dailyActivity.steps} className="font-heading font-bold text-text-primary text-xl" />
+            <span className="text-micro text-text-tertiary">/ 10k</span>
+          </div>
+          <ProgressBar value={dailyActivity.steps} max={10000} colorClass="bg-orange-500" heightClass="h-1.5" className="mt-2" />
+        </div>
+        
+        <div className="bg-bg-surface2 rounded-xl p-3">
+          <div className="text-caption text-text-tertiary mb-1">Active Cals</div>
+          <div className="flex items-baseline gap-1">
+            <AnimatedNumber value={dailyActivity.activeCalories} className="font-heading font-bold text-text-primary text-xl" />
+            <span className="text-micro text-text-tertiary">kcal</span>
+          </div>
+          <ProgressBar value={dailyActivity.activeCalories} max={500} colorClass="bg-rose-500" heightClass="h-1.5" className="mt-2" />
+        </div>
       </div>
     </StatCard>
   )
@@ -268,6 +311,7 @@ export function HomeDashboard() {
         </StatCard>
       </div>
 
+      <DailyActivityCard />
       <StreakCard />
       <WeeklyCalorieChart calTarget={metrics.caloricTarget} />
       <WaterTracker />

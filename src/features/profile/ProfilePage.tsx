@@ -10,7 +10,7 @@ import { useUserStore } from '@/store/userStore'
 import { useToastStore } from '@/store/toastStore'
 import {
   User, Settings, Shield, LogOut, ChevronRight, Edit3,
-  Scale, Target, Utensils, Dumbbell, Trophy, Zap, X, Check
+  Scale, Target, Utensils, Dumbbell, Trophy, Zap, X, Check, Smartphone
 } from 'lucide-react'
 
 const GOAL_LABELS: Record<string, string> = {
@@ -256,6 +256,7 @@ export function ProfilePage() {
       {/* Menu Items */}
       <div className="card overflow-hidden mb-4">
         {[
+          { icon: Smartphone, label: 'Connected Apps & Devices', action: () => navigate('/profile/integrations') },
           { icon: User, label: 'Edit Profile', action: () => {} },
           { icon: Settings, label: 'App Settings', action: () => {} },
           { icon: Shield, label: 'Privacy', action: () => {} },
