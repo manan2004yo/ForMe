@@ -89,7 +89,7 @@ export function SplashIntro() {
                   muted
                   playsInline
                   onTimeUpdate={handleTimeUpdate}
-                  className={`w-full h-full object-cover saturate-150 contrast-125 brightness-90 transition-all ${
+                  className={`w-full h-full object-cover transition-all ${
                     phase === 'glitch' ? 'video-glitch' : ''
                   }`}
                 />
@@ -132,7 +132,7 @@ export function SplashIntro() {
                 >
                     <video
                       src="/intro.mp4"
-                      className="w-full h-full object-cover saturate-150 contrast-125 brightness-90"
+                      className="w-full h-full object-cover"
                     />
                 </motion.div>
                 <div className="slash-line" />
