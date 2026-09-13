@@ -307,6 +307,10 @@ export interface WaistEntry {
   userId: string
   date: string
   waistCm: number
+  chestCm?: number
+  armsCm?: number
+  thighsCm?: number
+  hipsCm?: number
   notes?: string
 }
 

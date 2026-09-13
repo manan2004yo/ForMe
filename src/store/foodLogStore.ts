@@ -5,7 +5,7 @@
 import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { FoodLogEntry, LoggedFoodItem, MealSlot, NutritionInfo } from '@/types'
-import { saveFoodLog, getFoodLogsByDate, deleteFoodLog } from '@/lib/firebase/dataService'
+import { saveFoodLog, getFoodLogsByDate, getRecentFoodLogs, deleteFoodLog } from '@/lib/firebase/dataService'
 import { format } from 'date-fns'
 
 const today = () => format(new Date(), 'yyyy-MM-dd')
@@ -36,6 +36,7 @@ interface FoodLogState {
 
   // Actions
   loadLogs: (uid: string, date?: string) => Promise<void>
+  loadRecentLogs: (uid: string, days?: number) => Promise<void>
   addFoodEntry: (uid: string, meal: MealSlot, items: LoggedFoodItem[]) => Promise<void>
   removeEntry: (uid: string, entryId: string) => Promise<void>
   setDate: (date: string) => void
@@ -72,6 +73,21 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
           ...logs,
         ]
       }))
+    } finally {
+      set({ isLoading: false })
+    }
+  },
+
+  loadRecentLogs: async (uid: string, days = 30) => {
+    set({ isLoading: true })
+    try {
+      const logs = await getRecentFoodLogs(uid, days)
+      set(state => {
+        // Merge without duplicates
+        const existingIds = new Set(state.entries.map(e => e.id))
+        const newLogs = logs.filter(l => !existingIds.has(l.id))
+        return { entries: [...state.entries, ...newLogs] }
+      })
     } finally {
       set({ isLoading: false })
     }

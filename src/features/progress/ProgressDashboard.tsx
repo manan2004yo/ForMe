@@ -14,6 +14,11 @@ import { TrendingDown, TrendingUp, Minus, Plus, Check, Flame } from 'lucide-reac
 import { format, subDays } from 'date-fns'
 import { StatCard, AnimatedNumber, ProgressBar } from '@/components/shared'
 import { Button } from '@/components/ui'
+import { MeasurementsChart } from './MeasurementsChart'
+import { MacroTrendsChart } from './MacroTrendsChart'
+import { VolumeChart } from './VolumeChart'
+import { generateInsights } from '@/lib/engines/insightsEngine'
+import { Sparkles, AlertCircle, Info } from 'lucide-react'
 
 interface WeightLogEntry {
   date: string
@@ -161,11 +166,21 @@ export function ProgressDashboard() {
   const { addWeightEntry, addWaistEntry, weightHistory, waistHistory, loadAll } = useProgressStore()
   const [logWeight, setLogWeight] = useState('')
   const [logWaist, setLogWaist] = useState('')
+  const [logChest, setLogChest] = useState('')
+  const [logArms, setLogArms] = useState('')
+  const [logThighs, setLogThighs] = useState('')
+  const [logHips, setLogHips] = useState('')
   const [showLogger, setShowLogger] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savedOk, setSavedOk] = useState(false)
 
-  useEffect(() => { if (user) loadAll(user.uid) }, [user, loadAll])
+  const { loadRecentLogs } = useFoodLogStore()
+  useEffect(() => { 
+    if (user) {
+      loadAll(user.uid)
+      loadRecentLogs(user.uid, 30)
+    }
+  }, [user, loadAll, loadRecentLogs])
   if (!profile || !metrics) return null
 
   const history: WeightLogEntry[] = weightHistory.length > 0 ? weightHistory.slice().reverse().map(e => ({ date: e.date, weight: e.weightKg })) : generateDemoHistory(profile.weightKg, profile.fitnessGoal)
@@ -175,6 +190,10 @@ export function ProgressDashboard() {
   const isLosing = totalChange < 0
   const isUsingRealData = weightHistory.length > 0
   const weeklyGoal = metrics.caloricStrategy === 'deficit' ? -0.4 : metrics.caloricStrategy === 'surplus' ? 0.25 : 0
+
+  const { entries: foodLogs } = useFoodLogStore()
+  const { workoutLogs } = useProgressStore()
+  const insights = useMemo(() => generateInsights(profile, metrics, foodLogs, workoutLogs, weightHistory), [profile, metrics, foodLogs, workoutLogs, weightHistory])
 
   return (
     <div className="page bg-bg">
@@ -202,16 +221,41 @@ export function ProgressDashboard() {
               <label className="text-caption text-text-secondary block mb-1">Waist (cm)</label>
               <input type="number" className="w-full bg-bg-surface2 border border-border rounded-xl px-4 py-2.5 text-text-primary outline-none focus:border-accent" placeholder={(profile.waistCm || 80).toString()} value={logWaist} onChange={e => setLogWaist(e.target.value)} />
             </div>
+            <div>
+              <label className="text-caption text-text-secondary block mb-1">Chest (cm)</label>
+              <input type="number" className="w-full bg-bg-surface2 border border-border rounded-xl px-4 py-2.5 text-text-primary outline-none focus:border-accent" placeholder="-" value={logChest} onChange={e => setLogChest(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-caption text-text-secondary block mb-1">Arms (cm)</label>
+              <input type="number" className="w-full bg-bg-surface2 border border-border rounded-xl px-4 py-2.5 text-text-primary outline-none focus:border-accent" placeholder="-" value={logArms} onChange={e => setLogArms(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-caption text-text-secondary block mb-1">Thighs (cm)</label>
+              <input type="number" className="w-full bg-bg-surface2 border border-border rounded-xl px-4 py-2.5 text-text-primary outline-none focus:border-accent" placeholder="-" value={logThighs} onChange={e => setLogThighs(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-caption text-text-secondary block mb-1">Hips (cm)</label>
+              <input type="number" className="w-full bg-bg-surface2 border border-border rounded-xl px-4 py-2.5 text-text-primary outline-none focus:border-accent" placeholder="-" value={logHips} onChange={e => setLogHips(e.target.value)} />
+            </div>
           </div>
           <Button onClick={async () => {
-              if (!logWeight && !logWaist) return setShowLogger(false)
+              const hasData = logWeight || logWaist || logChest || logArms || logThighs || logHips
+              if (!hasData) return setShowLogger(false)
               setSaving(true)
               try {
                 if (logWeight && user) await addWeightEntry(user.uid, parseFloat(logWeight))
-                if (logWaist && user) await addWaistEntry(user.uid, parseFloat(logWaist))
+                if ((logWaist || logChest || logArms || logThighs || logHips) && user) {
+                  await addWaistEntry(user.uid, parseFloat(logWaist || '0'), undefined, {
+                    chestCm: logChest ? parseFloat(logChest) : undefined,
+                    armsCm: logArms ? parseFloat(logArms) : undefined,
+                    thighsCm: logThighs ? parseFloat(logThighs) : undefined,
+                    hipsCm: logHips ? parseFloat(logHips) : undefined
+                  })
+                }
                 setSavedOk(true)
                 setTimeout(() => setSavedOk(false), 2000)
                 setShowLogger(false); setLogWeight(''); setLogWaist('')
+                setLogChest(''); setLogArms(''); setLogThighs(''); setLogHips('');
               } finally { setSaving(false) }
             }} disabled={saving} variant="primary" fullWidth>
             {savedOk ? <><Check size={16} /> Saved!</> : saving ? 'Saving...' : 'Save Measurement'}
@@ -241,8 +285,29 @@ export function ProgressDashboard() {
         </StatCard>
       </div>
 
+      <div className="mb-6 space-y-3">
+        {insights.map(insight => (
+          <StatCard key={insight.id} variant="insight" padding="md" className="flex items-start gap-3 border-l-4" style={{ 
+            borderLeftColor: insight.type === 'positive' ? 'var(--status-good)' : insight.type === 'warning' ? 'var(--status-warning)' : 'var(--accent)' 
+          }}>
+            <div className="mt-0.5">
+              {insight.type === 'positive' && <Sparkles size={18} className="text-status-good" />}
+              {insight.type === 'warning' && <AlertCircle size={18} className="text-status-warning" />}
+              {insight.type === 'info' && <Info size={18} className="text-accent" />}
+            </div>
+            <div>
+              <h4 className="text-body font-bold text-text-primary mb-1">{insight.title}</h4>
+              <p className="text-caption text-text-secondary leading-relaxed">{insight.description}</p>
+            </div>
+          </StatCard>
+        ))}
+      </div>
+
       <WeightHistoryChart entries={history} />
+      <MeasurementsChart entries={waistHistory} />
+      <MacroTrendsChart calTarget={metrics.caloricTarget} />
       <CalorieHeatmap calTarget={metrics.caloricTarget} />
+      <VolumeChart />
       <TrajectoryCard profile={profile} metrics={metrics} />
     </div>
   )

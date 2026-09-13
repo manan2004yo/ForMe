@@ -28,7 +28,7 @@ interface ProgressState {
   saveDietPlan: (uid: string, plan: DailyDietPlan) => Promise<void>
   logWorkout: (uid: string, entry: Omit<WorkoutLogEntry, 'id' | 'createdAt'>) => Promise<void>
   addWeightEntry: (uid: string, weightKg: number, notes?: string) => Promise<void>
-  addWaistEntry: (uid: string, waistCm: number, notes?: string) => Promise<void>
+  addWaistEntry: (uid: string, waistCm: number, notes?: string, extra?: { chestCm?: number; armsCm?: number; thighsCm?: number; hipsCm?: number }) => Promise<void>
   getLatestWeight: () => number | null
   getLatestWaist: () => number | null
   getWeightTrend: () => 'up' | 'down' | 'stable' | null
@@ -96,13 +96,14 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     await saveWeightEntry(uid, entry)
   },
 
-  addWaistEntry: async (uid: string, waistCm: number, notes?: string) => {
+  addWaistEntry: async (uid: string, waistCm: number, notes?: string, extra?: { chestCm?: number; armsCm?: number; thighsCm?: number; hipsCm?: number }) => {
     const entry: WaistEntry = {
       id: uuidv4(),
       userId: uid,
       date: new Date().toISOString().split('T')[0],
       waistCm,
       notes,
+      ...extra,
     }
     set(s => ({ waistHistory: [entry, ...s.waistHistory] }))
     await saveWaistEntry(uid, entry)

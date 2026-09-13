@@ -89,6 +89,26 @@ export async function deleteFoodLog(uid: string, entryId: string): Promise<void>
   deleteLocalFoodLog(uid, entryId)
 }
 
+export async function getRecentFoodLogs(uid: string, days = 30): Promise<FoodLogEntry[]> {
+  try {
+    const ref = collection(db, 'users', uid, 'foodLogs')
+    const d = new Date()
+    d.setDate(d.getDate() - days)
+    const q = query(ref, where('date', '>=', d.toISOString().split('T')[0]), orderBy('date', 'desc'))
+    const snap = await getDocs(q)
+    return snap.docs.map(d => d.data() as FoodLogEntry)
+  } catch {
+    // Basic fallback: just return all local logs we have for recent dates
+    const allKeys = Object.keys(localStorage).filter(k => k.startsWith(`forme_foodlog_${uid}_`))
+    let localEntries: FoodLogEntry[] = []
+    allKeys.forEach(k => {
+      const entries = JSON.parse(localStorage.getItem(k) || '[]')
+      localEntries = [...localEntries, ...entries]
+    })
+    return localEntries
+  }
+}
+
 function saveLocalFoodLog(uid: string, entry: FoodLogEntry) {
   const key = `forme_foodlog_${uid}_${entry.date}`
   const existing = getLocalFoodLogs(uid, entry.date)
