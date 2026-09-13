@@ -108,7 +108,7 @@ export function PlanDashboard() {
       setPlan({
         id: `plan_${Date.now()}`,
         userId: profile.id,
-        type: 'cutting',
+        generatedAt: new Date().toISOString(),
         totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
         meals: [
           { slot: 'breakfast', label: 'Breakfast', items: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } },

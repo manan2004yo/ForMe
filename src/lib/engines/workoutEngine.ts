@@ -236,7 +236,8 @@ const EXERCISES: Record<string, {
     equipment: ['pull_up_bar'], isCompound: false, difficulty: 'intermediate',
     instructions: ['Hang from bar', 'Bring knees to chest', 'Control the descent'],
     repRange: [10, 20], restSec: 60, rir: 2
-  },/ EXTENDED CHEST
+  },
+  // EXTENDED CHEST
   machine_chest_press: {
     name: 'Machine Chest Press', muscleGroup: 'chest', secondary: ['triceps', 'shoulders'],
     equipment: ['machine'], isCompound: true, difficulty: 'beginner',
