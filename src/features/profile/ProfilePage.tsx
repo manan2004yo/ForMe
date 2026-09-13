@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
+import type { FitnessGoal, DietType, ComplexityMode } from '@/types'
 import { useToastStore } from '@/store/toastStore'
 import {
   User, Settings, Shield, LogOut, ChevronRight, Edit3,
@@ -42,6 +43,9 @@ export function ProfilePage() {
   const [editWeight, setEditWeight] = useState('')
   const [editHeight, setEditHeight] = useState('')
   const [editAge, setEditAge] = useState('')
+  const [editGoal, setEditGoal] = useState<FitnessGoal>('body_recomposition')
+  const [editDiet, setEditDiet] = useState<DietType>('vegetarian')
+  const [editMode, setEditMode] = useState<ComplexityMode>('smart')
   const [isSavingEdit, setIsSavingEdit] = useState(false)
 
   if (!profile || !metrics) return null
@@ -61,6 +65,9 @@ export function ProfilePage() {
     setEditWeight(profile.weightKg.toString())
     setEditHeight(profile.heightCm.toString())
     setEditAge(profile.age.toString())
+    setEditGoal(profile.fitnessGoal)
+    setEditDiet(profile.dietType)
+    setEditMode(profile.complexityMode)
     setShowEditModal(true)
   }
 
@@ -73,6 +80,9 @@ export function ProfilePage() {
         weightKg: parseFloat(editWeight) || profile.weightKg,
         heightCm: parseFloat(editHeight) || profile.heightCm,
         age: parseInt(editAge) || profile.age,
+        fitnessGoal: editGoal,
+        dietType: editDiet,
+        complexityMode: editMode,
       })
       toast.success('Profile updated successfully!')
       setShowEditModal(false)
@@ -154,6 +164,49 @@ export function ProfilePage() {
                 <div className="text-xs text-text-tertiary bg-bg-surface2 rounded-xl p-3">
                   💡 Updating weight recalculates your TDEE, BMI, and macro targets automatically.
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-text-tertiary">Goal</label>
+                  <select
+                    className="input-field py-2"
+                    value={editGoal}
+                    onChange={e => setEditGoal(e.target.value as FitnessGoal)}
+                  >
+                    <option value="build_muscle">Build Muscle</option>
+                    <option value="lose_fat">Lose Fat</option>
+                    <option value="body_recomposition">Recomp</option>
+                    <option value="get_lean">Get Lean</option>
+                    <option value="improve_fitness">Fitness</option>
+                    <option value="hybrid">Hybrid</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-text-tertiary">Diet</label>
+                  <select
+                    className="input-field py-2"
+                    value={editDiet}
+                    onChange={e => setEditDiet(e.target.value as DietType)}
+                  >
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="non_vegetarian">Non-Veg</option>
+                    <option value="vegan">Vegan</option>
+                    <option value="jain">Jain</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1 mt-3">
+                <label className="text-xs text-text-tertiary">App Complexity</label>
+                <select
+                  className="input-field py-2"
+                  value={editMode}
+                  onChange={e => setEditMode(e.target.value as ComplexityMode)}
+                >
+                  <option value="easy">Easy (Simple UI)</option>
+                  <option value="smart">Smart (AI Guided)</option>
+                  <option value="precision">Precision (Pro)</option>
+                </select>
               </div>
 
               <div className="flex gap-3 mt-5">
