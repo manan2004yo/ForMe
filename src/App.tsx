@@ -6,6 +6,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
+import { useAchievementEngine } from '@/lib/engines/useAchievementEngine'
 
 // Feature imports
 import { LandingPage } from '@/features/auth/LandingPage'
@@ -20,10 +21,12 @@ import { TrainDashboard } from '@/features/train/TrainDashboard'
 import { ProgressDashboard } from '@/features/progress/ProgressDashboard'
 import { ProfilePage } from '@/features/profile/ProfilePage'
 import { IntegrationsPage } from '@/features/profile/IntegrationsPage'
+import { AchievementsPage } from '@/features/profile/AchievementsPage'
 
 function AuthenticatedApp() {
   const { user, logout } = useAuthStore()
   const { profile, loadProfile, error } = useUserStore()
+  useAchievementEngine()
 
   useEffect(() => {
     if (user && user.uid !== 'demo') {
@@ -77,6 +80,7 @@ function AuthenticatedApp() {
         <Route path="/progress" element={<ProgressDashboard />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/integrations" element={<IntegrationsPage />} />
+        <Route path="/profile/achievements" element={<AchievementsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>
