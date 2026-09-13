@@ -17,6 +17,8 @@ import { AnimatedProgressRing, ProgressBar, StatCard, AnimatedNumber } from '@/c
 import { Button } from '@/components/ui'
 import { clsx } from 'clsx'
 import { useIntegrationStore } from '@/store/integrationStore'
+import { PageTransition } from '@/components/layout/PageTransition'
+import { HeroVisual } from './HeroVisual'
 
 function MacroBar({ label, consumed, target, colorClass }: { label: string; consumed: number; target: number; colorClass: string }) {
   return (
@@ -251,48 +253,33 @@ export function HomeDashboard() {
   const todayDate = format(new Date(), 'EEEE, d MMMM')
   const greeting = getGreeting()
 
+  const formeScore = Math.min(100, Math.round(((totals.calories / metrics.caloricTarget) + (totals.protein / metrics.proteinTarget)) * 50)) || 0
+
   return (
-    <div className="page bg-bg">
-      <div className="page-header flex items-start justify-between mb-6 animate-fade-in">
-        <div>
-          {isDemoMode && <div className="badge badge-accent mb-2 text-micro">Demo Mode</div>}
-          <div className="text-label text-text-tertiary mb-1 uppercase tracking-wider">{todayDate}</div>
-          <h1 className="text-display text-text-primary">
-            {greeting}, <br/><span className="text-accent">{profile.name.split(' ')[0]}</span> 👋
-          </h1>
+    <PageTransition>
+      <div className="page bg-bg pt-6">
+        <div className="page-header flex items-start justify-between mb-6 animate-fade-in">
+          <div>
+            {isDemoMode && <div className="badge badge-accent mb-2 text-micro">Demo Mode</div>}
+            <div className="text-label text-text-tertiary mb-1 uppercase tracking-wider">{todayDate}</div>
+            <h1 className="text-display text-text-primary">
+              {greeting}, <br/><span className="text-accent">{profile.name.split(' ')[0]}</span> 👋
+            </h1>
+          </div>
+          <button className="w-10 h-10 rounded-full bg-bg-surface border border-border flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors shadow-sm active:scale-95">
+            <Bell size={20} />
+          </button>
         </div>
-        <button className="w-10 h-10 rounded-full bg-bg-surface border border-border flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors shadow-sm active:scale-95">
-          <Bell size={20} />
-        </button>
-      </div>
 
-      <ContextSelector />
+        <ContextSelector />
 
-      {/* ONE MOMENT HERO: The Calorie Ring */}
-      <StatCard variant="hero" padding="lg" className="mb-4">
-        <div className="flex flex-col items-center mb-8 mt-4">
-          <AnimatedProgressRing 
-            value={totals.calories} 
-            max={metrics.caloricTarget}
-            size={220}
-            strokeWidth={16}
-            colorClass="text-accent"
-            glow={true}
-          />
-        </div>
-        <div className="grid grid-cols-1 gap-4 w-full">
-          <MacroBar label="Protein" consumed={totals.protein} target={metrics.proteinTarget} colorClass="bg-macro-protein" />
-          {profile.complexityMode !== 'easy' && (
-            <>
-              <MacroBar label="Carbs" consumed={totals.carbs} target={metrics.carbTarget} colorClass="bg-macro-carbs" />
-              <MacroBar label="Fat" consumed={totals.fat} target={metrics.fatTarget} colorClass="bg-macro-fat" />
-            </>
-          )}
-          {profile.complexityMode === 'precision' && (
-            <MacroBar label="Fiber" consumed={totals.fiber} target={metrics.fiberTarget} colorClass="bg-macro-fiber" />
-          )}
-        </div>
-      </StatCard>
+        {/* ONE MOMENT HERO: The SVG Hero Visual */}
+        <HeroVisual 
+          score={formeScore}
+          totalCalories={totals.calories}
+          calorieTarget={metrics.caloricTarget}
+          protein={totals.protein}
+        />
 
       <div className="grid grid-cols-2 gap-3 mb-4 animate-slide-up" style={{ animationDelay: '50ms' }}>
         <StatCard variant="interactive" onClick={() => navigate('/eat')} padding="md">
@@ -335,7 +322,8 @@ export function HomeDashboard() {
           </StatCard>
         ))}
       </div>
-    </div>
+      </div>
+    </PageTransition>
   )
 }
 

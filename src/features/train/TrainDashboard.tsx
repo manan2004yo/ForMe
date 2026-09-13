@@ -12,6 +12,8 @@ import type { WorkoutPlan, WorkoutDay, PlannedExercise } from '@/types'
 import { Clock, Dumbbell, RotateCcw, ChevronDown, ChevronUp, PlayCircle, ArrowLeftRight, Sparkles, Trash2, Plus, Search, FileX } from 'lucide-react'
 import { WorkoutLogger } from './WorkoutLogger'
 import { format } from 'date-fns'
+import { motion, AnimatePresence } from 'framer-motion'
+import { PageTransition } from '@/components/layout/PageTransition'
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -75,50 +77,57 @@ function ExerciseCard({ exercise, index, onRequestSwap, onRemove }: { exercise: 
         </div>
       </div>
 
-      {expanded && exData && (
-        <div className="px-4 pb-4 border-t border-border animate-fade-in">
-          <div className="mt-3">
-            <RIRBadge rir={exercise.rir} />
-          </div>
-          <div className="mt-3">
-            <div className="text-xs font-medium text-text-secondary mb-2">How to do it:</div>
-            <ol className="flex flex-col gap-1">
-              {exData.instructions.map((step, i) => (
-                <li key={i} className="flex gap-2 text-sm text-text-secondary">
-                  <span className="text-accent font-medium flex-shrink-0">{i + 1}.</span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-          {exData.homeAlternative && EXERCISES[exData.homeAlternative] && (
-            <div className="mt-3 p-2 bg-bg-surface2 rounded-xl text-xs text-text-secondary">
-              🏠 Home alternative: <span className="font-medium text-text-primary">{EXERCISES[exData.homeAlternative].name}</span>
+      <AnimatePresence>
+        {expanded && exData && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="px-4 pb-4 border-t border-border overflow-hidden"
+          >
+            <div className="mt-3">
+              <RIRBadge rir={exercise.rir} />
             </div>
-          )}
-          
-          <div className="flex gap-2 mt-4">
-            {onRequestSwap && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); onRequestSwap(); }}
-                className="flex-1 py-2.5 rounded-xl border border-accent/30 text-accent font-medium text-sm flex items-center justify-center gap-2 hover:bg-accent/5 transition-colors"
-              >
-                <ArrowLeftRight size={14} />
-                AI Swap
-              </button>
+            <div className="mt-3">
+              <div className="text-xs font-medium text-text-secondary mb-2">How to do it:</div>
+              <ol className="flex flex-col gap-1">
+                {exData.instructions.map((step, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-text-secondary">
+                    <span className="text-accent font-medium flex-shrink-0">{i + 1}.</span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            {exData.homeAlternative && EXERCISES[exData.homeAlternative] && (
+              <div className="mt-3 p-2 bg-bg-surface2 rounded-xl text-xs text-text-secondary">
+                🏠 Home alternative: <span className="font-medium text-text-primary">{EXERCISES[exData.homeAlternative].name}</span>
+              </div>
             )}
-            {onRemove && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                className="py-2.5 px-4 rounded-xl border border-error/30 text-error font-medium text-sm flex items-center justify-center hover:bg-error/5 transition-colors"
-                aria-label="Remove exercise"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+            
+            <div className="flex gap-2 mt-4">
+              {onRequestSwap && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onRequestSwap(); }}
+                  className="flex-1 py-2.5 rounded-xl border border-accent/30 text-accent font-medium text-sm flex items-center justify-center gap-2 hover:bg-accent/5 transition-colors"
+                >
+                  <ArrowLeftRight size={14} />
+                  AI Swap
+                </button>
+              )}
+              {onRemove && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                  className="py-2.5 px-4 rounded-xl border border-error/30 text-error font-medium text-sm flex items-center justify-center hover:bg-error/5 transition-colors"
+                  aria-label="Remove exercise"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -525,7 +534,8 @@ export function TrainDashboard() {
   }
 
   return (
-    <div className="page animate-fade-in">
+    <PageTransition>
+      <div className="page bg-bg pt-6 pb-8">
       <div className="page-header flex items-start justify-between">
         <div>
           <h1 className="font-heading font-bold text-2xl text-text-primary">Your Workout 💪</h1>
@@ -647,25 +657,27 @@ export function TrainDashboard() {
 
       {/* All Days */}
       <div className="flex flex-col gap-3">
-        {plan.days.map((day) => (
-          <div key={`${day.dayOfWeek}-${day.dayLabel}`}>
-            <WorkoutDayCard
-              day={day}
-              isToday={day.dayOfWeek === todayDow}
-              onSwapExercise={(index, currentId) => setSwappingTarget({ dayOfWeek: day.dayOfWeek, exerciseIndex: index, currentId })}
-              onRemoveExercise={(index) => handleRemoveExercise(day.dayOfWeek, index)}
-              onAddExercise={() => setAddingToDay(day.dayOfWeek)}
-            />
-            {day.dayOfWeek === todayDow && lastCompleted !== day.dayLabel && day.exercises.length > 0 && (
-              <button
-                onClick={() => setActiveLogger(day)}
-                className="btn btn-secondary btn-sm w-full mt-2 mb-1"
-              >
-                <PlayCircle size={14} /> Log This Session
-              </button>
-            )}
-          </div>
-        ))}
+        <AnimatePresence>
+          {plan.days.map((day) => (
+            <motion.div key={`${day.dayOfWeek}-${day.dayLabel}`}>
+              <WorkoutDayCard
+                day={day}
+                isToday={day.dayOfWeek === todayDow}
+                onSwapExercise={(index, currentId) => setSwappingTarget({ dayOfWeek: day.dayOfWeek, exerciseIndex: index, currentId })}
+                onRemoveExercise={(index) => handleRemoveExercise(day.dayOfWeek, index)}
+                onAddExercise={() => setAddingToDay(day.dayOfWeek)}
+              />
+              {day.dayOfWeek === todayDow && lastCompleted !== day.dayLabel && day.exercises.length > 0 && (
+                <button
+                  onClick={() => setActiveLogger(day)}
+                  className="btn btn-secondary btn-sm w-full mt-2 mb-1"
+                >
+                  <PlayCircle size={14} /> Log This Session
+                </button>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       {/* Workout Logger Modal */}
@@ -696,6 +708,7 @@ export function TrainDashboard() {
           onSelect={handleAddExercise}
         />
       )}
-    </div>
+      </div>
+    </PageTransition>
   )
 }

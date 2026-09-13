@@ -18,6 +18,8 @@ import { FoodSearch } from './FoodSearch'
 import { StatCard, ProgressBar, AnimatedNumber } from '@/components/shared'
 import { Button } from '@/components/ui'
 import { clsx } from 'clsx'
+import { motion, AnimatePresence } from 'framer-motion'
+import { PageTransition } from '@/components/layout/PageTransition'
 
 const MEAL_CONFIG: { slot: MealSlot; label: string; emoji: string; time: string }[] = [
   { slot: 'breakfast', label: 'Breakfast', emoji: '🌅', time: '7–9 AM' },
@@ -108,9 +110,15 @@ function MealIconTile({ config, entries, onAdd, onDelete, onBrowse, onVision }: 
         </div>
       </div>
 
-      {expanded && hasFood && (
-        <div className="px-4 pb-4 border-t border-border animate-slide-up" style={{ animationDuration: '200ms' }}>
-          <div className="flex gap-4 py-3 border-b border-border-strong/30 mb-2">
+      <AnimatePresence>
+        {expanded && hasFood && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="px-4 pb-4 border-t border-border overflow-hidden"
+          >
+            <div className="flex gap-4 py-3 border-b border-border-strong/30 mb-2">
             <NutritionChip label="P" value={totals.protein} unit="g" colorClass="bg-macro-protein" />
             <NutritionChip label="C" value={totals.carbs} unit="g" colorClass="bg-macro-carbs" />
             <NutritionChip label="F" value={totals.fat} unit="g" colorClass="bg-macro-fat" />
@@ -137,9 +145,10 @@ function MealIconTile({ config, entries, onAdd, onDelete, onBrowse, onVision }: 
                 ))}
               </div>
             ))}
-          </div>
-        </div>
-      )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </StatCard>
   )
 }
@@ -427,74 +436,77 @@ export function EatDashboard() {
   }
 
   return (
-    <div className="page bg-bg">
-      <div className="page-header flex flex-col mb-6 animate-fade-in">
-        <h1 className="text-display text-text-primary">What you ate <span className="drop-shadow-sm">🥗</span></h1>
-        
-        <div className="flex items-center gap-2 mt-4 bg-bg-surface2 rounded-xl p-1 shadow-inner border border-border">
-          <button onClick={() => navigateDate('prev')} className="w-10 h-10 flex items-center justify-center rounded-lg text-text-secondary hover:bg-bg-surface hover:shadow-soft transition-all active:scale-95">
-            <ChevronLeft size={20} />
-          </button>
-          <div className="flex-1 text-center flex flex-col justify-center">
-            <div className="text-label text-text-primary leading-tight">
-              {isTodaySelected ? 'Today' : format(selectedDateObj, 'EEEE')}
-            </div>
-            <div className="text-micro text-text-tertiary">{format(selectedDateObj, 'd MMM yyyy')}</div>
-          </div>
-          <button onClick={() => navigateDate('next')} disabled={isTodaySelected} className={clsx("w-10 h-10 flex items-center justify-center rounded-lg transition-all", isTodaySelected ? "text-text-tertiary opacity-30" : "text-text-secondary hover:bg-bg-surface hover:shadow-soft active:scale-95")}>
-            <ChevronRight size={20} />
-          </button>
-        </div>
-      </div>
-
-      <StatCard padding="lg" className="mb-6 animate-slide-up">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-baseline gap-1">
-            <AnimatedNumber value={totals.calories} className="text-hero text-text-primary" />
-            <span className="text-body font-semibold text-text-tertiary">/ {metrics.caloricTarget} kcal</span>
-          </div>
-          <div className="text-label text-text-secondary bg-bg-surface2 px-3 py-1.5 rounded-pill border border-border">
-            {Math.max(0, Math.round(metrics.caloricTarget - totals.calories))} kcal left
-          </div>
-        </div>
-        
-        <ProgressBar value={totals.calories} max={metrics.caloricTarget} heightClass="h-2.5" className="mb-6" colorClass="bg-accent" />
-        
-        <div className="grid grid-cols-4 gap-3">
-          {[
-            { label: 'Protein', consumed: totals.protein, target: metrics.proteinTarget, colorClass: 'bg-macro-protein' },
-            { label: 'Carbs', consumed: totals.carbs, target: metrics.carbTarget, colorClass: 'bg-macro-carbs' },
-            { label: 'Fat', consumed: totals.fat, target: metrics.fatTarget, colorClass: 'bg-macro-fat' },
-            { label: 'Fiber', consumed: totals.fiber, target: metrics.fiberTarget, colorClass: 'bg-macro-fiber' },
-          ].map(({ label, consumed, target, colorClass }) => (
-            <div key={label} className="flex flex-col gap-1.5">
-              <div className="text-sm font-semibold text-text-primary tabular-nums text-center">
-                <AnimatedNumber value={consumed} />g
+    <PageTransition>
+      <div className="page bg-bg pt-6">
+        {/* Header (Sticky) */}
+        <div className="page-header flex flex-col mb-6 animate-fade-in">
+          <h1 className="text-display text-text-primary">What you ate <span className="drop-shadow-sm">🥗</span></h1>
+          
+          <div className="flex items-center gap-2 mt-4 bg-bg-surface2 rounded-xl p-1 shadow-inner border border-border">
+            <button onClick={() => navigateDate('prev')} className="w-10 h-10 flex items-center justify-center rounded-lg text-text-secondary hover:bg-bg-surface hover:shadow-soft transition-all active:scale-95">
+              <ChevronLeft size={20} />
+            </button>
+            <div className="flex-1 text-center flex flex-col justify-center">
+              <div className="text-label text-text-primary leading-tight">
+                {isTodaySelected ? 'Today' : format(selectedDateObj, 'EEEE')}
               </div>
-              <ProgressBar value={consumed} max={target} colorClass={colorClass} heightClass="h-1.5" />
-              <div className="text-micro text-text-tertiary text-center">{label}</div>
+              <div className="text-micro text-text-tertiary">{format(selectedDateObj, 'd MMM yyyy')}</div>
             </div>
+            <button onClick={() => navigateDate('next')} disabled={isTodaySelected} className={clsx("w-10 h-10 flex items-center justify-center rounded-lg transition-all", isTodaySelected ? "text-text-tertiary opacity-30" : "text-text-secondary hover:bg-bg-surface hover:shadow-soft active:scale-95")}>
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+
+        <StatCard padding="lg" className="mb-6 animate-slide-up">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-baseline gap-1">
+              <AnimatedNumber value={totals.calories} className="text-hero text-text-primary" />
+              <span className="text-body font-semibold text-text-tertiary">/ {metrics.caloricTarget} kcal</span>
+            </div>
+            <div className="text-label text-text-secondary bg-bg-surface2 px-3 py-1.5 rounded-pill border border-border">
+              {Math.max(0, Math.round(metrics.caloricTarget - totals.calories))} kcal left
+            </div>
+          </div>
+          
+          <ProgressBar value={totals.calories} max={metrics.caloricTarget} heightClass="h-2.5" className="mb-6" colorClass="bg-accent" />
+          
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { label: 'Protein', consumed: totals.protein, target: metrics.proteinTarget, colorClass: 'bg-macro-protein' },
+              { label: 'Carbs', consumed: totals.carbs, target: metrics.carbTarget, colorClass: 'bg-macro-carbs' },
+              { label: 'Fat', consumed: totals.fat, target: metrics.fatTarget, colorClass: 'bg-macro-fat' },
+              { label: 'Fiber', consumed: totals.fiber, target: metrics.fiberTarget, colorClass: 'bg-macro-fiber' },
+            ].map(({ label, consumed, target, colorClass }) => (
+              <div key={label} className="flex flex-col gap-1.5">
+                <div className="text-sm font-semibold text-text-primary tabular-nums text-center">
+                  <AnimatedNumber value={consumed} />g
+                </div>
+                <ProgressBar value={consumed} max={target} colorClass={colorClass} heightClass="h-1.5" />
+                <div className="text-micro text-text-tertiary text-center">{label}</div>
+              </div>
+            ))}
+          </div>
+        </StatCard>
+
+        <div className="flex flex-col gap-3 pb-8 animate-slide-up" style={{ animationDelay: '100ms' }}>
+          {MEAL_CONFIG.map(config => (
+            <MealIconTile
+              key={config.slot}
+              config={config}
+              entries={entriesForMeal(config.slot)}
+              onAdd={(slot) => setActiveLogger(slot)}
+              onDelete={handleDelete}
+              onBrowse={(slot) => setActiveBrowser(slot)}
+              onVision={(slot) => setActiveVision(slot)}
+            />
           ))}
         </div>
-      </StatCard>
 
-      <div className="flex flex-col gap-3 pb-8 animate-slide-up" style={{ animationDelay: '100ms' }}>
-        {MEAL_CONFIG.map(config => (
-          <MealIconTile
-            key={config.slot}
-            config={config}
-            entries={entriesForMeal(config.slot)}
-            onAdd={(slot) => setActiveLogger(slot)}
-            onDelete={handleDelete}
-            onBrowse={(slot) => setActiveBrowser(slot)}
-            onVision={(slot) => setActiveVision(slot)}
-          />
-        ))}
+        {activeLogger && <FoodLogger slot={activeLogger} onClose={() => setActiveLogger(null)} />}
+        {activeBrowser && <FoodSearch slot={activeBrowser} onClose={() => setActiveBrowser(null)} />}
+        {activeVision && <VisionLogger slot={activeVision} onClose={() => setActiveVision(null)} />}
       </div>
-
-      {activeLogger && <FoodLogger slot={activeLogger} onClose={() => setActiveLogger(null)} />}
-      {activeBrowser && <FoodSearch slot={activeBrowser} onClose={() => setActiveBrowser(null)} />}
-      {activeVision && <VisionLogger slot={activeVision} onClose={() => setActiveVision(null)} />}
-    </div>
+    </PageTransition>
   )
 }

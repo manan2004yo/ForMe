@@ -360,6 +360,9 @@ interface AlertProps {
   className?: string
 }
 
+export * from './ToastContainer'
+export * from './AnimatedCounter'
+
 export function Alert({ type = 'info', children, className }: AlertProps) {
   const colors = {
     success: 'bg-success/10 border-success/20 text-success',

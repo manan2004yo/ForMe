@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { clsx } from 'clsx';
+import { clsx } from 'clsx'
+import { motion } from 'framer-motion';
 
 interface ProgressBarProps {
   value: number;
@@ -28,13 +29,15 @@ export function ProgressBar({
   const over = rawPct > 1;
 
   return (
-    <div className={clsx('w-full bg-border rounded-pill overflow-hidden', heightClass, className)}>
-      <div
+    <div className={clsx('w-full bg-bg-surface2 rounded-full overflow-hidden relative', heightClass, className)}>
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: `${pct}%` }}
+        transition={{ type: "spring", stiffness: 60, damping: 15 }}
         className={clsx(
-          'h-full rounded-pill transition-all ease-out duration-700',
+          'h-full rounded-full transition-colors duration-300',
           over ? 'bg-status-warning' : colorClass
         )}
-        style={{ width: isMounted ? `${pct}%` : '0%' }}
       />
     </div>
   );

@@ -3,7 +3,8 @@
 // ============================================================
 
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
 import { useAchievementEngine } from '@/lib/engines/useAchievementEngine'
@@ -26,6 +27,7 @@ import { AchievementsPage } from '@/features/profile/AchievementsPage'
 function AuthenticatedApp() {
   const { user, logout } = useAuthStore()
   const { profile, loadProfile, error } = useUserStore()
+  const location = useLocation()
   useAchievementEngine()
 
   useEffect(() => {
@@ -72,17 +74,19 @@ function AuthenticatedApp() {
 
   return (
     <AppShell>
-      <Routes>
-        <Route path="/" element={<HomeDashboard />} />
-        <Route path="/eat" element={<EatDashboard />} />
-        <Route path="/plan" element={<PlanDashboard />} />
-        <Route path="/train" element={<TrainDashboard />} />
-        <Route path="/progress" element={<ProgressDashboard />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profile/integrations" element={<IntegrationsPage />} />
-        <Route path="/profile/achievements" element={<AchievementsPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<HomeDashboard />} />
+          <Route path="/eat" element={<EatDashboard />} />
+          <Route path="/plan" element={<PlanDashboard />} />
+          <Route path="/train" element={<TrainDashboard />} />
+          <Route path="/progress" element={<ProgressDashboard />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/integrations" element={<IntegrationsPage />} />
+          <Route path="/profile/achievements" element={<AchievementsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AnimatePresence>
     </AppShell>
   )
 }
