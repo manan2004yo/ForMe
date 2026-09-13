@@ -65,24 +65,30 @@ function MealPlanCard({ meal, expanded, onToggle }: {
       {expanded && (
         <div className="px-4 pb-4 border-t border-black/5 animate-fade-in">
           <div className="flex flex-col gap-2 mt-3">
-            {meal.items.map((item, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent mt-2 flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-sm font-medium text-text-primary">{item.foodName}</span>
-                    <span className="text-xs text-text-tertiary">{Math.round(item.nutrition.calories)} kcal</span>
-                  </div>
-                  <div className="text-xs text-text-secondary">
-                    {item.quantity} {item.unit}
-                    {item.notes && <span className="text-text-tertiary ml-1">· {item.notes}</span>}
-                  </div>
-                  <div className="text-xs text-text-tertiary">
-                    P:{Math.round(item.nutrition.protein)}g · C:{Math.round(item.nutrition.carbs)}g · F:{Math.round(item.nutrition.fat)}g · Fiber:{Math.round(item.nutrition.fiber)}g
+            {meal.items.length === 0 ? (
+              <div className="text-center py-4 text-xs text-text-tertiary bg-black/5 rounded-xl">
+                Manual builder coming soon. Use the 'Eat' tab to log food.
+              </div>
+            ) : (
+              meal.items.map((item, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent mt-2 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-sm font-medium text-text-primary">{item.foodName}</span>
+                      <span className="text-xs text-text-tertiary">{Math.round(item.nutrition.calories)} kcal</span>
+                    </div>
+                    <div className="text-xs text-text-secondary">
+                      {item.quantity} {item.unit}
+                      {item.notes && <span className="text-text-tertiary ml-1">· {item.notes}</span>}
+                    </div>
+                    <div className="text-xs text-text-tertiary">
+                      P:{Math.round(item.nutrition.protein)}g · C:{Math.round(item.nutrition.carbs)}g · F:{Math.round(item.nutrition.fat)}g · Fiber:{Math.round(item.nutrition.fiber)}g
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       )}
@@ -99,7 +105,17 @@ export function PlanDashboard() {
 
   useEffect(() => {
     if (profile && metrics) {
-      setPlan(generateDietPlan(profile, metrics))
+      setPlan({
+        id: `plan_${Date.now()}`,
+        userId: profile.id,
+        type: 'cutting',
+        totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
+        meals: [
+          { slot: 'breakfast', label: 'Breakfast', items: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } },
+          { slot: 'lunch', label: 'Lunch', items: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } },
+          { slot: 'dinner', label: 'Dinner', items: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } },
+        ]
+      })
     }
   }, [profile, metrics])
 

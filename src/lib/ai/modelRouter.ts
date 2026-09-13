@@ -22,33 +22,42 @@ interface AIResponse {
 
 async function callMockProvider(query: string, context: AIContext): Promise<AIResponse> {
   // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1500))
+  await new Promise(resolve => setTimeout(resolve, 800))
 
   const lowerQuery = query.toLowerCase()
 
-  if (lowerQuery.includes('pizza') || lowerQuery.includes('can i eat')) {
+  if (lowerQuery.includes('pizza') || lowerQuery.includes('burger') || lowerQuery.includes('cheat')) {
     return {
-      message: `You can definitely have pizza! Looking at your day, you have about ${Math.round(context.metrics?.caloricTarget - (context.todayFood?.calories || 0))} calories left. I'd recommend a smaller portion and perhaps a protein-rich side to hit your ${context.metrics?.proteinTarget}g protein goal.`,
-      confidence: 'high'
-    }
-  }
-
-  if (lowerQuery.includes('not losing') || lowerQuery.includes('weight')) {
-    return {
-      message: `I see your weight has been stable, but if we look at your waist measurements and strength progress, you're actually building muscle while losing fat (body recomposition). Don't change your calories yet!`,
+      message: `You can fit it in! You have ${Math.round(context.metrics?.caloricTarget - (context.todayFood?.calories || 0))} calories left. Just be mindful of your protein target (${context.metrics?.proteinTarget}g).`,
       confidence: 'high'
     }
   }
 
   if (lowerQuery.includes('workout') || lowerQuery.includes('train')) {
     return {
-      message: `Based on your schedule, you have an Upper Body session today. Since you slept poorly yesterday, we can switch it to a shorter 30-minute recovery version if you prefer?`,
-      suggestedActions: [{ label: 'Switch to 30 min', action: 'modify_workout' }]
+      message: `I recommend focusing on progressive overload. If you're feeling tired, it's okay to drop the volume a bit. Need to adjust your split?`,
+      suggestedActions: [{ label: 'View Training Plan', action: 'go_train' }]
     }
   }
 
+  if (lowerQuery.includes('diet') || lowerQuery.includes('eat') || lowerQuery.includes('food')) {
+    return {
+      message: `Currently, you've hit ${Math.round(context.todayFood?.protein || 0)}g out of ${context.metrics?.proteinTarget}g of protein today. Try to include a lean protein source in your next meal!`,
+      suggestedActions: [{ label: 'Log Food', action: 'log_food' }]
+    }
+  }
+
+  // Generic fallback that actually echoes a bit of context so it doesn't look completely dumb
+  const responses = [
+    "That's a great question. Consistency is key!",
+    "I'm here to help you stay on track.",
+    "Make sure you're staying hydrated today!",
+    "Listen to your body, recovery is just as important as the workout."
+  ]
+  const randomResponse = responses[Math.floor(Math.random() * responses.length)]
+
   return {
-    message: `I'm FORME's AI Assistant. I can see your daily target is ${context.metrics?.caloricTarget} kcal and you've eaten ${Math.round(context.todayFood?.calories || 0)} kcal so far. How can I help you reach your goals today?`
+    message: `${randomResponse} By the way, you have ${Math.round(context.metrics?.caloricTarget - (context.todayFood?.calories || 0))} calories remaining today.`
   }
 }
 
