@@ -11,25 +11,25 @@
 /* ─── Design Tokens ─────────────────────────────────────────── */
 
 :root {
-  /* LIGHT THEME (Pristine, frosted glass vibe) */
-  --bg: #F8F9FA;
-  --bg-surface: rgba(255, 255, 255, 0.7);
-  --bg-surface-elevated: rgba(255, 255, 255, 0.85);
-  --bg-surface-floating: rgba(255, 255, 255, 0.95);
+  /* HIGH-END OLED DARK THEME */
+  --bg: #000000;
+  --bg-surface: rgba(20, 20, 20, 0.7);
+  --bg-surface-elevated: rgba(30, 30, 30, 0.85);
+  --bg-surface-floating: rgba(40, 40, 40, 0.95);
   
-  --text-primary: #111111;
-  --text-secondary: #555555;
-  --text-tertiary: #888888;
-  --text-inverse: #FFFFFF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #AAAAAA;
+  --text-tertiary: #666666;
+  --text-inverse: #000000;
 
   /* Accent - Vibrant Orange/Amber */
-  --accent: #E56B2E;
-  --accent-light: #FBEFE8;
-  --accent-muted: #F3A87C;
-  --accent-dark: #A64719;
+  --accent: #FF5A00;
+  --accent-light: rgba(255, 90, 0, 0.15);
+  --accent-muted: rgba(255, 90, 0, 0.5);
+  --accent-dark: #B33F00;
 
-  --border-subtle: rgba(0, 0, 0, 0.04);
-  --border-strong: rgba(0, 0, 0, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-strong: rgba(255, 255, 255, 0.1);
 
   /* Macros & Status */
   --macro-protein: #8B5CF6;

@@ -20,6 +20,8 @@ import { Button } from '@/components/ui'
 import { clsx } from 'clsx'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/layout/PageTransition'
+import { FadeUpReveal, StaggerGroup, StaggerItem } from '@/components/animations/Motion'
+import { ParallaxLayer } from '@/components/layout/ParallaxScroll'
 
 const MEAL_CONFIG: { slot: MealSlot; label: string; emoji: string; time: string }[] = [
   { slot: 'breakfast', label: 'Breakfast', emoji: '🌅', time: '7–9 AM' },
@@ -439,7 +441,8 @@ export function EatDashboard() {
     <PageTransition>
       <div className="page bg-bg pt-6">
         {/* Header (Sticky) */}
-        <div className="page-header flex flex-col mb-6 animate-fade-in">
+        <FadeUpReveal delay={0.1}>
+          <div className="page-header flex flex-col mb-6">
           <h1 className="text-display text-text-primary">What you ate <span className="drop-shadow-sm">🥗</span></h1>
           
           <div className="flex items-center gap-2 mt-4 bg-bg-surface2 rounded-xl p-1 shadow-inner border border-border">
@@ -457,8 +460,10 @@ export function EatDashboard() {
             </button>
           </div>
         </div>
+        </FadeUpReveal>
 
-        <StatCard padding="lg" className="mb-6 animate-slide-up">
+        <FadeUpReveal delay={0.2}>
+        <StatCard padding="lg" className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-baseline gap-1">
               <AnimatedNumber value={totals.calories} className="text-hero text-text-primary" />
@@ -488,9 +493,11 @@ export function EatDashboard() {
             ))}
           </div>
         </StatCard>
+        </FadeUpReveal>
 
-        <div className="flex flex-col gap-3 pb-8 animate-slide-up" style={{ animationDelay: '100ms' }}>
+        <StaggerGroup className="flex flex-col gap-3 pb-8">
           {MEAL_CONFIG.map(config => (
+            <StaggerItem key={config.slot}>
             <MealIconTile
               key={config.slot}
               config={config}
@@ -500,8 +507,9 @@ export function EatDashboard() {
               onBrowse={(slot) => setActiveBrowser(slot)}
               onVision={(slot) => setActiveVision(slot)}
             />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGroup>
 
         {activeLogger && <FoodLogger slot={activeLogger} onClose={() => setActiveLogger(null)} />}
         {activeBrowser && <FoodSearch slot={activeBrowser} onClose={() => setActiveBrowser(null)} />}

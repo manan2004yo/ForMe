@@ -56,7 +56,7 @@ function TrajectoryCard({ profile, metrics }: { profile: any; metrics: any }) {
   ]
 
   return (
-    <StatCard className="mb-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
+    <StatCard className="mb-4 " style={{ animationDelay: '100ms' }}>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-section text-text-primary">Weight Trajectory</h2>
         <div className="flex gap-4">
@@ -102,7 +102,7 @@ function TrajectoryCard({ profile, metrics }: { profile: any; metrics: any }) {
 
 function WeightHistoryChart({ entries }: { entries: WeightLogEntry[] }) {
   return (
-    <StatCard className="mb-4 animate-slide-up" style={{ animationDelay: '50ms' }}>
+    <StatCard className="mb-4 " style={{ animationDelay: '50ms' }}>
       <h2 className="text-section text-text-primary mb-6">Weight History</h2>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
@@ -141,7 +141,7 @@ function CalorieHeatmap({ calTarget }: { calTarget: number }) {
   const onTarget = days.filter(d => d.status === 'good').length
 
   return (
-    <StatCard className="mb-4 animate-slide-up" style={{ animationDelay: '150ms' }}>
+    <StatCard className="mb-4 " style={{ animationDelay: '150ms' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Flame size={20} className="text-accent" />
@@ -197,7 +197,7 @@ export function ProgressDashboard() {
 
   return (
     <div className="page bg-bg">
-      <div className="page-header flex flex-col mb-6 animate-fade-in">
+      <div className="page-header flex flex-col mb-6">
         <h1 className="text-display text-text-primary">Your Progress <span className="drop-shadow-sm">📊</span></h1>
         <div className="flex items-center justify-between mt-2">
           <p className="text-label text-text-secondary">
@@ -210,7 +210,7 @@ export function ProgressDashboard() {
       </div>
 
       {showLogger && (
-        <StatCard className="mb-6 animate-slide-up border-accent">
+        <StatCard className="mb-6  border-accent">
           <h3 className="text-body font-semibold text-text-primary mb-4">Log Today's Measurements</h3>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>

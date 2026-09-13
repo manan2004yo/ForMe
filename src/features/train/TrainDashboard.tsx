@@ -14,6 +14,7 @@ import { WorkoutLogger } from './WorkoutLogger'
 import { format } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/layout/PageTransition'
+import { FadeUpReveal, StaggerGroup, StaggerItem } from '@/components/animations/Motion'
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
