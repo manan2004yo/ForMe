@@ -13,6 +13,7 @@ interface AuthState {
   isInitialized: boolean
   error: string | null
   isDemo: boolean
+  isPro: boolean
 
   // Actions
   initialize: () => () => void
@@ -23,6 +24,7 @@ interface AuthState {
   sendPasswordReset: (email: string) => Promise<void>
   clearError: () => void
   setDemoUser: () => void
+  setProStatus: (status: boolean) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -33,12 +35,16 @@ export const useAuthStore = create<AuthState>()(
       isInitialized: false,
       error: null,
       isDemo: false,
+      isPro: false,
+
+  setProStatus: (status: boolean) => set({ isPro: status }),
 
   setDemoUser: () => {
     set({
       user: { uid: 'demo', email: 'demo@forme.app', displayName: 'Arjun (Demo)' },
       isInitialized: true,
       isDemo: true,
+      isPro: true, // Demo users get pro automatically for testing
     })
   },
 

@@ -11,6 +11,8 @@ import { LogOut, Target, Edit3, Shield, User, Save, Flame, Activity, BookOpen } 
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 import type { UserProfile } from '@/types'
+import { FormeProPaywall } from '../pro/FormeProPaywall'
+import { Crown } from 'lucide-react'
 
 export function ProfilePage() {
   const navigate = useNavigate()
@@ -21,6 +23,8 @@ export function ProfilePage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState<Partial<UserProfile> | null>(null)
+  const [showProPaywall, setShowProPaywall] = useState(false)
+  const { isPro } = useAuthStore()
 
   if (!profile) return null
 
@@ -39,6 +43,14 @@ export function ProfilePage() {
       await saveProfile(editForm)
     }
     setIsEditing(false)
+  }
+
+  if (showProPaywall) {
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-black/95">
+        <FormeProPaywall onClose={() => setShowProPaywall(false)} />
+      </div>
+    )
   }
 
   return (
@@ -209,6 +221,29 @@ export function ProfilePage() {
               <div className="text-xs text-white/50">Meal Templates</div>
             </div>
           </div>
+        </div>
+
+        {/* FORME PRO */}
+        <div className="bg-gradient-to-r from-accent/20 to-accent/5 border border-accent/20 rounded-3xl p-6 shadow-xl mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center">
+              <Crown className="text-accent" size={24} />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-lg">FORME PRO</h3>
+              <p className="text-sm text-white/60">
+                {isPro ? "You have unlocked all premium features." : "Unlock AI Periodization, Menu Hacker & more."}
+              </p>
+            </div>
+          </div>
+          {!isPro && (
+            <button 
+              onClick={() => setShowProPaywall(true)}
+              className="px-6 py-3 bg-accent text-black font-bold rounded-xl whitespace-nowrap active:scale-95 transition-all shadow-[0_0_20px_rgba(45,212,191,0.3)]"
+            >
+              Upgrade Now
+            </button>
+          )}
         </div>
 
         {/* Logout */}
