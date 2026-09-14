@@ -7,6 +7,7 @@ import { Plus, Trash2, ChevronDown, ChevronUp, Sun, Sunset, Moon, Coffee, Save, 
 import { usePlanStore } from '@/store/planStore'
 import type { MealSlot, NutritionInfo } from '@/types'
 import { PlanFoodSearch } from './PlanFoodSearch'
+import { SmartGroceryEngine } from './SmartGroceryEngine'
 import { ProgressBar, AnimatedNumber } from '@/components/shared'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
@@ -138,6 +139,7 @@ function MealSection({ slot, label, foods, onBrowse }: {
 }
 
 export function PlanDashboard() {
+  const [showGroceryEngine, setShowGroceryEngine] = useState(false)
   const { currentPlan, templates, saveAsTemplate, loadTemplate, clearPlan } = usePlanStore()
   const { metrics } = useUserStore()
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
@@ -158,7 +160,8 @@ export function PlanDashboard() {
   }
 
   return (
-    <PageTransition>
+    <>
+      <PageTransition>
       <div className="page relative">
         <header className="page-header mb-8 flex items-end justify-between">
           <div>
@@ -260,5 +263,7 @@ export function PlanDashboard() {
         )}
       </div>
     </PageTransition>
+      {showGroceryEngine && <SmartGroceryEngine onClose={() => setShowGroceryEngine(false)} />}
+    </>
   )
 }

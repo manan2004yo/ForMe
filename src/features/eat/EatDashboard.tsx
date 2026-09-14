@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import type { MealSlot, FoodLogEntry, NutritionInfo } from '@/types'
 import { FoodSearch } from './FoodSearch'
+import { FamilyRecipeSplitter } from './FamilyRecipeSplitter'
 import { ProgressBar, AnimatedNumber } from '@/components/shared'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
@@ -158,6 +159,7 @@ function MealSection({ config, entries, onDelete, onBrowse }: {
 }
 
 export function EatDashboard() {
+  const [showRecipeSplitter, setShowRecipeSplitter] = useState(false)
   const { user } = useAuthStore()
   const { entries, removeEntry } = useFoodLogStore()
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
@@ -175,7 +177,8 @@ export function EatDashboard() {
   }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
 
   return (
-    <PageTransition>
+    <>
+      <PageTransition>
       <div className="page relative">
         <header className="page-header mb-8">
           <p className="text-sm text-white/50 font-medium tracking-wide mb-1 uppercase">
@@ -226,7 +229,22 @@ export function EatDashboard() {
 
         {/* Meal Slots */}
         <div className="space-y-1">
-          {MEAL_CONFIG.map(config => (
+          
+        {/* Mom's Kitchen Splitter CTA */}
+        <button 
+          onClick={() => setShowRecipeSplitter(true)}
+          className="w-full mt-4 bg-gradient-to-r from-accent/20 to-[#121212] border border-accent/20 rounded-2xl p-4 flex items-center justify-between group active:scale-[0.98] transition-transform text-left"
+        >
+          <div>
+            <h3 className="text-white font-semibold text-sm">Mom's Kitchen Splitter</h3>
+            <p className="text-xs text-white/50 mt-1">Calculate exact macros for family meals</p>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-black transition-colors">
+            <Plus size={16} />
+          </div>
+        </button>
+
+        {MEAL_CONFIG.map(config => (
             <MealSection
               key={config.slot}
               config={config}
@@ -244,5 +262,7 @@ export function EatDashboard() {
         )}
       </div>
     </PageTransition>
+      {showRecipeSplitter && <FamilyRecipeSplitter onClose={() => setShowRecipeSplitter(false)} />}
+    </>
   )
 }
