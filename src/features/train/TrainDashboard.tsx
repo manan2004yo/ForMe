@@ -3,9 +3,12 @@
 // ============================================================
 
 import { useState } from 'react'
-import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download, Coffee } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download, Coffee, CheckCircle2 } from 'lucide-react'
 import { useTrainStore } from '@/store/trainStore'
-import type { PlannedExercise } from '@/types'
+import { useProgressStore } from '@/store/progressStore'
+import { useAuthStore } from '@/store/authStore'
+import { v4 as uuidv4 } from 'uuid'
+import type { PlannedExercise, WorkoutLogEntry, LoggedExercise, LoggedSet } from '@/types'
 import { TrainExerciseSearch } from './TrainExerciseSearch'
 import { MuscleHeatmap } from './MuscleHeatmap'
 import { PageTransition } from '@/components/layout/PageTransition'
@@ -54,8 +57,43 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse }: {
 }) {
   const [expanded, setExpanded] = useState(true)
   const { toggleRestDay, removeExerciseFromDay, saveAsTemplate } = useTrainStore()
+  const { logWorkout } = useProgressStore()
+  const { user } = useAuthStore()
   
   const hasExercises = exercises.length > 0
+
+  const handleLogWorkout = async () => {
+    if (!user) return
+    
+    // Convert planned exercises to logged exercises
+    const loggedExercises: LoggedExercise[] = exercises.map(ex => {
+      // Mock completed sets based on planned sets and reps
+      const mockSets: LoggedSet[] = Array.from({ length: ex.sets }).map((_, i) => ({
+        id: uuidv4(),
+        reps: ex.repRange[1], // Assuming they hit max reps in the range
+        weight: 0, // No weight specified in planner, default 0
+        rpe: (10 - (ex.rir || 8))
+      }))
+      
+      return {
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exerciseName,
+        muscleGroup: ex.muscleGroup,
+        sets: mockSets
+      }
+    })
+
+    const logEntry: Omit<WorkoutLogEntry, 'id' | 'createdAt'> = {
+      userId: user.uid,
+      date: new Date().toISOString().split('T')[0],
+      planDayLabel: DAY_NAMES[dayIndex],
+      exercises: loggedExercises,
+      completed: true
+    }
+
+    await logWorkout(user.uid, logEntry)
+    alert(`Workout logged! Your ${DAY_NAMES[dayIndex]} workout volume has been added to the Heatmap.`)
+  }
 
   return (
     <div className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden mb-4">
@@ -128,21 +166,29 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse }: {
             ))}
           </div>
           
-          <div className="flex justify-end p-2 border-t border-white/5 mt-2">
+          <div className="flex justify-between p-2 border-t border-white/5 mt-2">
             <button 
-              onClick={() => {
-                const name = prompt("Enter a name for this workout template (e.g., Push Day):")
-                if (name) saveAsTemplate(name, dayIndex)
-              }}
-              className="px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all flex items-center gap-1.5 active:scale-95"
+              onClick={(e) => { e.stopPropagation(); handleLogWorkout(); }}
+              className="px-4 py-1.5 text-xs font-bold text-black bg-accent hover:bg-accent/90 rounded-lg transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(45,212,191,0.2)] active:scale-95"
             >
-              <Save size={14} /> Save as template
+              <CheckCircle2 size={14} /> Log Workout
             </button>
-            <button 
-              className="px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all flex items-center gap-1.5 active:scale-95 ml-2"
-            >
-              Duplicate workout
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => {
+                  const name = prompt("Enter a name for this workout template (e.g., Push Day):")
+                  if (name) saveAsTemplate(name, dayIndex)
+                }}
+                className="px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all flex items-center gap-1.5 active:scale-95"
+              >
+                <Save size={14} /> Save template
+              </button>
+              <button 
+                className="px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all flex items-center gap-1.5 active:scale-95"
+              >
+                Duplicate
+              </button>
+            </div>
           </div>
         </div>
       )}
