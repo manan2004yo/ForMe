@@ -49,7 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ToastContainer />
       
       {/* Ask FORME FAB */}
-      <div className="fixed bottom-[100px] right-4 z-40">
+      <div className="fixed bottom-8 right-8 z-40">
         <div className="absolute inset-0 bg-accent blur-xl rounded-full opacity-40 animate-pulse-glow" />
         <button 
           onClick={() => setIsAssistantOpen(true)}
@@ -64,28 +64,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         isOpen={isAssistantOpen} 
         onClose={() => setIsAssistantOpen(false)} 
       />
-
-      {/* Premium Floating Bottom Dock Navigation */}
-      <div className="bottom-dock-container">
-        <nav className="bottom-dock">
-          {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-            const isActive = location.pathname === path
-            return (
-              <button
-                key={path}
-                onClick={() => navigate(path)}
-                className={clsx("nav-item", isActive && "active")}
-                aria-label={label}
-              >
-                <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className="transition-all duration-300" />
-                <span className="text-[10px] font-semibold tracking-wider mt-0.5">
-                  {label}
-                </span>
-              </button>
-            )
-          })}
-        </nav>
-      </div>
       
     </div>
   )
