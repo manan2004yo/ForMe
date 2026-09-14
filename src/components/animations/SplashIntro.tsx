@@ -58,12 +58,13 @@ export function SplashIntro() {
           className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden"
           // If the slice triggers, we want the whole container to stay while the internals animate.
           // The final exit just cleans up instantly since the slice covers the exit.
-          exit={{ opacity: 0, transition: { duration: 0.1 } }}
+          exit={{ opacity: 0, pointerEvents: 'none', transition: { duration: 0.1 } }}
         >
           {/* Skip Button */}
           <button 
             onClick={handleFinish}
-            className="absolute top-safe right-4 z-50 p-3 bg-black/40 backdrop-blur-md rounded-full text-white/50 hover:text-white transition-colors"
+            aria-label="Close intro video"
+            className="absolute top-safe right-4 z-50 p-3 bg-black/40 backdrop-blur-md rounded-full text-white/50 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
             style={{ marginTop: 'max(env(safe-area-inset-top), 16px)' }}
           >
             <X size={20} />

@@ -9,11 +9,11 @@ import { ArrowRight, Activity, Flame, Shield } from 'lucide-react'
 
 export function LandingPage() {
   const navigate = useNavigate()
-  const { loginDemo } = useAuthStore() as any // HACK: demo auth
+  const { setDemoUser } = useAuthStore()
   const { loadDemoProfile } = useUserStore()
 
   const handleDemo = () => {
-    if (loginDemo) loginDemo()
+    setDemoUser()
     loadDemoProfile()
     navigate('/')
   }
