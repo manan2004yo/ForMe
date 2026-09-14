@@ -172,6 +172,17 @@ export interface SavedMeal {
   createdAt: string
 }
 
+export interface FamilyRecipe {
+  id: string
+  userId: string
+  name: string
+  rawIngredients: LoggedFoodItem[]
+  totalMacros: NutritionInfo
+  totalServings: number
+  servingUnit: string // e.g., 'katori', 'plate', 'grams'
+  createdAt: string
+}
+
 // ─── Diet Plan ────────────────────────────────────────────────
 
 export interface MealPlanItem {

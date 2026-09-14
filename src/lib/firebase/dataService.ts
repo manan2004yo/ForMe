@@ -232,7 +232,7 @@ function getLocalWorkoutLogs(uid: string): WorkoutLogEntry[] {
   return raw ? JSON.parse(raw) : []
 }
 
-// ─── Saved Meals ──────────────────────────────────────────────
+// ─── Saved Meals & Recipes ──────────────────────────────────────
 
 export async function saveMeal(uid: string, meal: SavedMeal): Promise<void> {
   const ref = doc(db, 'users', uid, 'savedMeals', meal.id)
@@ -259,6 +259,34 @@ export async function getSavedMeals(uid: string): Promise<SavedMeal[]> {
 
 function getLocalSavedMeals(uid: string): SavedMeal[] {
   const raw = localStorage.getItem(`forme_savedmeals_${uid}`)
+  return raw ? JSON.parse(raw) : []
+}
+
+export async function saveFamilyRecipe(uid: string, recipe: any): Promise<void> {
+  const ref = doc(db, 'users', uid, 'familyRecipes', recipe.id)
+  try {
+    await setDoc(ref, recipe)
+  } catch (error) {
+    console.warn('Firestore write error (saveFamilyRecipe):', error)
+  }
+  const local = getLocalFamilyRecipes(uid)
+  const updated = local.filter((r: any) => r.id !== recipe.id)
+  updated.push(recipe)
+  localStorage.setItem(`forme_familyrecipes_${uid}`, JSON.stringify(updated))
+}
+
+export async function getFamilyRecipes(uid: string): Promise<any[]> {
+  try {
+    const ref = collection(db, 'users', uid, 'familyRecipes')
+    const snap = await getDocs(ref)
+    return snap.docs.map(d => d.data())
+  } catch {
+    return getLocalFamilyRecipes(uid)
+  }
+}
+
+function getLocalFamilyRecipes(uid: string): any[] {
+  const raw = localStorage.getItem(`forme_familyrecipes_${uid}`)
   return raw ? JSON.parse(raw) : []
 }
 
