@@ -1,10 +1,12 @@
-import * as functions from 'firebase-functions'
-import * as admin from 'firebase-admin'
+import * as functions from 'firebase-functions/v1'
+import { initializeApp } from 'firebase-admin/app'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import crypto from 'crypto'
 // @ts-ignore
 import Razorpay from 'razorpay'
 
-admin.initializeApp()
+initializeApp()
+const db = getFirestore()
 
 const razorpayKeyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder'
 const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder'
@@ -16,7 +18,7 @@ const instance = new Razorpay({
   key_secret: razorpayKeySecret,
 })
 
-export const createRazorpaySubscription = functions.https.onCall(async (data, context) => {
+export const createRazorpaySubscription = functions.https.onCall(async (data: any, context: functions.https.CallableContext) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be logged in')
   }
@@ -65,9 +67,8 @@ export const razorpayWebhook = functions.https.onRequest(async (req, res) => {
   const event = req.body
 
   // Idempotency: Prevent double processing
-  // Razorpay headers usually contain `x-razorpay-event-id`
-  const eventId = req.headers['x-razorpay-event-id'] as string || crypto.randomUUID()
-  const eventRef = admin.firestore().collection('razorpay_events').doc(eventId)
+  const eventId = (req.headers['x-razorpay-event-id'] as string) || crypto.randomUUID()
+  const eventRef = db.collection('razorpay_events').doc(eventId)
   const eventDoc = await eventRef.get()
 
   if (eventDoc.exists) {
@@ -76,7 +77,7 @@ export const razorpayWebhook = functions.https.onRequest(async (req, res) => {
     return
   }
 
-  await eventRef.set({ processedAt: admin.firestore.FieldValue.serverTimestamp(), type: event.event })
+  await eventRef.set({ processedAt: FieldValue.serverTimestamp(), type: event.event })
 
   // Handle successful subscription charge
   if (event.event === 'subscription.charged') {
@@ -84,7 +85,7 @@ export const razorpayWebhook = functions.https.onRequest(async (req, res) => {
     const uid = payload.notes?.firebase_uid
 
     if (uid) {
-      await admin.firestore().collection('users').doc(uid).set({
+      await db.collection('users').doc(uid).set({
         isPro: true,
         razorpaySubscriptionId: payload.id,
         razorpayCustomerId: payload.customer_id,
@@ -100,7 +101,7 @@ export const razorpayWebhook = functions.https.onRequest(async (req, res) => {
     const uid = payload.notes?.firebase_uid
 
     if (uid) {
-      await admin.firestore().collection('users').doc(uid).set({
+      await db.collection('users').doc(uid).set({
         isPro: false,
       }, { merge: true })
       
