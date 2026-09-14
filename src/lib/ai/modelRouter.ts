@@ -58,6 +58,27 @@ async function callMockProvider(query: string, context: AIContext): Promise<AIRe
     }
   }
 
+  // Parse natural language food logging
+  if (lowerQuery.includes('ate') || lowerQuery.includes('had') || lowerQuery.includes('eat')) {
+    // Basic mock parser
+    if (lowerQuery.includes('roti')) {
+      return {
+        message: `I can log that for you! 2 rotis are approximately 240 kcal and 6g of protein.`,
+        suggestedActions: [
+          { label: 'Log 2 Rotis to Lunch', action: 'ACTION:LOG_FOOD:roti' }
+        ]
+      }
+    }
+    if (lowerQuery.includes('egg') || lowerQuery.includes('eggs')) {
+      return {
+        message: `Got it. 3 whole eggs are roughly 230 kcal and 18g of protein.`,
+        suggestedActions: [
+          { label: 'Log 3 Eggs to Breakfast', action: 'ACTION:LOG_FOOD:eggs' }
+        ]
+      }
+    }
+  }
+
   return {
     message: `I've analyzed your progress. You have ${remainingCals} kcal left today. What would you like to focus on next?`,
     suggestedActions: [

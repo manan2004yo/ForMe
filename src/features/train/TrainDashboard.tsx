@@ -8,6 +8,7 @@ import { useTrainStore } from '@/store/trainStore'
 import type { PlannedExercise } from '@/types'
 import { TrainExerciseSearch } from './TrainExerciseSearch'
 import { MuscleHeatmap } from './MuscleHeatmap'
+import { LiveWorkoutBanner } from './LiveWorkoutBanner'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 
@@ -190,6 +191,8 @@ export function TrainDashboard() {
             )}
           </div>
         </header>
+
+        <LiveWorkoutBanner />
 
         <div className="mb-8">
           <MuscleHeatmap />
