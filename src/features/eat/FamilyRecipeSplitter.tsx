@@ -2,6 +2,9 @@ import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { UtensilsCrossed, Plus, Search, ChevronRight, Calculator, Check, ArrowLeft } from 'lucide-react'
 import { clsx } from 'clsx'
+import { v4 as uuidv4 } from 'uuid'
+import { useAuthStore } from '@/store/authStore'
+import { useFoodLogStore } from '@/store/foodLogStore'
 import type { LoggedFoodItem, NutritionInfo } from '@/types'
 
 // Mock database for ingredients
@@ -15,6 +18,9 @@ const MOCK_INGREDIENTS = [
 ]
 
 export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
+  const { user } = useAuthStore()
+  const { addFoodEntry } = useFoodLogStore()
+  
   const [recipeName, setRecipeName] = useState('')
   const [ingredients, setIngredients] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -51,6 +57,40 @@ export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
     const newIng = [...ingredients]
     newIng[index].grams = grams
     setIngredients(newIng)
+  }
+
+  const handleLogPortion = async () => {
+    if (!user || user.uid === 'demo') {
+      alert('Cannot save in demo mode')
+      onClose()
+      return
+    }
+    
+    if (!recipeName.trim()) {
+      alert('Please enter a recipe name')
+      return
+    }
+
+    const logItem: LoggedFoodItem = {
+      id: uuidv4(),
+      foodItemId: 'recipe_custom',
+      foodName: `${recipeName} (${myServings} Katoris)`,
+      quantity: 1,
+      unit: 'serving',
+      gramsConsumed: 100 * myServings,
+      nutrition: {
+        calories: myMacros.calories,
+        protein: myMacros.protein,
+        carbs: myMacros.carbs,
+        fat: myMacros.fat,
+        fiber: 0
+      },
+      confidence: 'high'
+    }
+
+    await addFoodEntry(user.uid, 'lunch', [logItem]) // Defaulting to lunch
+    alert('Logged successfully to Lunch!')
+    onClose()
   }
 
   return (
@@ -194,7 +234,7 @@ export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
               </div>
             </div>
             
-            <button onClick={onClose} className="w-full mt-6 py-3.5 rounded-xl bg-accent text-black font-bold tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-transform">
+            <button onClick={handleLogPortion} className="w-full mt-6 py-3.5 rounded-xl bg-accent text-black font-bold tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-transform">
               <Check size={18} />
               Log My Portion
             </button>
