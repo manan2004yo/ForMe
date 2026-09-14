@@ -5,19 +5,27 @@ import { PageTransition } from '@/components/layout/PageTransition'
 import { db } from '@/lib/firebase/config'
 import { doc, setDoc } from 'firebase/firestore'
 
-// Load Razorpay Script dynamically
-const loadRazorpay = () => {
-  return new Promise((resolve) => {
-    if (typeof window !== 'undefined' && (window as any).Razorpay) {
-      resolve(true)
-      return
-    }
-    const script = document.createElement('script')
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-    script.onload = () => resolve(true)
-    script.onerror = () => resolve(false)
-    document.body.appendChild(script)
-  })
+// Singleton promise to ensure script is only injected once even in Strict Mode
+let razorpayPromise: Promise<boolean> | null = null;
+
+const loadRazorpay = (): Promise<boolean> => {
+  if (typeof window === 'undefined') return Promise.resolve(false);
+  if ((window as any).Razorpay) return Promise.resolve(true);
+
+  if (!razorpayPromise) {
+    razorpayPromise = new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => {
+        console.error('Razorpay script failed to load. Check network tab.');
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
+  }
+  
+  return razorpayPromise;
 }
 
 export function FormeProPaywall({ onClose }: { onClose?: () => void }) {
@@ -41,7 +49,7 @@ export function FormeProPaywall({ onClose }: { onClose?: () => void }) {
 
       const isLoaded = await loadRazorpay()
       if (!isLoaded) {
-        throw new Error('Razorpay SDK failed to load. Are you online?')
+        throw new Error('Razorpay was blocked by your browser. Please disable your Adblocker or Brave Shields and try again.')
       }
 
       // Call Cloudflare Pages Function
