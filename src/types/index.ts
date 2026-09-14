@@ -237,6 +237,7 @@ export interface WorkoutSet {
 }
 
 export interface PlannedExercise {
+  id?: string
   exerciseId: string
   exerciseName: string
   muscleGroup: MuscleGroup

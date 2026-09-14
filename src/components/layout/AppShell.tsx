@@ -1,70 +1,111 @@
 // ============================================================
-// FORME — App Shell with Bottom Navigation
-// Premium Extreme Redesign
+// FORME - Premium App Shell (Sidebar & Bottom Nav)
 // ============================================================
 
-import { useNavigate, useLocation } from 'react-router-dom'
-import { useState } from 'react'
-import { Home, UtensilsCrossed, CalendarDays, Dumbbell, TrendingUp, User, Sparkles } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { ToastContainer } from '@/components/ui/ToastContainer'
-import { AskFormeAssistant } from '@/features/ai/AskFormeAssistant'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Home, Flame, BookOpen, Activity, TrendingUp, User, Sparkles } from 'lucide-react'
 import { clsx } from 'clsx'
+import { AskFormeAssistant } from '@/features/ai/AskFormeAssistant'
+import { useState } from 'react'
 
-interface NavItem {
-  path: string
-  label: string
-  icon: typeof Home
-}
-
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS = [
   { path: '/', label: 'Home', icon: Home },
-  { path: '/eat', label: 'Eat', icon: UtensilsCrossed },
-  { path: '/plan', label: 'Plan', icon: CalendarDays },
-  { path: '/train', label: 'Train', icon: Dumbbell },
+  { path: '/eat', label: 'Food Log', icon: Flame },
+  { path: '/plan', label: 'Diet Plan', icon: BookOpen },
+  { path: '/train', label: 'Workouts', icon: Activity },
   { path: '/progress', label: 'Progress', icon: TrendingUp },
-  { path: '/profile', label: 'Me', icon: User },
+  { path: '/profile', label: 'Profile', icon: User },
 ]
 
-export function AppShell({ children }: { children: ReactNode }) {
-  const navigate = useNavigate()
+export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
 
   return (
-    <div className="min-h-dvh flex flex-col relative z-0">
-      
-      {/* Ambient Animated Background */}
-      <div className="ambient-bg-container">
-        <div className="ambient-blob ambient-blob-1" />
-        <div className="ambient-blob ambient-blob-2" />
-      </div>
+    <div className="flex min-h-screen bg-[#0a0a0a] text-white selection:bg-accent/30 selection:text-white">
+      {/* --- DESKTOP SIDEBAR --- */}
+      <aside className="hidden md:flex flex-col w-64 border-r border-white/5 bg-[#121212] sticky top-0 h-screen overflow-y-auto">
+        <div className="p-8">
+          <h1 className="font-heading font-bold tracking-widest text-xl text-white cursor-pointer hover:text-accent transition-colors" onClick={() => navigate('/')}>FORME</h1>
+        </div>
 
-      {/* Main Content Area */}
-      <main className="page animate-fade-in">
-        {children}
+        <nav className="flex-1 px-4 flex flex-col gap-2 mt-4">
+          {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
+            const isActive = location.pathname === path
+            return (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className={clsx(
+                  "flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                  isActive 
+                    ? "bg-white/10 text-white shadow-sm" 
+                    : "text-white/50 hover:text-white hover:bg-white/5"
+                )}
+                aria-label={label}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <Icon size={20} className={isActive ? 'text-accent' : ''} />
+                {label}
+              </button>
+            )
+          })}
+        </nav>
+
+        <div className="p-6">
+          <button 
+            onClick={() => setIsAssistantOpen(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-white font-medium hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20 outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <Sparkles size={18} />
+            Ask FORME
+          </button>
+        </div>
+      </aside>
+
+      {/* --- MAIN CONTENT AREA --- */}
+      <main className="flex-1 relative flex flex-col pb-24 md:pb-0 min-w-0">
+        <div className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-12">
+          {children}
+        </div>
       </main>
 
-      {/* Global Notifications */}
-      <ToastContainer />
-      
-      {/* Ask FORME FAB */}
-      <div className="fixed bottom-8 right-8 z-40">
-        <div className="absolute inset-0 bg-accent blur-xl rounded-full opacity-40 animate-pulse-glow" />
-        <button 
-          onClick={() => setIsAssistantOpen(true)}
-          className="relative w-[56px] h-[56px] rounded-full bg-text-primary text-bg shadow-floating flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 hover:bg-accent hover:text-white group"
-          aria-label="Ask FORME"
-        >
-          <Sparkles size={24} className="group-hover:animate-pulse" />
-        </button>
-      </div>
+      {/* --- MOBILE BOTTOM NAV --- */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-[#121212]/90 backdrop-blur-lg border-t border-white/5 z-40 safe-bottom">
+        <div className="flex items-center justify-around px-2 py-3">
+          {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
+            const isActive = location.pathname === path
+            return (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className={clsx(
+                  "flex flex-col items-center gap-1 p-2 rounded-lg transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                  isActive ? "text-accent" : "text-white/40 hover:text-white/70"
+                )}
+                aria-label={label}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-[10px] font-medium tracking-wide mt-1">{label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </nav>
 
-      <AskFormeAssistant 
-        isOpen={isAssistantOpen} 
-        onClose={() => setIsAssistantOpen(false)} 
-      />
+      {/* --- FLOATING FAB FOR MOBILE --- */}
+      <button
+        onClick={() => setIsAssistantOpen(true)}
+        className="md:hidden fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-accent text-white shadow-lg shadow-accent/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform outline-none focus-visible:ring-2 focus-visible:ring-white"
+        aria-label="Ask FORME Assistant"
+      >
+        <Sparkles size={24} />
+      </button>
+
       
+      <AskFormeAssistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
     </div>
   )
 }

@@ -1,99 +1,109 @@
 // ============================================================
-// FORME — Diet Plan Dashboard
-// Shows AI-generated meal plan with budget + nutrition info
+// FORME - Premium Diet Plan Dashboard
 // ============================================================
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { Plus, Trash2, ChevronDown, ChevronUp, Sun, Sunset, Moon, Coffee, Save, Download } from 'lucide-react'
+import { usePlanStore } from '@/store/planStore'
+import type { MealSlot, NutritionInfo } from '@/types'
+import { PlanFoodSearch } from './PlanFoodSearch'
+import { ProgressBar, AnimatedNumber } from '@/components/shared'
+import { PageTransition } from '@/components/layout/PageTransition'
+import { clsx } from 'clsx'
 import { useUserStore } from '@/store/userStore'
-import { generateDietPlan, getEatNowRecommendation } from '@/lib/engines/dietEngine'
-import { useFoodLogStore } from '@/store/foodLogStore'
-import { RefreshCw, Clock, IndianRupee, ChevronDown, ChevronUp, Info } from 'lucide-react'
-import type { DailyDietPlan, PlannedMeal } from '@/types'
 
-const MEAL_COLORS: Record<string, string> = {
-  breakfast: 'from-amber-50 to-orange-50 border-amber-200',
-  lunch: 'from-green-50 to-emerald-50 border-green-200',
-  snack: 'from-purple-50 to-violet-50 border-purple-200',
-  dinner: 'from-blue-50 to-indigo-50 border-blue-200',
-  pre_workout: 'from-orange-50 to-red-50 border-orange-200',
-  post_workout: 'from-teal-50 to-cyan-50 border-teal-200',
+function NutritionChip({ label, value, unit, colorClass }: { label: string; value: number; unit: string; colorClass: string }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-[10px] uppercase tracking-wider text-white/40 mb-1">{label}</span>
+      <div className="flex items-baseline gap-1">
+        <span className={clsx("font-semibold text-sm", colorClass)}>{Math.round(value)}</span>
+        <span className="text-xs text-white/50">{unit}</span>
+      </div>
+    </div>
+  )
 }
 
-const MEAL_EMOJIS: Record<string, string> = {
-  breakfast: '🌅',
-  lunch: '☀️',
-  snack: '🍎',
-  dinner: '🌙',
-  pre_workout: '⚡',
-  post_workout: '💪',
-}
-
-function MealPlanCard({ meal, expanded, onToggle }: {
-  meal: PlannedMeal
-  expanded: boolean
-  onToggle: () => void
+function MealSection({ slot, label, foods, onBrowse }: {
+  slot: MealSlot
+  label: string
+  foods: any[]
+  onBrowse: (slot: MealSlot) => void
 }) {
-  const gradient = MEAL_COLORS[meal.slot] || 'from-gray-50 to-gray-50 border-gray-200'
+  const [expanded, setExpanded] = useState(true)
+  const { removeFoodFromSlot } = usePlanStore()
+  
+  const totals: NutritionInfo = foods.reduce((acc, f) => ({
+    calories: acc.calories + f.nutrition.calories,
+    protein: acc.protein + f.nutrition.protein,
+    carbs: acc.carbs + f.nutrition.carbs,
+    fat: acc.fat + f.nutrition.fat,
+    fiber: acc.fiber + f.nutrition.fiber,
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
+
+  const hasFood = foods.length > 0
 
   return (
-    <div className={`rounded-2xl border bg-gradient-to-br ${gradient} overflow-hidden`}>
-      <div
-        className="flex items-center gap-3 p-4 cursor-pointer"
-        onClick={onToggle}
+    <div className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden mb-4">
+      <div 
+        className={clsx(
+          "p-5 flex items-center justify-between cursor-pointer transition-colors",
+          hasFood ? "hover:bg-white/5" : ""
+        )}
+        onClick={() => hasFood && setExpanded(!expanded)}
       >
-        <span className="text-2xl">{MEAL_EMOJIS[meal.slot]}</span>
-        <div className="flex-1">
-          <div className="font-semibold text-text-primary">{meal.label}</div>
-          <div className="flex items-center gap-3 text-xs text-text-secondary mt-0.5">
-            <span className="font-medium text-text-primary">{Math.round(meal.totals.calories)} kcal</span>
-            <span>P:{Math.round(meal.totals.protein)}g</span>
-            <span>C:{Math.round(meal.totals.carbs)}g</span>
-            <span>F:{Math.round(meal.totals.fat)}g</span>
+        <div className="flex items-center gap-4">
+          <div>
+            <h3 className="text-white font-medium">{label}</h3>
+            {hasFood && (
+              <div className="flex items-center gap-4 mt-1">
+                <span className="text-xs text-white/70 font-semibold">{Math.round(totals.calories)} kcal</span>
+                <span className="text-[10px] text-emerald-400 font-medium">{Math.round(totals.protein)}g Protein</span>
+              </div>
+            )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {meal.estimatedCost && (
-            <span className="text-xs text-text-tertiary flex items-center gap-0.5">
-              <IndianRupee size={10} />
-              {meal.estimatedCost}
-            </span>
+        
+        <div className="flex items-center gap-3">
+          <button
+            onClick={(e) => { e.stopPropagation(); onBrowse(slot); }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-colors text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <Plus size={14} /> Add Food
+          </button>
+          {hasFood && (
+            <button className="text-white/40 p-1">
+              {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
           )}
-          {expanded ? <ChevronUp size={16} className="text-text-tertiary" /> : <ChevronDown size={16} className="text-text-tertiary" />}
         </div>
       </div>
 
-      {expanded && (
-        <div className="px-4 pb-4 border-t border-black/5 animate-fade-in">
-          <div className="flex flex-col gap-2 mt-3">
-            {meal.items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 px-4 bg-bg-surface2/30 rounded-2xl border border-dashed border-border-strong relative overflow-hidden group">
-                <div className="absolute inset-0 bg-accent/5 blur-2xl group-hover:bg-accent/10 transition-colors animate-pulse-glow" />
-                <span className="text-3xl mb-2 relative z-10 opacity-80 filter drop-shadow-sm">🍽️</span>
-                <span className="text-sm font-semibold text-text-primary relative z-10">Slot is Empty</span>
-                <p className="text-xs text-text-secondary text-center mt-1 max-w-[200px] relative z-10 leading-relaxed">
-                  Head over to the <strong className="text-accent px-1 py-0.5 bg-accent/10 rounded">Eat</strong> tab to start logging meals.
-                </p>
-              </div>
-            ) : (
-              meal.items.map((item, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-accent mt-2 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-sm font-medium text-text-primary">{item.foodName}</span>
-                      <span className="text-xs text-text-tertiary">{Math.round(item.nutrition.calories)} kcal</span>
-                    </div>
-                    <div className="text-xs text-text-secondary">
-                      {item.quantity} {item.unit}
-                      {item.notes && <span className="text-text-tertiary ml-1">· {item.notes}</span>}
-                    </div>
-                    <div className="text-xs text-text-tertiary">
-                      P:{Math.round(item.nutrition.protein)}g · C:{Math.round(item.nutrition.carbs)}g · F:{Math.round(item.nutrition.fat)}g · Fiber:{Math.round(item.nutrition.fiber)}g
-                    </div>
-                  </div>
+      {hasFood && expanded && (
+        <div className="border-t border-white/5 bg-[#0a0a0a]/50 p-2">
+          {foods.map(food => (
+            <div key={food.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 mb-2 last:mb-0 group">
+              <div>
+                <div className="text-sm text-white font-medium">{food.name}</div>
+                <div className="text-xs text-white/50 mt-1">
+                  {food.quantity} {food.unit} - {Math.round(food.nutrition.calories)} kcal
                 </div>
-              ))
-            )}
+              </div>
+              <button
+                onClick={() => removeFoodFromSlot(slot, food.id)}
+                className="p-2 text-white/20 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:opacity-100"
+                aria-label="Remove food"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+          
+          <div className="grid grid-cols-4 gap-2 mt-4 p-3 bg-white/5 rounded-xl border border-white/5">
+            <NutritionChip label="Calories" value={totals.calories} unit="kcal" colorClass="text-white" />
+            <NutritionChip label="Protein" value={totals.protein} unit="g" colorClass="text-emerald-400" />
+            <NutritionChip label="Carbs" value={totals.carbs} unit="g" colorClass="text-blue-400" />
+            <NutritionChip label="Fats" value={totals.fat} unit="g" colorClass="text-purple-400" />
           </div>
         </div>
       )}
@@ -102,157 +112,127 @@ function MealPlanCard({ meal, expanded, onToggle }: {
 }
 
 export function PlanDashboard() {
-  const { profile, metrics } = useUserStore()
-  const { todayTotals } = useFoodLogStore()
-  const [plan, setPlan] = useState<DailyDietPlan | null>(null)
-  const [expandedMeal, setExpandedMeal] = useState<string | null>('breakfast')
-  const [showInfo, setShowInfo] = useState(false)
+  const { currentPlan, templates, saveAsTemplate, loadTemplate, clearPlan } = usePlanStore()
+  const { metrics } = useUserStore()
+  const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
 
-  useEffect(() => {
-    if (profile && metrics) {
-      setPlan({
-        id: `plan_${Date.now()}`,
-        userId: profile.id,
-        generatedAt: new Date().toISOString(),
-        totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
-        meals: [
-          { slot: 'breakfast', label: 'Breakfast', items: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } },
-          { slot: 'lunch', label: 'Lunch', items: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } },
-          { slot: 'dinner', label: 'Dinner', items: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 } },
-        ]
-      })
-    }
-  }, [profile, metrics])
+  const totals = currentPlan.reduce((acc, slot) => {
+    slot.foods.forEach(f => {
+      acc.calories += f.nutrition.calories
+      acc.protein += f.nutrition.protein
+      acc.carbs += f.nutrition.carbs
+      acc.fat += f.nutrition.fat
+    })
+    return acc
+  }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
 
-  if (!profile || !metrics || !plan) {
-    return (
-      <div className="page flex items-center justify-center">
-        <div className="text-text-tertiary">Generating your plan...</div>
-      </div>
-    )
-  }
-
-  const totals = todayTotals()
-  const eatNow = getEatNowRecommendation(totals, metrics, profile)
-
-  const regenerate = () => {
-    if (profile && metrics) {
-      setPlan(generateDietPlan(profile, metrics))
-    }
+  const handleSaveTemplate = () => {
+    const name = prompt("Enter a name for this diet plan template (e.g., Hostel Breakfast):")
+    if (name) saveAsTemplate(name)
   }
 
   return (
-    <div className="page animate-fade-in">
-      <div className="page-header flex items-start justify-between">
-        <div>
-          <h1 className="font-heading font-bold text-2xl text-text-primary">Your Meal Plan 📋</h1>
-          <p className="text-text-secondary text-sm mt-1">Personalized for your goal & preferences</p>
-        </div>
-        <button onClick={regenerate} className="btn btn-ghost p-2 rounded-xl">
-          <RefreshCw size={18} className="text-text-secondary" />
-        </button>
-      </div>
+    <PageTransition>
+      <div className="page relative">
+        <header className="page-header mb-8 flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
+              Diet Plan
+            </h1>
+            <p className="text-sm text-white/50 font-medium tracking-wide mt-2">
+              Plan your meals to hit your macros
+            </p>
+          </div>
+          
+          <div className="flex gap-3">
+            <button 
+              onClick={handleSaveTemplate}
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            >
+              <Save size={16} /> Save Plan
+            </button>
+            <button 
+              onClick={clearPlan}
+              className="px-4 py-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            >
+              <Trash2 size={16} /> Clear
+            </button>
+          </div>
+        </header>
 
-      {/* Plan Summary */}
-      <div className="card p-4 mb-5">
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div>
-            <div className="font-heading font-bold text-xl text-text-primary tabular-nums">
-              {Math.round(plan.totals.calories)}
-            </div>
-            <div className="text-xs text-text-tertiary">kcal/day</div>
-            <div className="text-xs text-success mt-0.5">
-              target: {metrics.caloricTarget}
-            </div>
+        {templates.length > 0 && (
+          <div className="mb-8 flex gap-3 overflow-x-auto hide-scrollbar">
+            {templates.map(t => (
+              <button
+                key={t.id}
+                onClick={() => loadTemplate(t.id)}
+                className="px-4 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
+              >
+                <Download size={16} /> Load "{t.name}"
+              </button>
+            ))}
           </div>
-          <div>
-            <div className="font-heading font-bold text-xl text-text-primary tabular-nums">
-              {Math.round(plan.totals.protein)}g
-            </div>
-            <div className="text-xs text-text-tertiary">protein</div>
-            <div className="text-xs text-success mt-0.5">
-              target: {metrics.proteinTarget}g
-            </div>
-          </div>
-          <div>
-            <div className="font-heading font-bold text-xl text-text-primary tabular-nums flex items-center justify-center gap-0.5">
-              <IndianRupee size={14} />
-              {plan.estimatedDailyCost || '—'}
-            </div>
-            <div className="text-xs text-text-tertiary">daily cost</div>
-            <div className="text-xs text-text-tertiary mt-0.5">
-              /{Math.round((plan.estimatedDailyCost || 0) * 30)} / month
-            </div>
-          </div>
-        </div>
+        )}
 
-        {/* Macro Bars */}
-        <div className="mt-4 flex flex-col gap-1.5">
-          {[
-            { label: 'Protein', val: plan.totals.protein, target: metrics.proteinTarget, color: '#7C6AF4' },
-            { label: 'Carbs', val: plan.totals.carbs, target: metrics.carbTarget, color: '#F4A26A' },
-            { label: 'Fat', val: plan.totals.fat, target: metrics.fatTarget, color: '#6ABFF4' },
-          ].map(({ label, val, target, color }) => (
-            <div key={label} className="flex items-center gap-2 text-xs">
-              <span className="w-12 text-text-secondary">{label}</span>
-              <div className="flex-1 h-1.5 bg-bg-surface2 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${Math.min(100, (val / Math.max(1, target)) * 100)}%`, backgroundColor: color }}
-                />
+        {/* Plan Summary vs Target */}
+        <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 mb-8 shadow-xl">
+          <div className="flex justify-between items-end mb-6">
+            <div>
+              <h2 className="text-sm font-medium text-white/50 uppercase tracking-widest mb-1">Planned Calories</h2>
+              <div className="flex items-baseline gap-2">
+                <AnimatedNumber value={totals.calories} className="text-4xl font-heading font-bold text-white" />
+                <span className="text-white/40">/ {metrics?.caloricTarget || 0} kcal</span>
               </div>
-              <span className="w-16 text-right text-text-tertiary tabular-nums">{Math.round(val)}/{target}g</span>
             </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <div className="text-xs text-white/50 mb-2">Protein ({metrics?.proteinTarget}g)</div>
+              <div className="flex items-baseline gap-1 mb-2">
+                <span className="text-lg font-bold text-emerald-400">{Math.round(totals.protein)}</span>
+                <span className="text-xs text-white/40">g</span>
+              </div>
+              <ProgressBar value={totals.protein} max={metrics?.proteinTarget || 150} colorClass="bg-emerald-400" heightClass="h-1" className="bg-white/5" />
+            </div>
+            <div>
+              <div className="text-xs text-white/50 mb-2">Carbs ({metrics?.carbTarget}g)</div>
+              <div className="flex items-baseline gap-1 mb-2">
+                <span className="text-lg font-bold text-blue-400">{Math.round(totals.carbs)}</span>
+                <span className="text-xs text-white/40">g</span>
+              </div>
+              <ProgressBar value={totals.carbs} max={metrics?.carbTarget || 250} colorClass="bg-blue-400" heightClass="h-1" className="bg-white/5" />
+            </div>
+            <div>
+              <div className="text-xs text-white/50 mb-2">Fats ({metrics?.fatTarget}g)</div>
+              <div className="flex items-baseline gap-1 mb-2">
+                <span className="text-lg font-bold text-purple-400">{Math.round(totals.fat)}</span>
+                <span className="text-xs text-white/40">g</span>
+              </div>
+              <ProgressBar value={totals.fat} max={metrics?.fatTarget || 80} colorClass="bg-purple-400" heightClass="h-1" className="bg-white/5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Meal Slots */}
+        <div className="space-y-1">
+          {currentPlan.map(slot => (
+            <MealSection
+              key={slot.slot}
+              slot={slot.slot}
+              label={slot.label}
+              foods={slot.foods}
+              onBrowse={setBrowsingSlot}
+            />
           ))}
         </div>
-      </div>
 
-      {/* Eat Now Recommendation */}
-      <div className="card p-4 mb-5 gradient-bg-warm border-accent/20">
-        <div className="flex gap-3">
-          <div className="text-2xl">🤔</div>
-          <div>
-            <div className="font-medium text-text-primary text-sm mb-1">What should you eat now?</div>
-            <p className="text-sm text-text-secondary leading-relaxed">{eatNow}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Meal Plan Cards */}
-      <div className="flex flex-col gap-3">
-        {plan.meals.map((meal) => (
-          <MealPlanCard
-            key={meal.slot}
-            meal={meal}
-            expanded={expandedMeal === meal.slot}
-            onToggle={() => setExpandedMeal(expandedMeal === meal.slot ? null : meal.slot)}
-          />
-        ))}
-      </div>
-
-      {/* Personalization info */}
-      <div className="mt-5 card p-4">
-        <button
-          onClick={() => setShowInfo(s => !s)}
-          className="flex items-center gap-2 w-full text-left"
-        >
-          <Info size={14} className="text-text-tertiary" />
-          <span className="text-sm text-text-secondary flex-1">How is this plan made?</span>
-          {showInfo ? <ChevronUp size={14} className="text-text-tertiary" /> : <ChevronDown size={14} className="text-text-tertiary" />}
-        </button>
-        {showInfo && (
-          <div className="mt-3 text-sm text-text-secondary leading-relaxed animate-fade-in">
-            <p>This plan is generated based on:</p>
-            <ul className="list-disc list-inside mt-2 space-y-1 text-text-tertiary">
-              <li>Your {metrics.caloricStrategy} caloric target ({metrics.caloricTarget} kcal)</li>
-              <li>Diet type: {profile.dietType.replace(/_/g, ' ')}</li>
-              <li>Budget: ₹{profile.monthlyFoodBudget || 3000}/month</li>
-              <li>Eating environment: {profile.eatingEnvironment}</li>
-              <li>Cooking ability: {profile.cookingAbility}</li>
-            </ul>
+        {browsingSlot && (
+          <div className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto">
+            <PlanFoodSearch slot={browsingSlot} onClose={() => setBrowsingSlot(null)} />
           </div>
         )}
       </div>
-    </div>
+    </PageTransition>
   )
 }

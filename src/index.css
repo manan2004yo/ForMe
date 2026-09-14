@@ -552,15 +552,14 @@ body {
 
 .page {
   flex: 1;
-  padding-bottom: 20px;
-  width: 100vw;
-  height: 100vh;
+  padding-bottom: 24px;
   position: relative;
+  width: 100%;
 }
 
 .page-header {
-  padding-top: 60px;
-  padding-bottom: 32px;
+  padding-top: 16px;
+  padding-bottom: 24px;
 }
 
 /* ─── Floating Bottom Dock ───────────────────────────────────── */
@@ -942,11 +941,3 @@ body {
     transform-style: preserve-3d;
   }
 }
-
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-
-.custom-scrollbar .page { background-color: transparent !important; }
-.custom-scrollbar .page-header { background-color: transparent !important; }

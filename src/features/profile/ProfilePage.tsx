@@ -1,383 +1,135 @@
 // ============================================================
-// FORME — Profile Page
-// User info, body stats, settings, logout
+// FORME - Premium Profile Page
 // ============================================================
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
-import type { FitnessGoal, DietType, ComplexityMode } from '@/types'
-import { useToastStore } from '@/store/toastStore'
-import {
-  User, Settings, Shield, LogOut, ChevronRight, Edit3,
-  Scale, Target, Utensils, Dumbbell, Trophy, Zap, X, Check, Smartphone, Medal
-} from 'lucide-react'
-
-const GOAL_LABELS: Record<string, string> = {
-  build_muscle: '💪 Build Muscle',
-  lose_fat: '🔥 Lose Fat',
-  body_recomposition: '⚡ Body Recomp',
-  get_lean: '✂️ Get Lean',
-  improve_fitness: '🏃 Improve Fitness',
-  hybrid: '🎯 Hybrid',
-}
-
-const COMPLEXITY_LABELS: Record<string, string> = {
-  easy: '🌱 Easy Mode',
-  smart: '⚡ Smart Mode',
-  precision: '🔬 Precision Mode',
-}
+import { LogOut, Target, Edit3, Check, X, Shield, Settings, User } from 'lucide-react'
+import { PageTransition } from '@/components/layout/PageTransition'
 
 export function ProfilePage() {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
-  const { profile, metrics, isDemoMode, saveProfile } = useUserStore()
-  const toast = useToastStore()
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const { profile, isDemoMode } = useUserStore()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
 
-  // Edit form state
-  const [editName, setEditName] = useState('')
-  const [editWeight, setEditWeight] = useState('')
-  const [editHeight, setEditHeight] = useState('')
-  const [editAge, setEditAge] = useState('')
-  const [editGoal, setEditGoal] = useState<FitnessGoal>('body_recomposition')
-  const [editDiet, setEditDiet] = useState<DietType>('vegetarian')
-  const [editMode, setEditMode] = useState<ComplexityMode>('smart')
-  const [isSavingEdit, setIsSavingEdit] = useState(false)
-
-  if (!profile || !metrics) return null
+  if (!profile) return null
 
   const handleLogout = async () => {
-    setIsLoggingOut(true)
-    try {
-      await logout()
-      navigate('/landing')
-    } finally {
-      setIsLoggingOut(false)
-    }
+    await logout()
+    navigate('/')
   }
-
-  const openEditModal = () => {
-    setEditName(profile.name)
-    setEditWeight(profile.weightKg.toString())
-    setEditHeight(profile.heightCm.toString())
-    setEditAge(profile.age.toString())
-    setEditGoal(profile.fitnessGoal)
-    setEditDiet(profile.dietType)
-    setEditMode(profile.complexityMode)
-    setShowEditModal(true)
-  }
-
-  const handleSaveProfile = async () => {
-    if (!editName.trim()) return
-    setIsSavingEdit(true)
-    try {
-      await saveProfile({
-        name: editName.trim(),
-        weightKg: parseFloat(editWeight) || profile.weightKg,
-        heightCm: parseFloat(editHeight) || profile.heightCm,
-        age: parseInt(editAge) || profile.age,
-        fitnessGoal: editGoal,
-        dietType: editDiet,
-        complexityMode: editMode,
-      })
-      toast.success('Profile updated successfully!')
-      setShowEditModal(false)
-    } finally {
-      setIsSavingEdit(false)
-    }
-  }
-
-  const avatarLetter = profile.name?.[0]?.toUpperCase() || 'U'
 
   return (
-    <div className="page animate-fade-in">
-      <div className="page-header">
-        <h1 className="font-heading font-bold text-2xl text-text-primary">Profile 👤</h1>
-      </div>
+    <PageTransition>
+      <div className="page relative">
+        <header className="page-header mb-8">
+          <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
+            Profile
+          </h1>
+          <p className="text-sm text-white/50 font-medium tracking-wide mt-2">
+            Manage your account and preferences
+          </p>
+        </header>
 
-      {/* Edit Profile Modal */}
-      {showEditModal && (
-        <div className="modal-backdrop" onClick={() => setShowEditModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="font-heading font-bold text-xl text-text-primary">Edit Profile</h2>
-                <button onClick={() => setShowEditModal(false)} className="btn btn-ghost p-2 rounded-xl">
-                  <X size={18} className="text-text-tertiary" />
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <div>
-                  <label className="text-xs font-medium text-text-secondary mb-1.5 block">Display Name</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={editName}
-                    onChange={e => setEditName(e.target.value)}
-                    placeholder="Your name"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-text-secondary mb-1.5 block">Weight (kg)</label>
-                    <input
-                      type="number"
-                      className="input-field"
-                      value={editWeight}
-                      onChange={e => setEditWeight(e.target.value)}
-                      step="0.1"
-                      min="30"
-                      max="300"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-text-secondary mb-1.5 block">Height (cm)</label>
-                    <input
-                      type="number"
-                      className="input-field"
-                      value={editHeight}
-                      onChange={e => setEditHeight(e.target.value)}
-                      min="100"
-                      max="250"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-text-secondary mb-1.5 block">Age</label>
-                  <input
-                    type="number"
-                    className="input-field"
-                    value={editAge}
-                    onChange={e => setEditAge(e.target.value)}
-                    min="10"
-                    max="100"
-                  />
-                </div>
-
-                <div className="text-xs text-text-tertiary bg-bg-surface2 rounded-xl p-3">
-                  💡 Updating weight recalculates your TDEE, BMI, and macro targets automatically.
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mt-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-text-tertiary">Goal</label>
-                  <select
-                    className="input-field py-2"
-                    value={editGoal}
-                    onChange={e => setEditGoal(e.target.value as FitnessGoal)}
-                  >
-                    <option value="build_muscle">Build Muscle</option>
-                    <option value="lose_fat">Lose Fat</option>
-                    <option value="body_recomposition">Recomp</option>
-                    <option value="get_lean">Get Lean</option>
-                    <option value="improve_fitness">Fitness</option>
-                    <option value="hybrid">Hybrid</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-text-tertiary">Diet</label>
-                  <select
-                    className="input-field py-2"
-                    value={editDiet}
-                    onChange={e => setEditDiet(e.target.value as DietType)}
-                  >
-                    <option value="vegetarian">Vegetarian</option>
-                    <option value="non_vegetarian">Non-Veg</option>
-                    <option value="vegan">Vegan</option>
-                    <option value="jain">Jain</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1 mt-3">
-                <label className="text-xs text-text-tertiary">App Complexity</label>
-                <select
-                  className="input-field py-2"
-                  value={editMode}
-                  onChange={e => setEditMode(e.target.value as ComplexityMode)}
-                >
-                  <option value="easy">Easy (Simple UI)</option>
-                  <option value="smart">Smart (AI Guided)</option>
-                  <option value="precision">Precision (Pro)</option>
-                </select>
-              </div>
-
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => setShowEditModal(false)} className="btn btn-secondary btn-md flex-1">
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveProfile}
-                  disabled={isSavingEdit || !editName.trim()}
-                  className="btn btn-accent btn-md flex-1"
-                  id="save-profile"
-                >
-                  {isSavingEdit ? 'Saving...' : <><Check size={15} /> Save Changes</>}
-                </button>
-              </div>
+        {isDemoMode && (
+          <div className="bg-accent/10 border border-accent/20 rounded-2xl p-4 mb-6 flex items-start gap-3">
+            <Shield size={20} className="text-accent flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-accent font-medium text-sm">Demo Mode Active</h3>
+              <p className="text-xs text-accent/70 mt-1">
+                You are currently viewing a read-only demo. Sign up to save your data permanently.
+              </p>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Avatar & Name */}
-      <div className="card p-5 mb-4">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center text-white font-heading font-bold text-2xl shadow-accent flex-shrink-0">
-            {avatarLetter}
+        {/* User Card */}
+        <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 mb-6 flex items-center gap-6">
+          <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-3xl font-heading font-bold text-white uppercase shadow-inner">
+            {profile.name.charAt(0)}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-heading font-bold text-xl text-text-primary truncate">
-              {profile.name}
-            </div>
-            <div className="text-sm text-text-secondary truncate">{profile.email}</div>
-            {isDemoMode && (
-              <div className="badge badge-accent text-xs mt-1">Demo Mode</div>
-            )}
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-white">{profile.name}</h2>
+            <div className="text-sm text-white/50 mt-1 capitalize">{profile.dietType} Diet • {profile.fitnessGoal.replace('_', ' ')}</div>
+            <div className="text-xs text-white/30 mt-1">{user?.email || 'demo@example.com'}</div>
           </div>
-          <button onClick={openEditModal} className="btn btn-ghost p-2 rounded-xl" id="edit-profile-btn">
-            <Edit3 size={18} className="text-text-secondary" />
+          <button className="p-3 bg-white/5 rounded-xl text-white/50 hover:text-white transition-colors">
+            <Edit3 size={18} />
           </button>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-border grid grid-cols-3 gap-2 text-center">
-          <div>
-            <div className="font-heading font-bold text-lg text-text-primary">{profile.weightKg} kg</div>
-            <div className="text-xs text-text-tertiary">Weight</div>
-          </div>
-          <div>
-            <div className="font-heading font-bold text-lg text-text-primary">{profile.heightCm} cm</div>
-            <div className="text-xs text-text-tertiary">Height</div>
-          </div>
-          <div>
-            <div className="font-heading font-bold text-lg text-text-primary">{profile.age}y</div>
-            <div className="text-xs text-text-tertiary">Age</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Key Stats */}
-      <div className="card p-4 mb-4">
-        <h2 className="font-heading font-semibold text-text-primary mb-3">Your Numbers</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: 'BMR', value: `${metrics.bmr} kcal`, icon: Zap, desc: 'Basal metabolic rate' },
-            { label: 'TDEE', value: `${metrics.tdee} kcal`, icon: Scale, desc: 'Total daily energy' },
-            { label: 'Cal Target', value: `${metrics.caloricTarget} kcal`, icon: Target, desc: metrics.caloricStrategy },
-            { label: 'Protein', value: `${metrics.proteinTarget}g`, icon: Trophy, desc: 'Daily goal' },
-          ].map(({ label, value, icon: Icon, desc }) => (
-            <div key={label} className="bg-bg-surface2 rounded-xl p-3">
-              <Icon size={14} className="text-accent mb-1" />
-              <div className="font-heading font-bold text-text-primary">{value}</div>
-              <div className="text-xs text-text-secondary">{label}</div>
-              <div className="text-[10px] text-text-tertiary capitalize">{desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Profile Details */}
-      <div className="card p-4 mb-4">
-        <h2 className="font-heading font-semibold text-text-primary mb-3">Your Setup</h2>
-        <div className="flex flex-col gap-3">
-          {[
-            { icon: Target, label: 'Goal', value: GOAL_LABELS[profile.fitnessGoal] || profile.fitnessGoal },
-            { icon: Utensils, label: 'Diet', value: profile.dietType.replace(/_/g, ' '), suffix: profile.eatsEggs ? '· eats eggs' : '' },
-            { icon: Dumbbell, label: 'Training', value: `${profile.trainingDays.length}x/week · ${profile.trainingLocation}` },
-            { icon: Settings, label: 'Mode', value: COMPLEXITY_LABELS[profile.complexityMode] || profile.complexityMode },
-          ].map(({ icon: Icon, label, value, suffix }) => (
-            <div key={label} className="flex items-center gap-3 py-2">
-              <Icon size={16} className="text-text-tertiary flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs text-text-tertiary">{label}</div>
-                <div className="text-sm font-medium text-text-primary capitalize">
-                  {value} {suffix && <span className="text-text-tertiary font-normal">{suffix}</span>}
-                </div>
+        {/* Settings Links */}
+        <div className="bg-[#121212] border border-white/5 rounded-3xl overflow-hidden mb-8">
+          <div className="p-4 border-b border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/70">
+                <Target size={18} />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-white">Adjust Goals</div>
+                <div className="text-xs text-white/50 mt-0.5">Change target weight or macros</div>
               </div>
             </div>
-          ))}
+          </div>
+
+          <div className="p-4 border-b border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/70">
+                <User size={18} />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-white">Account Details</div>
+                <div className="text-xs text-white/50 mt-0.5">Manage email and password</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/70">
+                <Settings size={18} />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-white">Preferences</div>
+                <div className="text-xs text-white/50 mt-0.5">Units, theme, and notifications</div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Menu Items */}
-      <div className="card overflow-hidden mb-4">
-        {[
-          { icon: Medal, label: 'Achievements & Badges', action: () => navigate('/profile/achievements') },
-          { icon: Smartphone, label: 'Connected Apps & Devices', action: () => navigate('/profile/integrations') },
-          { icon: User, label: 'Edit Profile', action: openEditModal },
-          { icon: Settings, label: 'App Settings', action: () => toast.info('App settings coming soon') },
-          { icon: Shield, label: 'Privacy', action: () => toast.info('Privacy settings coming soon') },
-        ].map(({ icon: Icon, label, action }, i) => (
-          <button
-            key={label}
-            onClick={action}
-            className={`flex items-center gap-3 w-full px-4 py-4 text-left hover:bg-bg-surface2 transition-colors ${
-              i > 0 ? 'border-t border-border' : ''
-            }`}
-          >
-            <Icon size={18} className="text-text-secondary" />
-            <span className="flex-1 text-sm font-medium text-text-primary">{label}</span>
-            <ChevronRight size={16} className="text-text-tertiary" />
-          </button>
-        ))}
-      </div>
-
-      {/* Logout */}
-      {!isDemoMode ? (
-        showLogoutConfirm ? (
-          <div className="card p-4 mb-4 border-error/20 animate-slide-up">
-            <p className="text-sm text-text-secondary mb-3">Are you sure you want to sign out?</p>
-            <div className="flex gap-3">
-              <button
+        {/* Logout */}
+        {showLogoutConfirm ? (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-6 flex flex-col items-center text-center">
+            <h3 className="text-red-400 font-medium mb-4">Are you sure you want to sign out?</h3>
+            <div className="flex gap-4 w-full">
+              <button 
                 onClick={() => setShowLogoutConfirm(false)}
-                className="btn btn-secondary btn-md flex-1"
+                className="flex-1 py-3 bg-white/5 text-white rounded-xl font-medium hover:bg-white/10 transition-colors"
               >
                 Cancel
               </button>
-              <button
+              <button 
                 onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="btn btn-md flex-1 bg-error text-white hover:bg-red-700"
-                id="confirm-logout"
+                className="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
               >
-                {isLoggingOut ? 'Signing out...' : 'Sign Out'}
+                Sign Out
               </button>
             </div>
           </div>
         ) : (
-          <button
+          <button 
             onClick={() => setShowLogoutConfirm(true)}
-            className="card w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-error-light transition-colors mb-4"
-            id="logout-button"
+            className="w-full py-4 bg-[#121212] border border-white/5 text-red-400 rounded-3xl font-medium hover:bg-red-500/5 transition-colors flex items-center justify-center gap-2"
           >
-            <LogOut size={18} className="text-error" />
-            <span className="text-sm font-medium text-error">Sign Out</span>
+            <LogOut size={18} />
+            Sign Out
           </button>
-        )
-      ) : (
-        <div className="card p-4 mb-4 gradient-bg-warm border-accent/20 text-center">
-          <p className="text-sm text-text-secondary mb-3">
-            You're in demo mode. Create an account to save your data.
-          </p>
-          <button
-            onClick={() => navigate('/signup')}
-            className="btn btn-accent btn-md w-full"
-          >
-            Create Free Account
-          </button>
-        </div>
-      )}
+        )}
 
-      <div className="text-center text-xs text-text-tertiary pb-4">
-        FORME v0.1.0 · Made with ❤️ for India
       </div>
-    </div>
+    </PageTransition>
   )
 }

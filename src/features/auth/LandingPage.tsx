@@ -1,170 +1,116 @@
 // ============================================================
-// FORME — Landing Page
+// FORME - Premium Landing Page
 // ============================================================
 
 import { useNavigate } from 'react-router-dom'
-import { useUserStore } from '@/store/userStore'
 import { useAuthStore } from '@/store/authStore'
-import { ArrowRight, Zap, Shield, Target, ChevronRight } from 'lucide-react'
-
-const FEATURES = [
-  {
-    icon: '🥗',
-    title: 'Indian Food Intelligence',
-    desc: 'Track roti, dal, sabzi, dahi and 300+ Indian foods with real portion sizes — katori, glass, piece.'
-  },
-  {
-    icon: '💪',
-    title: 'Science-Based Training',
-    desc: 'Progressive overload plans tailored to your gym, home or hybrid setup. Built for Indian schedules.'
-  },
-  {
-    icon: '📊',
-    title: 'Body Recomposition Engine',
-    desc: 'Precise BMR, TDEE, and macro targets. Track fat loss and muscle gain with your actual numbers.'
-  },
-  {
-    icon: '💰',
-    title: 'Budget-Aware Planning',
-    desc: 'Meal plans that fit your ₹2,000–₹8,000/month food budget. Hostel, home, or office — covered.'
-  },
-]
-
-const STATS = [
-  { value: '300+', label: 'Indian Foods' },
-  { value: '150+', label: 'Exercises' },
-  { value: '7', label: 'Split Types' },
-  { value: '∞', label: 'Plans' },
-]
+import { useUserStore } from '@/store/userStore'
+import { ArrowRight, Activity, Flame, Shield } from 'lucide-react'
 
 export function LandingPage() {
   const navigate = useNavigate()
+  const { loginDemo } = useAuthStore() as any // HACK: demo auth
   const { loadDemoProfile } = useUserStore()
-  const { setDemoUser } = useAuthStore()
 
   const handleDemo = () => {
-    setDemoUser()
+    if (loginDemo) loginDemo()
     loadDemoProfile()
     navigate('/')
   }
 
   return (
-    <div className="min-h-dvh bg-bg flex flex-col overflow-x-hidden">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-accent-light via-bg to-bg pointer-events-none" />
-        <div className="absolute top-0 right-0 w-80 h-80 bg-accent/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
-
-        <div className="relative max-w-lg mx-auto px-6 pt-16 pb-12">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-12 animate-fade-in">
-            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shadow-accent">
-              <span className="text-white font-heading font-bold text-lg">F</span>
-            </div>
-            <span className="font-heading font-bold text-2xl text-text-primary tracking-tight">FORME</span>
-          </div>
-
-          {/* Hero Text */}
-          <div className="animate-slide-up">
-            <div className="badge badge-accent mb-4">
-              <Zap size={10} />
-              Built for India
-            </div>
-            <h1 className="font-heading font-bold text-4xl text-text-primary leading-[1.15] mb-4">
-              Fitness that{' '}
-              <span className="gradient-text">actually fits</span>
-              {' '}your life
-            </h1>
-            <p className="text-text-secondary text-lg leading-relaxed mb-8">
-              Track Indian food, build muscle, lose fat — with a plan that understands hostel mess, 
-              family dinners, and your ₹3,000/month budget.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => navigate('/signup')}
-                className="btn btn-accent btn-xl w-full"
-                id="cta-signup"
-              >
-                Get Started Free
-                <ArrowRight size={18} />
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                className="btn btn-secondary btn-xl w-full"
-                id="cta-login"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={handleDemo}
-                className="btn btn-ghost btn-md w-full text-text-tertiary"
-                id="cta-demo"
-              >
-                Explore with Demo Profile
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Bar */}
-      <div className="bg-text-primary text-white py-5">
-        <div className="max-w-lg mx-auto px-6">
-          <div className="grid grid-cols-4 gap-2 text-center">
-            {STATS.map(({ value, label }) => (
-              <div key={label}>
-                <div className="font-heading font-bold text-xl text-accent">{value}</div>
-                <div className="text-xs text-white/60 mt-0.5">{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Features */}
-      <div className="max-w-lg mx-auto px-6 py-12">
-        <h2 className="font-heading font-bold text-2xl text-text-primary text-center mb-8">
-          Everything you need
-        </h2>
-        <div className="flex flex-col gap-4">
-          {FEATURES.map((feature, i) => (
-            <div
-              key={feature.title}
-              className="card p-5 animate-slide-up"
-              style={{ animationDelay: `${i * 80}ms` }}
-            >
-              <div className="flex gap-4">
-                <div className="text-3xl flex-shrink-0">{feature.icon}</div>
-                <div>
-                  <h3 className="font-heading font-semibold text-text-primary mb-1">{feature.title}</h3>
-                  <p className="text-sm text-text-secondary leading-relaxed">{feature.desc}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Footer CTA */}
-      <div className="max-w-lg mx-auto px-6 pb-12 text-center">
-        <div className="card p-8 gradient-bg-warm">
-          <div className="text-3xl mb-3">🚀</div>
-          <h3 className="font-heading font-bold text-xl text-text-primary mb-2">Ready to transform?</h3>
-          <p className="text-text-secondary text-sm mb-6">Join thousands of Indians building their best body.</p>
-          <button
-            onClick={() => navigate('/signup')}
-            className="btn btn-accent btn-lg w-full"
-            id="cta-footer-signup"
+    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-accent/30 selection:text-white flex flex-col font-sans">
+      
+      {/* Header */}
+      <header className="flex justify-between items-center px-6 py-6 md:px-12 md:py-8 w-full max-w-7xl mx-auto">
+        <div className="font-heading font-bold tracking-widest text-xl text-white">FORME</div>
+        <div className="flex items-center gap-6">
+          <button 
+            onClick={() => navigate('/login')} 
+            className="text-sm font-medium text-white/70 hover:text-white transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-md px-2 py-1"
           >
-            Start for Free
-            <ArrowRight size={16} />
+            Sign In
+          </button>
+          <button 
+            onClick={() => navigate('/signup')} 
+            className="text-sm font-medium bg-white text-black px-5 py-2.5 rounded-full hover:bg-white/90 transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            Get Started
           </button>
         </div>
-      </div>
+      </header>
+
+      {/* Hero Section */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center max-w-4xl mx-auto mt-12 md:mt-24 mb-24">
+        
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8">
+          <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+          <span className="text-xs font-medium tracking-wide text-white/80">India-first fitness platform</span>
+        </div>
+
+        <h1 className="text-5xl md:text-7xl font-heading font-bold leading-[1.1] tracking-tight text-white mb-6">
+          Track everything.<br />
+          <span className="text-white/40">Sacrifice nothing.</span>
+        </h1>
+
+        <p className="text-lg md:text-xl text-white/50 max-w-2xl mb-12 leading-relaxed">
+          The intelligent tracking platform designed around real Indian life. 
+          Home food, hostel meals, gym routines, and precise body metrics - all in one premium workspace.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          <button 
+            onClick={() => navigate('/signup')} 
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-accent text-white px-8 py-4 rounded-xl font-medium text-lg hover:bg-accent/90 transition-all shadow-lg shadow-accent/20 outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            Create Free Account
+            <ArrowRight size={20} />
+          </button>
+          
+          <button 
+            onClick={handleDemo} 
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 text-white border border-white/10 px-8 py-4 rounded-xl font-medium text-lg hover:bg-white/10 transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            Try Demo
+          </button>
+        </div>
+
+        {/* Feature Preview (Abstract UI representation) */}
+        <div className="mt-24 relative w-full aspect-video max-w-3xl rounded-2xl border border-white/10 bg-[#121212] shadow-2xl overflow-hidden flex items-center justify-center">
+          {/* Subtle gradient glow behind the abstract UI */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,100,0,0.05),transparent_70%)]" />
+          
+          <div className="flex flex-col gap-6 w-full max-w-lg px-8">
+            <div className="w-full h-12 rounded-xl bg-white/5 flex items-center px-4 border border-white/5">
+              <div className="w-4 h-4 rounded-full bg-accent/20 mr-4" />
+              <div className="h-2 w-32 bg-white/20 rounded-full" />
+            </div>
+            <div className="w-full flex gap-4">
+              <div className="flex-1 h-32 rounded-xl bg-white/5 border border-white/5 p-4 flex flex-col justify-end">
+                <div className="h-2 w-16 bg-white/20 rounded-full mb-2" />
+                <div className="h-6 w-24 bg-white/80 rounded-full" />
+              </div>
+              <div className="flex-1 h-32 rounded-xl bg-white/5 border border-white/5 p-4 flex flex-col justify-end">
+                <div className="h-2 w-16 bg-white/20 rounded-full mb-2" />
+                <div className="h-6 w-24 bg-white/80 rounded-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 py-12 px-6 flex flex-col items-center justify-center text-center">
+        <h2 className="text-2xl font-heading font-bold mb-6">Ready to transform?</h2>
+        <button 
+          onClick={() => navigate('/signup')} 
+          className="text-sm font-medium bg-white text-black px-6 py-3 rounded-full hover:bg-white/90 transition-all mb-12 outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          Start for Free
+        </button>
+        <p className="text-xs text-white/30 tracking-wide">&copy; {new Date().getFullYear()} FORME FITNESS. INDIA FIRST.</p>
+      </footer>
     </div>
   )
 }
