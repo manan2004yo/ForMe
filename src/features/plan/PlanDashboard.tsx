@@ -243,6 +243,20 @@ export function PlanDashboard() {
           </div>
         </div>
 
+        {/* Hostel & Budget Engine CTA */}
+        <button 
+          onClick={() => setShowGroceryEngine(true)}
+          className="w-full mb-6 bg-gradient-to-r from-emerald-500/20 to-[#121212] border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-between group active:scale-[0.98] transition-transform text-left"
+        >
+          <div>
+            <h3 className="text-white font-semibold text-sm">Hostel & Budget Engine</h3>
+            <p className="text-xs text-white/50 mt-1">Optimize your weekly grocery budget</p>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-black transition-colors">
+            <Plus size={16} />
+          </div>
+        </button>
+
         {/* Meal Slots */}
         <div className="space-y-1">
           {currentPlan.map(slot => (
