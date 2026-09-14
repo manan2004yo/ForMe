@@ -9,7 +9,7 @@ import { useUserStore } from '@/store/userStore'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useWaterStreakStore } from '@/store/waterStreakStore'
-import { Droplet, Plus, Flame, Activity, ArrowRight } from 'lucide-react'
+import { Droplet, Plus, Flame, Activity, ArrowRight, TrendingUp, User } from 'lucide-react'
 import { ProgressBar, AnimatedNumber } from '@/components/shared'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
@@ -163,7 +163,7 @@ export function HomeDashboard() {
         </section>
 
         {/* Quick Actions & Hydration */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <WaterTracker />
 
           <div className="bg-[#121212] border border-white/5 rounded-2xl p-6 flex flex-col">
@@ -180,20 +180,55 @@ export function HomeDashboard() {
             <div className="flex-1 flex flex-col justify-end gap-3">
               <button 
                 onClick={() => navigate('/train')}
-                className="w-full py-4 rounded-xl bg-accent text-white font-medium hover:bg-accent/90 transition-all flex items-center justify-between px-6 shadow-lg shadow-accent/20 outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="w-full py-4 rounded-xl bg-accent text-white font-medium hover:bg-accent/90 transition-all flex items-center justify-between px-6 shadow-lg shadow-accent/20 outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
               >
                 <span>Log Workout</span>
                 <ArrowRight size={20} />
               </button>
               <button 
                 onClick={() => navigate('/plan')}
-                className="w-full py-4 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors flex items-center justify-between px-6 outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="w-full py-4 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors flex items-center justify-between px-6 outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95"
               >
                 <span>View Diet Plan</span>
                 <ArrowRight size={20} />
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Explore More */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <button 
+            onClick={() => navigate('/progress')}
+            className="bg-[#121212] border border-white/5 rounded-2xl p-6 flex items-center justify-between hover:bg-white/5 transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95 group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                <TrendingUp size={20} />
+              </div>
+              <div>
+                <h2 className="text-white font-medium">View Progress</h2>
+                <div className="text-sm text-white/40 mt-0.5">Weight & body metrics</div>
+              </div>
+            </div>
+            <ArrowRight size={20} className="text-white/20 group-hover:text-accent transition-colors group-hover:translate-x-1" />
+          </button>
+
+          <button 
+            onClick={() => navigate('/profile')}
+            className="bg-[#121212] border border-white/5 rounded-2xl p-6 flex items-center justify-between hover:bg-white/5 transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95 group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                <User size={20} />
+              </div>
+              <div>
+                <h2 className="text-white font-medium">Profile & Goals</h2>
+                <div className="text-sm text-white/40 mt-0.5">Manage your settings</div>
+              </div>
+            </div>
+            <ArrowRight size={20} className="text-white/20 group-hover:text-accent transition-colors group-hover:translate-x-1" />
+          </button>
         </div>
 
       </div>
