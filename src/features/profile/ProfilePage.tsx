@@ -6,14 +6,21 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
-import { LogOut, Target, Edit3, Check, X, Shield, Settings, User } from 'lucide-react'
+import { useTrainStore } from '@/store/trainStore'
+import { LogOut, Target, Edit3, Shield, User, Save, Flame, Activity, BookOpen } from 'lucide-react'
 import { PageTransition } from '@/components/layout/PageTransition'
+import { clsx } from 'clsx'
+import type { UserProfile } from '@/types'
 
 export function ProfilePage() {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
-  const { profile, isDemoMode } = useUserStore()
+  const { profile, isDemoMode, saveProfile } = useUserStore()
+  const { templates: trainTemplates } = useTrainStore()
+  
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editForm, setEditForm] = useState<Partial<UserProfile> | null>(null)
 
   if (!profile) return null
 
@@ -22,16 +29,45 @@ export function ProfilePage() {
     navigate('/')
   }
 
+  const handleEditClick = () => {
+    setEditForm(profile)
+    setIsEditing(true)
+  }
+
+  const handleSave = async () => {
+    if (editForm) {
+      await saveProfile(editForm)
+    }
+    setIsEditing(false)
+  }
+
   return (
     <PageTransition>
-      <div className="page relative">
-        <header className="page-header mb-8">
-          <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
-            Profile
-          </h1>
-          <p className="text-sm text-white/50 font-medium tracking-wide mt-2">
-            Manage your account and preferences
-          </p>
+      <div className="page relative pb-24">
+        <header className="page-header mb-8 flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
+              Profile
+            </h1>
+            <p className="text-sm text-white/50 font-medium tracking-wide mt-2">
+              Manage your personal details and goals
+            </p>
+          </div>
+          {!isEditing ? (
+            <button 
+              onClick={handleEditClick}
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-all active:scale-95 flex items-center gap-2"
+            >
+              <Edit3 size={16} /> Edit Profile
+            </button>
+          ) : (
+            <button 
+              onClick={handleSave}
+              className="px-4 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg text-sm font-medium transition-all active:scale-95 flex items-center gap-2 shadow-lg shadow-accent/20"
+            >
+              <Save size={16} /> Save Changes
+            </button>
+          )}
         </header>
 
         {isDemoMode && (
@@ -47,73 +83,148 @@ export function ProfilePage() {
         )}
 
         {/* User Card */}
-        <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 mb-6 flex items-center gap-6">
+        <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 mb-8 flex items-center gap-6 shadow-xl">
           <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-3xl font-heading font-bold text-white uppercase shadow-inner">
             {profile.name.charAt(0)}
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-white">{profile.name}</h2>
-            <div className="text-sm text-white/50 mt-1 capitalize">{profile.dietType} Diet • {profile.fitnessGoal.replace('_', ' ')}</div>
-            <div className="text-xs text-white/30 mt-1">{user?.email || 'demo@example.com'}</div>
+            {isEditing ? (
+              <input
+                type="text"
+                value={editForm?.name || ''}
+                onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white w-full sm:w-1/2 outline-none focus:ring-2 focus:ring-accent font-bold text-lg mb-2"
+              />
+            ) : (
+              <h2 className="text-xl font-bold text-white">{profile.name}</h2>
+            )}
+            
+            <div className="text-xs text-white/30 mb-2">{user?.email || 'demo@example.com'}</div>
+            
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs font-medium bg-white/5 text-white/70 px-2 py-1 rounded capitalize">
+                {profile.dietType}
+              </span>
+              <span className="text-xs font-medium bg-white/5 text-white/70 px-2 py-1 rounded capitalize">
+                {profile.fitnessGoal.replace('_', ' ')}
+              </span>
+            </div>
           </div>
-          <button className="p-3 bg-white/5 rounded-xl text-white/50 hover:text-white transition-colors">
-            <Edit3 size={18} />
-          </button>
         </div>
 
-        {/* Settings Links */}
-        <div className="bg-[#121212] border border-white/5 rounded-3xl overflow-hidden mb-8">
-          <div className="p-4 border-b border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/70">
-                <Target size={18} />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-white">Adjust Goals</div>
-                <div className="text-xs text-white/50 mt-0.5">Change target weight or macros</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 border-b border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/70">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Personal Details */}
+          <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/70">
                 <User size={18} />
               </div>
-              <div>
-                <div className="text-sm font-medium text-white">Account Details</div>
-                <div className="text-xs text-white/50 mt-0.5">Manage email and password</div>
+              <h3 className="font-semibold text-white">Personal Details</h3>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-white/50">Age</span>
+                {isEditing ? (
+                  <input type="number" value={editForm?.age || ''} onChange={e => setEditForm({...editForm, age: parseInt(e.target.value)})} className="bg-white/5 border border-white/10 rounded px-2 py-1 w-20 text-white outline-none focus:border-accent text-right text-sm" />
+                ) : (
+                  <span className="text-sm font-medium text-white">{profile.age} yrs</span>
+                )}
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-white/50">Height</span>
+                {isEditing ? (
+                  <input type="number" value={editForm?.heightCm || ''} onChange={e => setEditForm({...editForm, heightCm: parseInt(e.target.value)})} className="bg-white/5 border border-white/10 rounded px-2 py-1 w-20 text-white outline-none focus:border-accent text-right text-sm" />
+                ) : (
+                  <span className="text-sm font-medium text-white">{profile.heightCm} cm</span>
+                )}
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-white/50">Gender</span>
+                {isEditing ? (
+                  <select value={editForm?.gender || ''} onChange={e => setEditForm({...editForm, gender: e.target.value as any})} className="bg-white/5 border border-white/10 rounded px-2 py-1 w-24 text-white outline-none focus:border-accent text-right text-sm [&>option]:bg-[#121212]">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                ) : (
+                  <span className="text-sm font-medium text-white capitalize">{profile.gender}</span>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/70">
-                <Settings size={18} />
+          {/* Goals & Preferences */}
+          <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/70">
+                <Target size={18} />
               </div>
-              <div>
-                <div className="text-sm font-medium text-white">Preferences</div>
-                <div className="text-xs text-white/50 mt-0.5">Units, theme, and notifications</div>
+              <h3 className="font-semibold text-white">Goals & Diet</h3>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-white/50">Fitness Goal</span>
+                {isEditing ? (
+                  <select value={editForm?.fitnessGoal || ''} onChange={e => setEditForm({...editForm, fitnessGoal: e.target.value as any})} className="bg-white/5 border border-white/10 rounded px-2 py-1 w-36 text-white outline-none focus:border-accent text-right text-sm [&>option]:bg-[#121212]">
+                    <option value="lose_weight">Lose Weight</option>
+                    <option value="build_muscle">Build Muscle</option>
+                    <option value="body_recomposition">Recomp</option>
+                    <option value="lean_bulk">Lean Bulk</option>
+                  </select>
+                ) : (
+                  <span className="text-sm font-medium text-white capitalize">{profile.fitnessGoal.replace('_', ' ')}</span>
+                )}
               </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-white/50">Diet Type</span>
+                {isEditing ? (
+                  <select value={editForm?.dietType || ''} onChange={e => setEditForm({...editForm, dietType: e.target.value as any})} className="bg-white/5 border border-white/10 rounded px-2 py-1 w-32 text-white outline-none focus:border-accent text-right text-sm [&>option]:bg-[#121212]">
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="eggetarian">Eggetarian</option>
+                    <option value="non_vegetarian">Non-Veg</option>
+                    <option value="vegan">Vegan</option>
+                  </select>
+                ) : (
+                  <span className="text-sm font-medium text-white capitalize">{profile.dietType}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Saved Templates */}
+        <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl mb-8">
+          <h3 className="font-semibold text-white mb-6">Your Library</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+              <Activity size={24} className="text-accent mb-2" />
+              <div className="text-xl font-bold text-white">{trainTemplates.length}</div>
+              <div className="text-xs text-white/50">Workout Templates</div>
+            </div>
+            <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
+              <BookOpen size={24} className="text-blue-400 mb-2" />
+              <div className="text-xl font-bold text-white">0</div>
+              <div className="text-xs text-white/50">Meal Templates</div>
             </div>
           </div>
         </div>
 
         {/* Logout */}
         {showLogoutConfirm ? (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-6 flex flex-col items-center text-center">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-6 flex flex-col items-center text-center shadow-xl">
             <h3 className="text-red-400 font-medium mb-4">Are you sure you want to sign out?</h3>
-            <div className="flex gap-4 w-full">
+            <div className="flex gap-4 w-full sm:w-auto">
               <button 
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 py-3 bg-white/5 text-white rounded-xl font-medium hover:bg-white/10 transition-colors"
+                className="px-8 py-3 bg-white/5 text-white rounded-xl font-medium hover:bg-white/10 transition-colors active:scale-95"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleLogout}
-                className="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                className="px-8 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20 active:scale-95"
               >
                 Sign Out
               </button>
@@ -122,7 +233,7 @@ export function ProfilePage() {
         ) : (
           <button 
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full py-4 bg-[#121212] border border-white/5 text-red-400 rounded-3xl font-medium hover:bg-red-500/5 transition-colors flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-8 py-4 bg-[#121212] border border-white/5 text-red-400 rounded-2xl font-medium hover:bg-red-500/5 transition-colors flex items-center justify-center gap-2 active:scale-95 mx-auto"
           >
             <LogOut size={18} />
             Sign Out
