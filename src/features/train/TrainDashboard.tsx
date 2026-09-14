@@ -7,6 +7,7 @@ import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download, Coffee } from 'lu
 import { useTrainStore } from '@/store/trainStore'
 import type { PlannedExercise } from '@/types'
 import { TrainExerciseSearch } from './TrainExerciseSearch'
+import { MuscleHeatmap } from './MuscleHeatmap'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 
@@ -189,6 +190,10 @@ export function TrainDashboard() {
             )}
           </div>
         </header>
+
+        <div className="mb-8">
+          <MuscleHeatmap />
+        </div>
 
         {templates.length > 0 && (
           <div className="mb-8 overflow-x-auto hide-scrollbar">

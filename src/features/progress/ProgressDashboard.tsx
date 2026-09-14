@@ -12,6 +12,7 @@ import { TrendingDown, TrendingUp, Plus, Activity, BookOpen, Dumbbell, ShieldAle
 import { format, subDays } from 'date-fns'
 import { AnimatedNumber } from '@/components/shared'
 import { PageTransition } from '@/components/layout/PageTransition'
+import { CinematicProgressMorph } from './CinematicProgressMorph'
 import { clsx } from 'clsx'
 
 export function ProgressDashboard() {
@@ -24,6 +25,7 @@ export function ProgressDashboard() {
   const [logWaist, setLogWaist] = useState('')
   const [isLogging, setIsLogging] = useState(false)
   const [activeTab, setActiveTab] = useState<'weight' | 'measurements'>('weight')
+  const [showMorph, setShowMorph] = useState(false)
 
   useEffect(() => {
     if (user && user.uid !== 'demo') {
@@ -77,6 +79,7 @@ export function ProgressDashboard() {
   }).length
 
   return (
+    <>
     <PageTransition>
       <div className="page relative">
         <header className="page-header mb-8">
@@ -106,16 +109,19 @@ export function ProgressDashboard() {
               <Activity size={120} />
             </div>
           </div>
-          <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-            <div className="text-xs font-medium text-white/50 uppercase tracking-widest mb-2">Goal Weight</div>
-            <div className="flex items-baseline gap-1 relative z-10">
-              <AnimatedNumber value={(profile.weightKg - 5)} className="text-3xl font-heading font-bold text-white" />
-              <span className="text-white/40">kg</span>
+          <button 
+            onClick={() => setShowMorph(true)}
+            className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden group hover:border-accent/30 transition-colors text-left"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="text-xs font-medium text-accent uppercase tracking-widest mb-2">Visual Progress</div>
+            <div className="text-xl font-heading font-bold text-white leading-tight">
+              Cinematic Morph
             </div>
-            <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-white/40 relative z-10">
-              {goalDiff} kg to go
+            <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-white/50 group-hover:text-accent transition-colors">
+              <Plus size={14} className="fill-current" /> Open Viewer
             </div>
-          </div>
+          </button>
         </div>
 
         {/* Action Tabs */}
@@ -293,5 +299,7 @@ export function ProgressDashboard() {
 
       </div>
     </PageTransition>
+      {showMorph && <CinematicProgressMorph onClose={() => setShowMorph(false)} />}
+    </>
   )
 }
