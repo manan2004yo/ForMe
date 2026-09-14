@@ -31,6 +31,7 @@ function MealSection({ slot, label, foods, onBrowse }: {
   onBrowse: (slot: MealSlot) => void
 }) {
   const [expanded, setExpanded] = useState(true)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const { removeFoodFromSlot } = usePlanStore()
   
   const totals: NutritionInfo = foods.reduce((acc, f) => ({
@@ -64,15 +65,19 @@ function MealSection({ slot, label, foods, onBrowse }: {
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); onBrowse(slot); }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-colors text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95"
           >
-            <Plus size={14} /> Add Food
+            <Plus size={14} /> Search food
           </button>
           {hasFood && (
-            <button className="text-white/40 p-1">
+            <button 
+              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+              className="text-white/40 p-1.5 hover:bg-white/5 rounded-lg transition-colors active:scale-95"
+              aria-label={expanded ? "Collapse meal" : "Expand meal"}
+            >
               {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
           )}
@@ -89,16 +94,37 @@ function MealSection({ slot, label, foods, onBrowse }: {
                   {food.quantity} {food.unit} - {Math.round(food.nutrition.calories)} kcal
                 </div>
               </div>
-              <button
-                onClick={() => removeFoodFromSlot(slot, food.id)}
-                className="p-2 text-white/20 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:opacity-100"
-                aria-label="Remove food"
-              >
-                <Trash2 size={16} />
-              </button>
+              {confirmDeleteId === food.id ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-red-400 font-medium">Remove?</span>
+                  <button 
+                    onClick={() => { removeFoodFromSlot(slot, food.id); setConfirmDeleteId(null); }}
+                    className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-xs font-semibold hover:bg-red-500/30 transition-all active:scale-95"
+                  >
+                    Yes
+                  </button>
+                  <button 
+                    onClick={() => setConfirmDeleteId(null)}
+                    className="px-3 py-1.5 bg-white/5 text-white/70 rounded-lg text-xs font-semibold hover:bg-white/10 transition-all active:scale-95"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDeleteId(food.id)}
+                  className="px-3 py-1.5 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:opacity-100 text-xs font-semibold active:scale-95"
+                >
+                  Remove item
+                </button>
+              )}
             </div>
           ))}
           
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 mb-2">
+            <button className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5">Edit meal</button>
+            <button className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5">Copy previous meal</button>
+          </div>
           <div className="grid grid-cols-4 gap-2 mt-4 p-3 bg-white/5 rounded-xl border border-white/5">
             <NutritionChip label="Calories" value={totals.calories} unit="kcal" colorClass="text-white" />
             <NutritionChip label="Protein" value={totals.protein} unit="g" colorClass="text-emerald-400" />

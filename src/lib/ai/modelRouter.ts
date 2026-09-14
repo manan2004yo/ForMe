@@ -25,39 +25,45 @@ async function callMockProvider(query: string, context: AIContext): Promise<AIRe
   await new Promise(resolve => setTimeout(resolve, 800))
 
   const lowerQuery = query.toLowerCase()
+  const remainingCals = Math.round(context.metrics?.caloricTarget - (context.todayFood?.calories || 0))
+  const remainingProtein = Math.round(context.metrics?.proteinTarget - (context.todayFood?.protein || 0))
 
-  if (lowerQuery.includes('pizza') || lowerQuery.includes('burger') || lowerQuery.includes('cheat')) {
+  if (lowerQuery.includes('pizza') || lowerQuery.includes('burger') || lowerQuery.includes('cheat') || lowerQuery.includes('dinner')) {
     return {
-      message: `You can fit it in! You have ${Math.round(context.metrics?.caloricTarget - (context.todayFood?.calories || 0))} calories left. Just be mindful of your protein target (${context.metrics?.proteinTarget}g).`,
-      confidence: 'high'
+      message: `You have ${remainingCals} kcal and ${remainingProtein}g protein remaining. Here are your best options:`,
+      suggestedActions: [
+        { label: 'High Protein Dinner', action: 'Suggest high protein dinner' },
+        { label: 'Quick Snack Option', action: 'Suggest a quick snack' }
+      ]
     }
   }
 
-  if (lowerQuery.includes('workout') || lowerQuery.includes('train')) {
+  if (lowerQuery.includes('workout') || lowerQuery.includes('train') || lowerQuery.includes('bench') || lowerQuery.includes('sets')) {
     return {
-      message: `I recommend focusing on progressive overload. If you're feeling tired, it's okay to drop the volume a bit. Need to adjust your split?`,
-      suggestedActions: [{ label: 'View Training Plan', action: 'go_train' }]
+      message: `For your goal of ${context.profile?.goal === 'build_muscle' ? 'hypertrophy' : 'strength'}, here are the recommended set and rep ranges:`,
+      suggestedActions: [
+        { label: 'Strength: 3-5 sets, 4-6 reps', action: 'Help me plan strength' },
+        { label: 'Hypertrophy: 3-4 sets, 8-12 reps', action: 'Help me plan hypertrophy' }
+      ]
     }
   }
-
-  if (lowerQuery.includes('diet') || lowerQuery.includes('eat') || lowerQuery.includes('food')) {
+  
+  if (lowerQuery.includes('recover') || lowerQuery.includes('rest')) {
     return {
-      message: `Currently, you've hit ${Math.round(context.todayFood?.protein || 0)}g out of ${context.metrics?.proteinTarget}g of protein today. Try to include a lean protein source in your next meal!`,
-      suggestedActions: [{ label: 'Log Food', action: 'log_food' }]
+      message: `Rest days are crucial. What type of recovery are you interested in today?`,
+      suggestedActions: [
+        { label: 'Active Recovery Routine', action: 'Suggest active recovery' },
+        { label: 'Mobility & Stretching', action: 'Suggest mobility work' }
+      ]
     }
   }
-
-  // Generic fallback that actually echoes a bit of context so it doesn't look completely dumb
-  const responses = [
-    "That's a great question. Consistency is key!",
-    "I'm here to help you stay on track.",
-    "Make sure you're staying hydrated today!",
-    "Listen to your body, recovery is just as important as the workout."
-  ]
-  const randomResponse = responses[Math.floor(Math.random() * responses.length)]
 
   return {
-    message: `${randomResponse} By the way, you have ${Math.round(context.metrics?.caloricTarget - (context.todayFood?.calories || 0))} calories remaining today.`
+    message: `I've analyzed your progress. You have ${remainingCals} kcal left today. What would you like to focus on next?`,
+    suggestedActions: [
+      { label: 'Review Diet Plan', action: 'Review diet plan' },
+      { label: 'Adjust Macros', action: 'Adjust macros' }
+    ]
   }
 }
 

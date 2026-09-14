@@ -38,7 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={path}
                 onClick={() => navigate(path)}
                 className={clsx(
-                  "flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                  "flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95",
                   isActive 
                     ? "bg-white/10 text-white shadow-sm" 
                     : "text-white/50 hover:text-white hover:bg-white/5"
@@ -56,7 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="p-6">
           <button 
             onClick={() => setIsAssistantOpen(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-white font-medium hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20 outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-white font-medium hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20 outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
           >
             <Sparkles size={18} />
             Ask FORME
@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={path}
                 onClick={() => navigate(path)}
                 className={clsx(
-                  "flex flex-col items-center gap-1 p-2 rounded-lg transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                  "flex flex-col items-center gap-1 p-2 rounded-lg transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95",
                   isActive ? "text-accent" : "text-white/40 hover:text-white/70"
                 )}
                 aria-label={label}

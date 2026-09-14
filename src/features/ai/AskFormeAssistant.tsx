@@ -6,6 +6,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Sparkles, X, Send, Loader2, Info } from 'lucide-react'
 import { useUserStore } from '@/store/userStore'
+import { useAuthStore } from '@/store/authStore'
+import { useTrainStore } from '@/store/trainStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { askForme, type AIContext } from '@/lib/ai/modelRouter'
 import { v4 as uuidv4 } from 'uuid'
@@ -22,31 +24,42 @@ interface Message {
 export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const location = useLocation()
   const { profile, metrics } = useUserStore()
+  const { user } = useAuthStore()
+  const { currentPlan } = useTrainStore()
   const { todayTotals } = useFoodLogStore()
   
   const getContextualGreeting = () => {
     const path = location.pathname
+    const todayIndex = new Date().getDay()
+    const isRestDay = currentPlan[todayIndex]?.isRestDay
+
     if (path.includes('eat')) {
       return {
-        message: "Hi! I see you're looking at your Food Log. Need help finding a specific Indian food or calculating macros?",
-        actions: [{ label: 'Find high protein lunch', action: 'Suggest a high protein Indian lunch' }]
+        message: "Hi! Need help with your food log? I can suggest meals to hit your remaining macros.",
+        actions: [{ label: 'Suggest a high-protein dinner under 600 kcal', action: 'Suggest a high-protein dinner under 600 kcal.' }]
       }
     }
     if (path.includes('train')) {
+      if (isRestDay) {
+        return {
+          message: "It's a rest day! Need recovery tips?",
+          actions: [{ label: 'How should I recover today?', action: 'How should I recover today?' }]
+        }
+      }
       return {
-        message: "Hey! Ready to plan your workouts? I can suggest exercises for specific muscle groups or help you structure a split.",
-        actions: [{ label: 'Suggest back exercises', action: 'What are good back exercises for a home gym?' }]
+        message: "Ready to train? I can help you pick sets and reps or swap exercises.",
+        actions: [{ label: 'Help me choose sets and reps for bench press', action: 'Help me choose sets and reps for bench press.' }]
       }
     }
     if (path.includes('plan')) {
       return {
-        message: "Planning ahead? I can help you review your target macros against your planned meals.",
-        actions: [{ label: 'Review my macros', action: 'Am I hitting my protein target?' }]
+        message: "Planning your meals? I can help you balance your macros.",
+        actions: [{ label: 'How much protein is left today?', action: 'How much protein is left today?' }]
       }
     }
     return {
-      message: "Hi! I'm FORME Coach. I can help you with nutrition, workouts, and analyzing your progress.",
-      actions: [{ label: 'What should I eat?', action: 'What should I eat right now based on my goals?' }]
+      message: "Hi! I'm FORME Coach. What can I help you with today?",
+      actions: [{ label: 'Review my progress', action: 'Review my progress.' }, { label: 'Adjust my goals', action: 'How should I adjust my goals?' }]
     }
   }
 
@@ -128,22 +141,41 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
         "inset-x-0 bottom-0 h-[85vh] sm:h-auto sm:top-24 sm:bottom-6 sm:right-6 sm:w-[400px] sm:left-auto bg-[#121212] border border-white/10 sm:rounded-3xl rounded-t-3xl",
         isOpen ? "translate-y-0 opacity-100" : "translate-y-full sm:translate-y-8 opacity-0 pointer-events-none"
       )}>
-        <header className="px-6 py-4 border-b border-white/5 bg-[#121212] flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent">
-              <Sparkles size={16} />
+        <header className="px-6 py-4 border-b border-white/5 bg-[#121212] flex flex-col shrink-0 gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent">
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-white">FORME Coach</h2>
+                <p className="text-xs text-white/50">Context-Aware AI</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-semibold text-white">FORME Coach</h2>
-              <p className="text-xs text-white/50">Context-Aware AI</p>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => {
+                  const greeting = getContextualGreeting()
+                  setMessages([{ id: uuidv4(), role: 'assistant', content: greeting.message, actions: greeting.actions }])
+                }}
+                className="text-xs font-semibold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-all active:scale-95"
+              >
+                Clear
+              </button>
+              <button 
+                onClick={onClose}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors active:scale-95"
+              >
+                <X size={18} />
+              </button>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            <X size={18} />
-          </button>
+          {user?.email === 'demo@forme.fit' && (
+            <div className="flex items-center justify-center gap-1.5 bg-orange-500/10 text-orange-400 py-1.5 rounded text-xs font-medium border border-orange-500/20">
+              <Info size={12} />
+              <span>Responses are based on Demo Profile data.</span>
+            </div>
+          )}
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-[#0a0a0a]">

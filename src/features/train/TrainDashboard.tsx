@@ -13,6 +13,7 @@ import { clsx } from 'clsx'
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 function ExerciseRow({ exercise, onRemove }: { exercise: PlannedExercise, onRemove: () => void }) {
+  const [confirm, setConfirm] = useState(false)
   return (
     <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 mb-2 last:mb-0 group">
       <div>
@@ -26,13 +27,20 @@ function ExerciseRow({ exercise, onRemove }: { exercise: PlannedExercise, onRemo
           </span>
         </div>
       </div>
-      <button
-        onClick={onRemove}
-        className="p-2 text-white/20 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:opacity-100"
-        aria-label="Remove exercise"
-      >
-        <Trash2 size={16} />
-      </button>
+      {confirm ? (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-red-400 font-medium">Remove?</span>
+          <button onClick={onRemove} className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-xs font-semibold hover:bg-red-500/30 transition-all active:scale-95">Yes</button>
+          <button onClick={() => setConfirm(false)} className="px-3 py-1.5 bg-white/5 text-white/70 rounded-lg text-xs font-semibold hover:bg-white/10 transition-all active:scale-95">No</button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setConfirm(true)}
+          className="px-3 py-1.5 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:opacity-100 text-xs font-semibold active:scale-95"
+        >
+          Remove
+        </button>
+      )}
     </div>
   )
 }
@@ -70,29 +78,41 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse }: {
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          {!isRestDay && (
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {!hasExercises && !isRestDay && (
             <button
               onClick={(e) => { e.stopPropagation(); onBrowse(dayIndex); }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-colors text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95"
             >
-              <Plus size={14} /> Add Exercise
+              <Plus size={14} /> Create workout day
+            </button>
+          )}
+          
+          {hasExercises && !isRestDay && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onBrowse(dayIndex); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95"
+            >
+              <Plus size={14} /> Add exercise manually
             </button>
           )}
           
           <button
             onClick={(e) => { e.stopPropagation(); toggleRestDay(dayIndex); }}
             className={clsx(
-              "p-2 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white",
-              isRestDay ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+              "px-3 py-1.5 rounded-lg transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95",
+              isRestDay ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
             )}
-            title={isRestDay ? "Remove Rest Day" : "Mark as Rest Day"}
           >
-            <Coffee size={16} />
+            {isRestDay ? "Remove rest day" : "Mark rest day"}
           </button>
 
           {(hasExercises || isRestDay) && (
-            <button className="text-white/40 p-1 ml-1">
+            <button 
+              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+              className="text-white/40 p-1.5 hover:bg-white/5 rounded-lg ml-1 transition-all active:scale-95"
+              aria-label={expanded ? "Collapse day" : "Expand day"}
+            >
               {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
           )}
@@ -113,9 +133,14 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse }: {
                 const name = prompt("Enter a name for this workout template (e.g., Push Day):")
                 if (name) saveAsTemplate(name, dayIndex)
               }}
-              className="text-xs font-medium text-white/50 hover:text-white transition-colors flex items-center gap-1"
+              className="px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all flex items-center gap-1.5 active:scale-95"
             >
-              <Save size={14} /> Save as Template
+              <Save size={14} /> Save as template
+            </button>
+            <button 
+              className="px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all flex items-center gap-1.5 active:scale-95 ml-2"
+            >
+              Duplicate workout
             </button>
           </div>
         </div>
@@ -150,16 +175,18 @@ export function TrainDashboard() {
           </div>
           
           <div className="flex gap-3">
-            <button 
-              onClick={() => {
-                if(confirm("Are you sure you want to clear your entire weekly plan?")) {
-                  clearPlan()
-                }
-              }}
-              className="px-4 py-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-            >
-              <Trash2 size={16} /> Clear Week
-            </button>
+            {currentPlan.some((d: any) => d.exercises.length > 0) && (
+              <button 
+                onClick={() => {
+                  if(confirm("Are you sure you want to clear your entire weekly plan? This will remove all planned exercises.")) {
+                    clearPlan()
+                  }
+                }}
+                className="px-4 py-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 active:scale-95"
+              >
+                Clear workout
+              </button>
+            )}
           </div>
         </header>
 
