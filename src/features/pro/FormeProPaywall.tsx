@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Crown, CheckCircle2, Zap, ArrowRight, ShieldCheck, X } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { PageTransition } from '@/components/layout/PageTransition'
+import { db } from '@/lib/firebase/config'
+import { doc, setDoc } from 'firebase/firestore'
 
 // Load Razorpay Script dynamically
 const loadRazorpay = () => {
@@ -38,16 +40,15 @@ export function FormeProPaywall({ onClose }: { onClose?: () => void }) {
         throw new Error('Razorpay SDK failed to load. Are you online?')
       }
 
-      // In a real app, call your Firebase Cloud Function:
-      // const createRazorpaySubscription = httpsCallable(functions, 'createRazorpaySubscription')
-      // const { data } = await createRazorpaySubscription()
+      // Call Cloudflare Pages Function
+      const createRes = await fetch('/api/razorpay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid || (user as any).id })
+      })
       
-      // MOCK DATA for DEMO PURPOSES since we don't have live Firebase Functions deployed
-      const mockData = {
-        subscription_id: 'sub_test_placeholder',
-        key_id: 'rzp_test_placeholder'
-      }
-      const data = mockData
+      const data = await createRes.json()
+      if (!createRes.ok) throw new Error(data.error || 'Failed to initialize payment')
 
       const options = {
         key: data.key_id,
@@ -55,12 +56,37 @@ export function FormeProPaywall({ onClose }: { onClose?: () => void }) {
         name: 'FORME PRO',
         description: 'Monthly Premium Subscription',
         image: 'https://your-logo-url.com/logo.png', // Replace with actual logo URL
-        handler: function (response: any) {
-          // This fires when payment is successful on the client
-          console.log('Payment successful:', response)
-          alert(`Payment Successful! \nPayment ID: ${response.razorpay_payment_id}\nSubscription ID: ${response.razorpay_subscription_id}`)
-          // Note: The real truth is the Webhook. The client handler is just for UX.
-          if (onClose) onClose()
+        handler: async function (response: any) {
+          try {
+            // 1. Verify Signature on Cloudflare Edge
+            const verifyRes = await fetch('/api/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_subscription_id: response.razorpay_subscription_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            })
+            
+            const verifyData = await verifyRes.json()
+            if (!verifyData.valid) throw new Error('Payment signature verification failed!')
+
+            // 2. Update Firestore Securely
+            await setDoc(doc(db, 'users', user.uid || (user as any).id), {
+              isPro: true,
+              razorpaySubscriptionId: response.razorpay_subscription_id,
+              razorpayCustomerId: response.razorpay_customer_id || null,
+            }, { merge: true })
+
+            alert(`Payment Successful! Welcome to FORME PRO.`)
+            if (onClose) onClose()
+            // Force reload to apply pro status everywhere
+            window.location.reload()
+            
+          } catch (err: any) {
+            setError(err.message || 'Error saving payment data.')
+          }
         },
         prefill: {
           name: typeof user === 'object' && user !== null && 'displayName' in user ? user.displayName : 'User',
