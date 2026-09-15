@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
+import { useSpotifyStore } from '@/store/spotifyStore'
 import { useAchievementEngine } from '@/lib/engines/useAchievementEngine'
 
 // Feature imports
@@ -95,6 +96,15 @@ function AppRoutes() {
   const { user, isInitialized, initialize } = useAuthStore()
 
   useEffect(() => {
+    // Intercept Spotify OAuth Callback
+    const urlParams = new URLSearchParams(window.location.search)
+    const code = urlParams.get('code')
+    if (code) {
+      useSpotifyStore.getState().handleCallback(code)
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
     const unsubscribe = initialize()
     return unsubscribe
   }, [initialize])
