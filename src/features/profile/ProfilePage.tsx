@@ -14,6 +14,8 @@ import { clsx } from 'clsx'
 import type { UserProfile } from '@/types'
 import { FormeProPaywall } from '../pro/FormeProPaywall'
 import { Crown } from 'lucide-react'
+import { AppSettingsModal } from './AppSettingsModal'
+import { PrivacySettingsModal } from './PrivacySettingsModal'
 
 export function ProfilePage() {
   const navigate = useNavigate()
@@ -25,6 +27,8 @@ export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState<Partial<UserProfile> | null>(null)
   const [showProPaywall, setShowProPaywall] = useState(false)
+  const [showAppSettings, setShowAppSettings] = useState(false)
+  const [showPrivacySettings, setShowPrivacySettings] = useState(false)
   const { isPro } = useAuthStore()
   const { info } = useToastStore()
 
@@ -58,8 +62,9 @@ export function ProfilePage() {
   }
 
   return (
-    <PageTransition>
-      <div className="page relative pb-24">
+    <>
+      <PageTransition>
+        <div className="page relative pb-24">
         <header className="page-header mb-8 flex items-end justify-between">
           <div>
             <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
@@ -250,12 +255,12 @@ export function ProfilePage() {
           )}
         </div>
 
-        {/* Settings & Privacy (Restored) */}
+        {/* Settings & Privacy */}
         <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl mb-8">
           <h3 className="font-semibold text-white mb-6">Settings & Privacy</h3>
           <div className="space-y-2">
             <button 
-              onClick={handleComingSoon}
+              onClick={() => setShowAppSettings(true)}
               className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors active:scale-[0.98]"
             >
               <div className="flex items-center gap-3">
@@ -264,7 +269,7 @@ export function ProfilePage() {
               </div>
             </button>
             <button 
-              onClick={handleComingSoon}
+              onClick={() => setShowPrivacySettings(true)}
               className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors active:scale-[0.98]"
             >
               <div className="flex items-center gap-3">
@@ -306,5 +311,8 @@ export function ProfilePage() {
 
       </div>
     </PageTransition>
+      {showAppSettings && <AppSettingsModal onClose={() => setShowAppSettings(false)} />}
+      {showPrivacySettings && <PrivacySettingsModal onClose={() => setShowPrivacySettings(false)} />}
+    </>
   )
 }

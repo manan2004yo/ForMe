@@ -38,6 +38,7 @@ interface FoodLogState {
   loadLogs: (uid: string, date?: string) => Promise<void>
   loadRecentLogs: (uid: string, days?: number) => Promise<void>
   addFoodEntry: (uid: string, meal: MealSlot, items: LoggedFoodItem[]) => Promise<void>
+  updateEntry: (uid: string, entryId: string, updatedEntry: FoodLogEntry) => Promise<void>
   removeEntry: (uid: string, entryId: string) => Promise<void>
   setDate: (date: string) => void
 }
@@ -108,6 +109,13 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
 
     set(state => ({ entries: [...state.entries, entry] }))
     await saveFoodLog(uid, entry)
+  },
+
+  updateEntry: async (uid: string, entryId: string, updatedEntry: FoodLogEntry) => {
+    set(state => ({
+      entries: state.entries.map(e => e.id === entryId ? updatedEntry : e)
+    }))
+    await saveFoodLog(uid, updatedEntry)
   },
 
   removeEntry: async (uid: string, entryId: string) => {

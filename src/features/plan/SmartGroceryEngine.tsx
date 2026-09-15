@@ -43,6 +43,16 @@ export function SmartGroceryEngine({ onClose }: { onClose: () => void }) {
     }
     setGeneratedList(list);
   }
+
+  const handleManualAdd = (food: typeof BUDGET_FOODS[0]) => {
+    // Add 500g by default for manual adds
+    const cost = food.costPer100g * 5;
+    setGeneratedList(prev => [...prev, { ...food, amount: '500g', cost }]);
+  }
+  
+  const handleRemove = (index: number) => {
+    setGeneratedList(prev => prev.filter((_, i) => i !== index));
+  }
   
   return (
     <motion.div 
@@ -86,15 +96,21 @@ export function SmartGroceryEngine({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {generatedList.length > 0 ? (
-          <div>
+        {generatedList.length > 0 && (
+          <div className="mb-8">
             <h3 className="text-xs font-medium text-white/50 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <ShoppingBag size={14} className="text-emerald-400" /> Your Optimized Shopping List
+              <ShoppingBag size={14} className="text-emerald-400" /> Your Shopping List
             </h3>
             <div className="space-y-3 bg-[#121212] p-4 rounded-xl border border-white/5">
               {generatedList.map((food, i) => (
                 <div key={i} className="flex items-center justify-between border-b border-white/5 pb-2 last:border-0 last:pb-0">
                   <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => handleRemove(i)}
+                      className="text-white/30 hover:text-red-400 transition-colors"
+                    >
+                      <ArrowLeft size={14} className="rotate-180" /> 
+                    </button>
                     <span className="text-sm font-semibold text-white">{food.amount}</span>
                     <span className="text-sm text-white/80">{food.name}</span>
                   </div>
@@ -107,27 +123,30 @@ export function SmartGroceryEngine({ onClose }: { onClose: () => void }) {
               </div>
             </div>
           </div>
-        ) : (
-          <div>
-            <h3 className="text-xs font-medium text-white/50 uppercase tracking-wider mb-4">High ROI Protein Sources</h3>
-            <div className="space-y-3">
-              {BUDGET_FOODS.map((food, i) => (
-                <div key={i} className="bg-[#121212] border border-white/5 rounded-xl p-4 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-white/90">{food.name}</h4>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[10px] text-emerald-400 font-medium">{food.protein}g protein / 100g</span>
-                      <span className="text-[10px] text-white/40 font-medium">₹{food.costPer100g} / 100g</span>
-                    </div>
-                  </div>
-                  <button className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors">
-                    <Plus size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
+
+        <div>
+          <h3 className="text-xs font-medium text-white/50 uppercase tracking-wider mb-4">High ROI Protein Sources</h3>
+          <div className="space-y-3">
+            {BUDGET_FOODS.map((food, i) => (
+              <div key={i} className="bg-[#121212] border border-white/5 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-white/90">{food.name}</h4>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-[10px] text-emerald-400 font-medium">{food.protein}g protein / 100g</span>
+                    <span className="text-[10px] text-white/40 font-medium">₹{food.costPer100g} / 100g</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => handleManualAdd(food)}
+                  className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-400 transition-all active:scale-95"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </motion.div>
   )

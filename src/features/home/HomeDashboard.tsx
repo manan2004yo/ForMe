@@ -31,7 +31,7 @@ function MacroBar({ label, consumed, target, colorClass }: { label: string; cons
 }
 
 function WaterTracker() {
-  const { waterToday, waterGoal, addWater, loadWater } = useWaterStreakStore()
+  const { waterToday, waterGoal, addWater, removeWater, loadWater } = useWaterStreakStore()
 
   useEffect(() => {
     loadWater()
@@ -61,15 +61,18 @@ function WaterTracker() {
 
       <div className="flex flex-wrap gap-2 mb-6">
         {cups.map((filled, i) => (
-          <div
+          <button
             key={i}
+            onClick={() => filled && removeWater()}
+            disabled={!filled}
             className={clsx(
-              'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300',
-              filled ? 'bg-blue-500/20 shadow-inner border border-blue-500/30' : 'bg-white/5 border border-white/5'
+              'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-accent',
+              filled ? 'bg-blue-500/20 shadow-inner border border-blue-500/30 hover:bg-red-500/20 hover:border-red-500/30 group active:scale-95 cursor-pointer' : 'bg-white/5 border border-white/5 opacity-50 cursor-default'
             )}
+            title={filled ? "Click to remove water" : ""}
           >
-            <Droplet size={16} className={filled ? 'text-blue-400' : 'text-white/20'} fill={filled ? 'currentColor' : 'none'} />
-          </div>
+            <Droplet size={16} className={filled ? 'text-blue-400 group-hover:text-red-400' : 'text-white/20'} fill={filled ? 'currentColor' : 'none'} />
+          </button>
         ))}
       </div>
 
@@ -116,7 +119,11 @@ export function HomeDashboard() {
               <CnsStatusBadge />
             </div>
           </div>
-          <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent">
+          <button 
+            onClick={() => navigate('/eat')}
+            className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent hover:bg-white/10 active:scale-95"
+            title="Log Food"
+          >
             <Search size={18} />
           </button>
         </header>

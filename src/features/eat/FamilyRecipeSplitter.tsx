@@ -7,16 +7,17 @@ import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import type { LoggedFoodItem, NutritionInfo } from '@/types'
 
-// Mock database for ingredients
-const MOCK_INGREDIENTS = [
-  { id: '1', name: 'Raw Toor Dal', calories: 343, protein: 22, carbs: 63, fat: 1.5, fiber: 15 },
-  { id: '2', name: 'Ghee', calories: 900, protein: 0, carbs: 0, fat: 100, fiber: 0 },
-  { id: '3', name: 'Onion (Raw)', calories: 40, protein: 1.1, carbs: 9.3, fat: 0.1, fiber: 1.7 },
-  { id: '4', name: 'Tomato (Raw)', calories: 18, protein: 0.9, carbs: 3.9, fat: 0.2, fiber: 1.2 },
-  { id: '5', name: 'Raw Chicken Breast', calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0 },
-  { id: '6', name: 'Paneer', calories: 265, protein: 18, carbs: 1.2, fat: 20, fiber: 0 },
-]
+import { INDIAN_FOODS } from '@/lib/data/indianFoods'
 
+const MOCK_INGREDIENTS = INDIAN_FOODS.map(f => ({
+  id: f.id,
+  name: f.name,
+  calories: f.nutrition.calories,
+  protein: f.nutrition.protein,
+  carbs: f.nutrition.carbs,
+  fat: f.nutrition.fat,
+  fiber: f.nutrition.fiber
+}))
 export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
   const { user } = useAuthStore()
   const { addFoodEntry } = useFoodLogStore()

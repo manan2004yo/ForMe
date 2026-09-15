@@ -40,12 +40,13 @@ function NutritionChip({ label, value, unit, colorClass }: { label: string; valu
   )
 }
 
-function MealSection({ config, entries, onDelete, onBrowse, onSnap }: {
+function MealSection({ config, entries, onDelete, onBrowse, onSnap, onEdit }: {
   config: typeof MEAL_CONFIG[0]
   entries: FoodLogEntry[]
   onDelete: (entryId: string) => void
   onBrowse: (slot: MealSlot) => void
   onSnap: (slot: MealSlot) => void
+  onEdit: (entry: FoodLogEntry) => void
 }) {
   const [expanded, setExpanded] = useState(true)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -142,12 +143,20 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap }: {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => setConfirmDeleteId(entry.id)}
-                      className="px-3 py-1.5 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:opacity-100 text-xs font-semibold active:scale-95"
-                    >
-                      Remove item
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                      <button
+                        onClick={() => onEdit(entry)}
+                        className="px-3 py-1.5 text-white/40 hover:text-white hover:bg-white/10 rounded-lg outline-none text-xs font-semibold active:scale-95"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(entry.id)}
+                        className="px-3 py-1.5 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-lg outline-none text-xs font-semibold active:scale-95"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -184,7 +193,7 @@ export function EatDashboard() {
   const [showRecipeSplitter, setShowRecipeSplitter] = useState(false)
   const { user } = useAuthStore()
   const { metrics } = useUserStore()
-  const { entries, removeEntry, addFoodEntry } = useFoodLogStore()
+  const { entries, removeEntry, addFoodEntry, updateEntry } = useFoodLogStore()
   const { getCurrentStatus } = useCnsStore()
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
   const [snappingSlot, setSnappingSlot] = useState<MealSlot | null>(null)
@@ -300,6 +309,36 @@ export function EatDashboard() {
               onDelete={(id) => removeEntry(user?.uid || "demo", id)}
               onBrowse={setBrowsingSlot}
               onSnap={setSnappingSlot}
+              onEdit={(entry) => {
+                // For MVP, simple prompt to edit quantity of the first food in the entry
+                const food = entry.foods[0]
+                if (!food) return
+                const newQtyStr = window.prompt(`Edit quantity for ${food.foodName} (${food.unit}):`, String(food.quantity))
+                if (newQtyStr) {
+                  const newQty = parseFloat(newQtyStr)
+                  if (!isNaN(newQty) && newQty > 0) {
+                    const ratio = newQty / food.quantity
+                    const updatedFood = {
+                      ...food,
+                      quantity: newQty,
+                      gramsConsumed: food.gramsConsumed * ratio,
+                      nutrition: {
+                        calories: food.nutrition.calories * ratio,
+                        protein: food.nutrition.protein * ratio,
+                        carbs: food.nutrition.carbs * ratio,
+                        fat: food.nutrition.fat * ratio,
+                        fiber: food.nutrition.fiber * ratio,
+                      }
+                    }
+                    updateEntry(user?.uid || "demo", entry.id, {
+                      ...entry,
+                      foods: [updatedFood],
+                      totals: updatedFood.nutrition,
+                      updatedAt: new Date().toISOString()
+                    })
+                  }
+                }
+              }}
             />
           ))}
         </div>
