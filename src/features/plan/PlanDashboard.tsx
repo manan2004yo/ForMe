@@ -12,6 +12,7 @@ import { ProgressBar, AnimatedNumber } from '@/components/shared'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 import { useUserStore } from '@/store/userStore'
+import { useToastStore } from '@/store/toastStore'
 
 function NutritionChip({ label, value, unit, colorClass }: { label: string; value: number; unit: string; colorClass: string }) {
   return (
@@ -46,7 +47,7 @@ function MealSection({ slot, label, foods, onBrowse }: {
   const hasFood = foods.length > 0
 
   return (
-    <div className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden mb-4">
+    <div className="glass-panel overflow-hidden mb-4 transition-all duration-300 hover:shadow-card-hover">
       <div 
         className={clsx(
           "p-5 flex items-center justify-between cursor-pointer transition-colors",
@@ -123,8 +124,18 @@ function MealSection({ slot, label, foods, onBrowse }: {
           ))}
           
           <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 mb-2">
-            <button className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5">Edit meal</button>
-            <button className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5">Copy previous meal</button>
+            <button 
+              onClick={() => useToastStore.getState().info("Meal editing coming soon.")}
+              className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5"
+            >
+              Edit meal
+            </button>
+            <button 
+              onClick={() => useToastStore.getState().info("Copying meals coming soon.")}
+              className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5"
+            >
+              Copy previous meal
+            </button>
           </div>
           <div className="grid grid-cols-4 gap-2 mt-4 p-3 bg-white/5 rounded-xl border border-white/5">
             <NutritionChip label="Calories" value={totals.calories} unit="kcal" colorClass="text-white" />
@@ -204,7 +215,7 @@ export function PlanDashboard() {
         )}
 
         {/* Plan Summary vs Target */}
-        <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 mb-8 shadow-xl">
+        <div className="glass-panel-intense p-6 mb-8 relative overflow-hidden">
           <div className="flex justify-between items-end mb-6">
             <div>
               <h2 className="text-sm font-medium text-white/50 uppercase tracking-widest mb-1">Planned Calories</h2>

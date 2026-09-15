@@ -40,7 +40,7 @@ function WaterTracker() {
   const cups = Array.from({ length: waterGoal }, (_, i) => i < waterToday)
 
   return (
-    <div className="bg-[#121212] border border-white/5 rounded-2xl p-6">
+    <div className="glass-panel p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
@@ -125,7 +125,7 @@ export function HomeDashboard() {
         <DailyCheckInCard />
 
         {/* Nutrition Summary */}
-        <section className="bg-[#121212] border border-white/5 rounded-3xl p-6 md:p-8 mb-6 shadow-2xl shadow-black/50">
+        <section className="glass-panel-intense p-6 md:p-8 mb-6 relative overflow-hidden">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <Flame size={20} className="text-accent" />
@@ -174,7 +174,7 @@ export function HomeDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <WaterTracker />
 
-          <div className="bg-[#121212] border border-white/5 rounded-2xl p-6 flex flex-col">
+          <div className="glass-panel p-6 flex flex-col hover:shadow-card-hover transition-all duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
                 <Activity size={20} className="text-orange-400" />
@@ -208,7 +208,7 @@ export function HomeDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button 
             onClick={() => navigate('/progress')}
-            className="bg-[#121212] border border-white/5 rounded-2xl p-6 flex items-center justify-between hover:bg-white/5 transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95 group"
+            className="glass-panel p-6 flex items-center justify-between hover:shadow-card-hover transition-all duration-300 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95 group"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
@@ -224,7 +224,7 @@ export function HomeDashboard() {
 
           <button 
             onClick={() => navigate('/profile')}
-            className="bg-[#121212] border border-white/5 rounded-2xl p-6 flex items-center justify-between hover:bg-white/5 transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95 group"
+            className="glass-panel p-6 flex items-center justify-between hover:shadow-card-hover transition-all duration-300 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95 group"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">

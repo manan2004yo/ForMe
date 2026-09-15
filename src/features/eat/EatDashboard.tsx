@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useUserStore } from '@/store/userStore'
 import { useCnsStore } from '@/store/cnsStore'
+import { useToastStore } from '@/store/toastStore'
 import type { MealSlot, FoodLogEntry, NutritionInfo } from '@/types'
 import { FoodSearch } from './FoodSearch'
 import { SnapAndLogModal } from './SnapAndLogModal'
@@ -62,7 +63,7 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap }: {
   const hasFood = allFoods.length > 0
 
   return (
-    <div className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden mb-4">
+    <div className="glass-panel overflow-hidden mb-4 transition-all duration-300 hover:shadow-card-hover">
       <div 
         className={clsx(
           "p-5 flex items-center justify-between cursor-pointer transition-colors",
@@ -154,8 +155,18 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap }: {
           ))}
           
           <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 mb-2">
-            <button className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5">Edit meal</button>
-            <button className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5">Copy previous</button>
+            <button 
+              onClick={() => useToastStore.getState().info("Meal editing coming soon.")}
+              className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5"
+            >
+              Edit meal
+            </button>
+            <button 
+              onClick={() => useToastStore.getState().info("Copying meals coming soon.")}
+              className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5"
+            >
+              Copy previous
+            </button>
           </div>
           <div className="grid grid-cols-4 gap-2 mt-4 p-3 bg-white/5 rounded-xl border border-white/5">
             <NutritionChip label="Calories" value={totals.calories} unit="kcal" colorClass="text-white" />
@@ -219,7 +230,7 @@ export function EatDashboard() {
         </header>
 
         {/* Daily Summary */}
-        <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 mb-8 shadow-xl relative overflow-hidden">
+        <div className="glass-panel-intense p-6 mb-8 relative overflow-hidden">
           {isFried && (
             <div className="absolute top-0 left-0 w-full bg-accent/20 border-b border-accent/20 p-2 text-center text-[10px] font-bold text-accent tracking-widest uppercase flex items-center justify-center gap-2">
               <Sun size={12} /> AI Adjusted: +50g Carbs for CNS Recovery

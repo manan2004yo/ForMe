@@ -93,7 +93,7 @@ export function ProgressDashboard() {
 
         {/* Current Stats */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+          <div className="glass-panel-intense p-6 relative overflow-hidden">
             <div className="text-xs font-medium text-white/50 uppercase tracking-widest mb-2">Current Weight</div>
             <div className="flex items-baseline gap-1 relative z-10">
               <AnimatedNumber value={currentWeight} className="text-3xl font-heading font-bold text-white" />
@@ -111,7 +111,7 @@ export function ProgressDashboard() {
           </div>
           <button 
             onClick={() => setShowMorph(true)}
-            className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden group hover:border-accent/30 transition-colors text-left"
+            className="glass-panel-intense p-6 relative overflow-hidden group hover:border-accent/30 transition-colors text-left hover:shadow-card-hover"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="text-xs font-medium text-accent uppercase tracking-widest mb-2">Visual Progress</div>
@@ -167,7 +167,7 @@ export function ProgressDashboard() {
               </button>
             </div>
 
-            <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl mb-8 min-h-[300px]">
+            <div className="glass-panel-intense p-6 mb-8 min-h-[300px]">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-sm font-medium text-white/50 uppercase tracking-widest">Weight Trend</h2>
               </div>
@@ -225,7 +225,7 @@ export function ProgressDashboard() {
               </button>
             </div>
             
-            <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl mb-8 min-h-[300px]">
+            <div className="glass-panel-intense p-6 mb-8 min-h-[300px]">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-sm font-medium text-white/50 uppercase tracking-widest">Waist Trend</h2>
               </div>
@@ -254,7 +254,7 @@ export function ProgressDashboard() {
 
         {/* Consistency & Adherence */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="bg-[#121212] border border-white/5 rounded-3xl p-6">
+          <div className="glass-panel-intense p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
                 <Dumbbell size={18} />
@@ -270,7 +270,7 @@ export function ProgressDashboard() {
             </div>
           </div>
           
-          <div className="bg-[#121212] border border-white/5 rounded-3xl p-6">
+          <div className="glass-panel-intense p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
                 <BookOpen size={18} />
@@ -288,7 +288,7 @@ export function ProgressDashboard() {
         </div>
 
         {/* Strength & PRs */}
-        <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 mb-8 relative overflow-hidden">
+        <div className="glass-panel-intense p-6 mb-8 relative overflow-hidden">
           <div className="flex flex-col items-center justify-center h-32 text-center relative z-10">
             <h3 className="text-white font-medium mb-2 flex items-center gap-2">
               Strength & PR History

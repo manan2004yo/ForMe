@@ -7,7 +7,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
 import { useTrainStore } from '@/store/trainStore'
-import { LogOut, Target, Edit3, Shield, User, Save, Flame, Activity, BookOpen } from 'lucide-react'
+import { LogOut, Target, Edit3, Shield, User, Save, Flame, Activity, BookOpen, Settings, Lock } from 'lucide-react'
+import { useToastStore } from '@/store/toastStore'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 import type { UserProfile } from '@/types'
@@ -25,6 +26,9 @@ export function ProfilePage() {
   const [editForm, setEditForm] = useState<Partial<UserProfile> | null>(null)
   const [showProPaywall, setShowProPaywall] = useState(false)
   const { isPro } = useAuthStore()
+  const { info } = useToastStore()
+
+  const handleComingSoon = () => info("This setting will be available in the next update.")
 
   if (!profile) return null
 
@@ -244,6 +248,31 @@ export function ProfilePage() {
               Upgrade Now
             </button>
           )}
+        </div>
+
+        {/* Settings & Privacy (Restored) */}
+        <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl mb-8">
+          <h3 className="font-semibold text-white mb-6">Settings & Privacy</h3>
+          <div className="space-y-2">
+            <button 
+              onClick={handleComingSoon}
+              className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <Settings size={20} className="text-white/70" />
+                <span className="font-medium text-white">App Settings</span>
+              </div>
+            </button>
+            <button 
+              onClick={handleComingSoon}
+              className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors active:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <Lock size={20} className="text-white/70" />
+                <span className="font-medium text-white">Privacy & Data</span>
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Logout */}

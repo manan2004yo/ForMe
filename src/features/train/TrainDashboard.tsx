@@ -15,6 +15,7 @@ import { MuscleHeatmap } from './MuscleHeatmap'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 import { AlertTriangle } from 'lucide-react'
+import { useToastStore } from '@/store/toastStore'
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -98,7 +99,7 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse }: {
   }
 
   return (
-    <div className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden mb-4">
+    <div className="glass-panel overflow-hidden mb-4 transition-all duration-300 hover:shadow-card-hover">
       <div 
         className={clsx(
           "p-5 flex items-center justify-between cursor-pointer transition-colors",
@@ -186,6 +187,7 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse }: {
                 <Save size={14} /> Save template
               </button>
               <button 
+                onClick={() => useToastStore.getState().info("Duplicating days coming soon.")}
                 className="px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all flex items-center gap-1.5 active:scale-95"
               >
                 Duplicate
