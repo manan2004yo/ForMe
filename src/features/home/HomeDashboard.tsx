@@ -9,7 +9,9 @@ import { useUserStore } from '@/store/userStore'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useWaterStreakStore } from '@/store/waterStreakStore'
-import { Droplet, Plus, Flame, Activity, ArrowRight, TrendingUp, User } from 'lucide-react'
+import { DailyCheckInCard } from '@/features/cns/DailyCheckInCard'
+import { CnsStatusBadge } from '@/features/cns/CnsStatusBadge'
+import { Droplet, Plus, Flame, Activity, ArrowRight, TrendingUp, User, Search } from 'lucide-react'
 import { ProgressBar, AnimatedNumber } from '@/components/shared'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
@@ -103,18 +105,25 @@ export function HomeDashboard() {
 
   return (
     <PageTransition>
-      <div className="page">
-        {/* Header */}
-        <header className="page-header flex justify-between items-end mb-8">
+      <div className="space-y-6">
+        {/* HEADER */}
+        <header className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-white/50 font-medium tracking-wide mb-1 uppercase">
-              {format(new Date(), 'EEEE, d MMM')}
-            </p>
-            <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
-              Welcome back, {profile.name.split(' ')[0]}
-            </h1>
+            <p className="text-white/50 text-sm font-medium tracking-wider uppercase mb-1">Overview</p>
+            <div className="flex items-center gap-3">
+              <h1 className="font-heading font-bold text-3xl text-white">
+                Hi, {profile.name.split(' ')[0]}
+              </h1>
+              <CnsStatusBadge />
+            </div>
           </div>
+          <button className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent">
+            <Search size={18} />
+          </button>
         </header>
+
+        {/* CNS ENGINE CHECK-IN */}
+        <DailyCheckInCard />
 
         {/* Nutrition Summary */}
         <section className="bg-[#121212] border border-white/5 rounded-3xl p-6 md:p-8 mb-6 shadow-2xl shadow-black/50">

@@ -7,12 +7,14 @@ import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download, Coffee, CheckCirc
 import { useTrainStore } from '@/store/trainStore'
 import { useProgressStore } from '@/store/progressStore'
 import { useAuthStore } from '@/store/authStore'
+import { useCnsStore } from '@/store/cnsStore'
 import { v4 as uuidv4 } from 'uuid'
 import type { PlannedExercise, WorkoutLogEntry, LoggedExercise, LoggedSet } from '@/types'
 import { TrainExerciseSearch } from './TrainExerciseSearch'
 import { MuscleHeatmap } from './MuscleHeatmap'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
+import { AlertTriangle } from 'lucide-react'
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -206,7 +208,9 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse }: {
 
 export function TrainDashboard() {
   const { currentPlan, templates, loadTemplate, clearPlan } = useTrainStore()
+  const { getCurrentStatus } = useCnsStore()
   const [browsingDay, setBrowsingDay] = useState<number | null>(null)
+  const cnsStatus = getCurrentStatus()
 
   return (
     <PageTransition>
@@ -231,11 +235,26 @@ export function TrainDashboard() {
                 }}
                 className="px-4 py-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 active:scale-95"
               >
-                Clear workout
+                <Trash2 size={16} />
               </button>
             )}
           </div>
         </header>
+
+        {cnsStatus === 'Fried' && (
+          <div className="mb-8 p-4 rounded-2xl bg-error/10 border border-error/20 flex gap-4 items-start">
+            <div className="p-2 rounded-xl bg-error/20 text-error shrink-0">
+              <AlertTriangle size={24} />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-error mb-1">CNS Warning: Overtraining Risk</h3>
+              <p className="text-error/80 text-sm leading-relaxed">
+                Your AI Engine detects that your Central Nervous System is fried based on your recent sleep and fatigue logs. 
+                Consider taking an active recovery day or dropping your volume by 20% today.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="mb-8">
           <MuscleHeatmap />
