@@ -7,6 +7,8 @@ import { Home, Flame, BookOpen, Activity, TrendingUp, User, Sparkles } from 'luc
 import { clsx } from 'clsx'
 import { AskFormeAssistant } from '@/features/ai/AskFormeAssistant'
 import { useState } from 'react'
+import { useUserStore } from '@/store/userStore'
+import { ShieldAlert } from 'lucide-react'
 
 const NAV_ITEMS = [
   { path: '/', label: 'Home', icon: Home },
@@ -21,11 +23,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
+  const { isIncognito } = useUserStore()
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a] text-white selection:bg-accent/30 selection:text-white">
-      {/* --- DESKTOP SIDEBAR --- */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-white/5 bg-[#121212] sticky top-0 h-screen overflow-y-auto">
+    <div className="flex flex-col min-h-screen bg-[#0a0a0a] text-white selection:bg-accent/30 selection:text-white">
+      {isIncognito && (
+        <div className="bg-red-500/20 border-b border-red-500/30 px-4 py-2 flex items-center justify-center gap-2 text-red-400 z-50 sticky top-0">
+          <ShieldAlert size={16} />
+          <span className="text-xs font-semibold tracking-wide uppercase">Incognito Mode Active — Data syncing paused</span>
+        </div>
+      )}
+      <div className="flex flex-1">
+        {/* --- DESKTOP SIDEBAR --- */}
+        <aside className="hidden md:flex flex-col w-64 border-r border-white/5 bg-[#121212] sticky top-0 h-[100dvh] overflow-y-auto">
         <div className="p-8">
           <h1 className="font-heading font-bold tracking-widest text-xl text-white cursor-pointer hover:text-accent transition-colors" onClick={() => navigate('/')}>FORME</h1>
         </div>
@@ -104,8 +114,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Sparkles size={24} />
       </button>
 
-      
       <AskFormeAssistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
+      </div>
     </div>
   )
 }

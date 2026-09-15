@@ -1,10 +1,13 @@
 import { motion } from 'framer-motion'
 import { ArrowLeft, Download, Trash2, Shield, EyeOff } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
+import { useUserStore } from '@/store/userStore'
 import { useNavigate } from 'react-router-dom'
+import { clsx } from 'clsx'
 
 export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
   const { logout } = useAuthStore()
+  const { isIncognito, toggleIncognito } = useUserStore()
   const navigate = useNavigate()
 
   const handleDelete = () => {
@@ -45,15 +48,32 @@ export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
           <h3 className="text-xs font-medium text-white/50 uppercase tracking-wider mb-4">Data Management</h3>
           <div className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden space-y-1 p-2">
             
-            <button className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors">
+            <button 
+              onClick={toggleIncognito}
+              className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors"
+            >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white/5 text-white/70 flex items-center justify-center">
+                <div className={clsx(
+                  "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                  isIncognito ? "bg-red-500/20 text-red-400" : "bg-white/5 text-white/70"
+                )}>
                   <EyeOff size={16} />
                 </div>
                 <div className="text-left">
                   <span className="font-medium text-white block">Incognito Mode</span>
-                  <span className="text-xs text-white/50">Pause all tracking temporarily</span>
+                  <span className="text-xs text-white/50">
+                    {isIncognito ? "Tracking is paused" : "Pause all tracking temporarily"}
+                  </span>
                 </div>
+              </div>
+              <div className={clsx(
+                "w-12 h-6 rounded-full transition-colors relative",
+                isIncognito ? "bg-red-500" : "bg-white/10"
+              )}>
+                <div className={clsx(
+                  "w-5 h-5 rounded-full bg-black absolute top-0.5 transition-transform",
+                  isIncognito ? "translate-x-6" : "translate-x-0.5 bg-white/50"
+                )} />
               </div>
             </button>
 

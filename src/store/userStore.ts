@@ -54,6 +54,7 @@ interface UserState {
   isDemoMode: boolean
   error: string | null
   activeContext: ActiveContext
+  isIncognito: boolean
 
   // Actions
   loadProfile: (uid: string) => Promise<void>
@@ -63,6 +64,7 @@ interface UserState {
   loadDemoProfile: () => void
   recalculateMetrics: () => void
   setContext: (context: ActiveContext) => void
+  toggleIncognito: () => void
 }
 
 import { persist } from 'zustand/middleware'
@@ -76,6 +78,9 @@ export const useUserStore = create<UserState>()(
       isDemoMode: false,
       error: null,
       activeContext: 'normal',
+      isIncognito: false,
+
+  toggleIncognito: () => set(state => ({ isIncognito: !state.isIncognito })),
 
   setContext: (context) => {
     const { profile } = get()

@@ -8,9 +8,10 @@ import { useUserStore } from '@/store/userStore'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useWaterStreakStore } from '@/store/waterStreakStore'
+import { useIntegrationStore } from '@/store/integrationStore'
 import { DailyCheckInCard } from '@/features/cns/DailyCheckInCard'
 import { CnsStatusBadge } from '@/features/cns/CnsStatusBadge'
-import { Droplet, Plus, Flame, Activity, ArrowRight, TrendingUp, User, Search } from 'lucide-react'
+import { Droplet, Plus, Flame, Activity, ArrowRight, TrendingUp, User, Search, RefreshCw, Moon } from 'lucide-react'
 import { ProgressBar, AnimatedNumber } from '@/components/shared'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
@@ -83,6 +84,71 @@ function WaterTracker() {
       >
         <Plus size={18} /> Add Water
       </button>
+    </div>
+  )
+}
+
+
+
+function HealthSyncCard() {
+  const { connectedPlatforms, dailyActivity, syncData, isSyncing } = useIntegrationStore()
+  
+  if (connectedPlatforms.length === 0) return null
+
+  return (
+    <div className="glass-panel p-6 flex flex-col hover:shadow-card-hover transition-all duration-300">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+            <Activity size={20} className="text-emerald-400" />
+          </div>
+          <div>
+            <h2 className="text-white font-medium">Health Sync</h2>
+            <div className="text-sm text-white/40 mt-0.5">Live biometrics</div>
+          </div>
+        </div>
+        <button 
+          onClick={syncData}
+          disabled={isSyncing}
+          className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <RefreshCw size={16} className={clsx("text-white/70", isSyncing && "animate-spin")} />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+          <div className="text-xs text-white/50 mb-1 flex items-center gap-1 font-medium">
+            <TrendingUp size={12} /> Steps
+          </div>
+          <div className="text-2xl font-heading font-bold text-emerald-400">
+            {dailyActivity?.steps.toLocaleString() || '--'}
+          </div>
+        </div>
+        <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+          <div className="text-xs text-white/50 mb-1 flex items-center gap-1 font-medium">
+            <Flame size={12} /> Active Kcal
+          </div>
+          <div className="text-2xl font-heading font-bold text-orange-400">
+            {dailyActivity?.activeCalories || '--'}
+          </div>
+        </div>
+        {dailyActivity?.sleepScore && (
+          <div className="col-span-2 bg-white/5 rounded-xl p-4 flex items-center justify-between border border-white/5 mt-2">
+            <div>
+              <div className="text-xs text-white/50 mb-1 flex items-center gap-1 font-medium">
+                <Moon size={12} /> Sleep Score
+              </div>
+              <div className="text-2xl font-heading font-bold text-blue-400">
+                {dailyActivity.sleepScore}
+              </div>
+            </div>
+            <div className="w-12 h-12 rounded-full border-4 border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-sm bg-blue-500/10">
+              {dailyActivity.sleepScore > 80 ? 'Good' : 'Fair'}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -179,7 +245,10 @@ export function HomeDashboard() {
 
         {/* Quick Actions & Hydration */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <WaterTracker />
+          <div className="flex flex-col gap-6">
+            <WaterTracker />
+            <HealthSyncCard />
+          </div>
 
           <div className="glass-panel p-6 flex flex-col hover:shadow-card-hover transition-all duration-300">
             <div className="flex items-center gap-3 mb-6">
