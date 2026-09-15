@@ -173,7 +173,7 @@ export function EatDashboard() {
   const [showRecipeSplitter, setShowRecipeSplitter] = useState(false)
   const { user } = useAuthStore()
   const { metrics } = useUserStore()
-  const { entries, removeEntry, addEntry } = useFoodLogStore()
+  const { entries, removeEntry, addFoodEntry } = useFoodLogStore()
   const { getCurrentStatus } = useCnsStore()
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
   const [snappingSlot, setSnappingSlot] = useState<MealSlot | null>(null)
@@ -304,20 +304,16 @@ export function EatDashboard() {
             slot={snappingSlot} 
             onClose={() => setSnappingSlot(null)}
             onLog={(name, cals, p, c, f) => {
-              const entryId = uuidv4()
-              addEntry(user?.uid || "demo", {
-                id: entryId,
-                date: format(new Date(), 'yyyy-MM-dd'),
-                meal: snappingSlot,
-                foods: [{
-                  id: uuidv4(),
-                  foodId: 'ai-vision',
-                  foodName: name,
-                  quantity: 1,
-                  unit: 'serving',
-                  nutrition: { calories: cals, protein: p, carbs: c, fat: f, fiber: 0 }
-                }]
-              })
+              addFoodEntry(user?.uid || "demo", snappingSlot, [{
+                id: uuidv4(),
+                foodItemId: 'ai-vision',
+                foodName: name,
+                quantity: 1,
+                unit: 'serving',
+                gramsConsumed: 200,
+                confidence: 'high',
+                nutrition: { calories: cals, protein: p, carbs: c, fat: f, fiber: 0 }
+              }])
               setSnappingSlot(null)
             }}
           />

@@ -13,6 +13,7 @@ This file provides guidance for AI assistants and agents working on this codebas
 3. **DO NOT commit `.env` files.** Environment variables must be set locally in `.env` (gitignored) and in Cloudflare Pages dashboard for production.
 4. **DO NOT expose secrets.** Firebase config values in `VITE_*` variables are client-side by design (Firebase Web SDK), but no server-side secrets should ever be added to client-side code.
 5. **ALWAYS PUSH CHANGES TO CLOUDFLARE.** Whenever you finish a feature, bugfix, or phase, you MUST immediately run `git add . ; git commit -m "..." ; git push` to ensure the live Cloudflare Pages URL is updated. Do not leave code sitting only on the user's local machine unless they explicitly tell you not to push.
+6. **ZERO ERRORS BEFORE PUSHING.** Before you run `git push`, you MUST ensure the Problems section (TypeScript and ESLint) is completely clean. Run `npm run lint` and `tsc --noEmit` to verify and fix all warnings/errors first.
 
 ---
 

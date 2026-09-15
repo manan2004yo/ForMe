@@ -4,7 +4,6 @@
 
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { format } from 'date-fns'
 import { useUserStore } from '@/store/userStore'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'

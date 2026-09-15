@@ -1,9 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronRight, Activity, Zap, Info } from 'lucide-react'
-import { clsx } from 'clsx'
+import { Activity } from 'lucide-react'
 import { useProgressStore } from '@/store/progressStore'
-import type { MuscleGroup } from '@/types'
 
 const COLORS = {
   low: 'rgba(255, 255, 255, 0.1)',       // Rested (cool)
@@ -161,7 +159,7 @@ export function MuscleHeatmap() {
             {dynamicMuscleGroups.find(m => m.id === activeGroup)?.volume === 0 && (
               <div className="text-xs text-emerald-400 mt-2 font-medium bg-emerald-400/10 px-2 py-1 rounded inline-block">Fully rested</div>
             )}
-            {dynamicMuscleGroups.find(m => m.id === activeGroup)?.volume! > 20 && (
+            {(dynamicMuscleGroups.find(m => m.id === activeGroup)?.volume ?? 0) > 20 && (
               <div className="text-xs text-red-400 mt-2 font-medium bg-red-400/10 px-2 py-1 rounded inline-block">Needs recovery</div>
             )}
           </motion.div>

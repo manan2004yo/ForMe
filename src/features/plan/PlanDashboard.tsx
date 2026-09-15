@@ -3,7 +3,7 @@
 // ============================================================
 
 import { useState } from 'react'
-import { Plus, Trash2, ChevronDown, ChevronUp, Sun, Sunset, Moon, Coffee, Save, Download } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download } from 'lucide-react'
 import { usePlanStore } from '@/store/planStore'
 import type { MealSlot, NutritionInfo } from '@/types'
 import { PlanFoodSearch } from './PlanFoodSearch'
