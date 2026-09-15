@@ -118,7 +118,7 @@ export const useUserStore = create<UserState>()(
           cookingAbility: 'basic',
           eatingEnvironment: 'home',
           foodAvailability: [],
-          fitnessGoal: 'fat_loss_muscle_gain',
+          fitnessGoal: 'body_recomposition',
           trainingExperience: 'beginner',
           trainingLocation: 'gym',
           availableEquipment: [],
