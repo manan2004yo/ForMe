@@ -25,6 +25,30 @@ import { ProfilePage } from '@/features/profile/ProfilePage'
 import { IntegrationsPage } from '@/features/profile/IntegrationsPage'
 import { AchievementsPage } from '@/features/profile/AchievementsPage'
 
+
+function SpotifyCallback() {
+  const location = useLocation()
+  
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const code = params.get('code')
+    if (code) {
+      useSpotifyStore.getState().handleCallback(code).then(() => {
+        window.location.href = '/train' // Redirect to train dashboard after success
+      })
+    } else {
+      window.location.href = '/train' // Fallback
+    }
+  }, [location])
+
+  return (
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-bg">
+      <div className="w-12 h-12 rounded-full border-4 border-accent border-t-transparent animate-spin mb-4" />
+      <p className="text-white font-medium">Authenticating with Spotify...</p>
+    </div>
+  )
+}
+
 function AuthenticatedApp() {
   const { user, logout } = useAuthStore()
   const { profile, loadProfile, error } = useUserStore()
@@ -85,6 +109,7 @@ function AuthenticatedApp() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/integrations" element={<IntegrationsPage />} />
           <Route path="/profile/achievements" element={<AchievementsPage />} />
+          <Route path="/callback" element={<SpotifyCallback />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>

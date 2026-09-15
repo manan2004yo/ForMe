@@ -45,7 +45,8 @@ function base64encode(input: ArrayBuffer) {
 }
 
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID
-const REDIRECT_URI = window.location.origin // Dynamic redirect URI (e.g. http://localhost:5173)
+// STRICT CALLBACK URI to fix Spotify 'Not matching configuration' error
+const REDIRECT_URI = window.location.origin.includes('localhost') ? 'http://localhost:5173/callback' : window.location.origin + '/callback'
 
 export const useSpotifyStore = create<SpotifyState>()(
   persist(

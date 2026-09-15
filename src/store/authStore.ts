@@ -29,7 +29,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isLoading: false,
       isInitialized: false,
@@ -67,6 +67,10 @@ export const useAuthStore = create<AuthState>()(
   },
 
   loginWithEmail: async (email, password, rememberMe = true) => {
+    if (!import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY === 'YOUR_API_KEY') {
+      get().setDemoUser()
+      return
+    }
     set({ isLoading: true, error: null })
     try {
       await signInWithEmail(email, password, rememberMe)
