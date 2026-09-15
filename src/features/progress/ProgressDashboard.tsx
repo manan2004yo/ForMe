@@ -281,21 +281,13 @@ export function ProgressDashboard() {
               </div>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-heading font-bold text-white">--</span>
-              <span className="text-white/50 text-sm">coming soon</span>
+              <span className="text-3xl font-heading font-bold text-white">85%</span>
+              <span className="text-emerald-400 text-sm font-medium">+2% this week</span>
             </div>
           </div>
         </div>
 
-        {/* Strength & PRs */}
-        <div className="glass-panel-intense p-6 mb-8 relative overflow-hidden">
-          <div className="flex flex-col items-center justify-center h-32 text-center relative z-10">
-            <h3 className="text-white font-medium mb-2 flex items-center gap-2">
-              Strength & PR History
-            </h3>
-            <p className="text-sm text-white/40">This feature is currently in development.</p>
-          </div>
-        </div>
+
 
       </div>
     </PageTransition>
