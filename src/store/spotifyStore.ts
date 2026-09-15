@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export interface SpotifyTrack {
   id: string
@@ -24,7 +25,9 @@ const MOCK_TRACKS: SpotifyTrack[] = [
   { id: '5', name: 'X Gon\' Give It To Ya', artist: 'DMX', bpm: 95 }
 ]
 
-export const useSpotifyStore = create<SpotifyState>((set) => ({
+export const useSpotifyStore = create<SpotifyState>()(
+  persist(
+    (set) => ({
   isConnected: false,
   isConnecting: false,
   currentTrack: null,
@@ -49,4 +52,9 @@ export const useSpotifyStore = create<SpotifyState>((set) => ({
       return { currentTrack: randomTrack }
     })
   }
-}))
+    }),
+    {
+      name: 'forme-spotify-storage',
+    }
+  )
+)
