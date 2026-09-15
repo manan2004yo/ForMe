@@ -56,4 +56,10 @@ export const storage = getStorage(app)
 //   connectStorageEmulator(storage, 'localhost', 9199)
 // }
 
+// Export configuration status check
+export const isFirebaseConfigured = Boolean(
+  import.meta.env.VITE_FIREBASE_API_KEY &&
+  import.meta.env.VITE_FIREBASE_API_KEY !== "YOUR_API_KEY"
+)
+
 export default app

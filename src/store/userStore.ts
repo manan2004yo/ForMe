@@ -95,12 +95,50 @@ export const useUserStore = create<UserState>()(
       const profile = await getUserProfile(uid)
       if (profile) {
         const metrics = calculateBodyMetrics(profile, get().activeContext)
-        set({ profile, metrics, isDemoMode: false })
+        set({ profile, metrics, isDemoMode: false, error: null })
       } else {
-        set({ error: 'Profile not found. Please check your Firestore Database rules and ensure it is created.' })
+        // Create an initial user profile shell for new authenticated users
+        const defaultProfile: UserProfile = {
+          id: uid,
+          email: '',
+          name: 'FORME User',
+          age: 25,
+          gender: 'male',
+          heightCm: 175,
+          weightKg: 70,
+          activityLevel: 'moderately_active',
+          lifestyle: 'working_professional',
+          dietType: 'flexible',
+          eatsEggs: true,
+          eatsMeat: true,
+          eatsFish: true,
+          eatsDairy: true,
+          allergies: '',
+          monthlyFoodBudget: 5000,
+          cookingAbility: 'intermediate',
+          eatingEnvironment: 'home',
+          foodAvailability: [],
+          fitnessGoal: 'general_fitness',
+          trainingExperience: 'intermediate',
+          trainingLocation: 'gym',
+          availableEquipment: [],
+          trainingDays: [1, 3, 5],
+          gymClosedDays: [],
+          workoutDuration: '45-60',
+          physicalLimitations: '',
+          complexityMode: 'smart',
+          mealFrequency: 3,
+          preferredKatoriGrams: 150,
+          onboardingComplete: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+        await saveUserProfile(uid, defaultProfile)
+        const metrics = calculateBodyMetrics(defaultProfile, get().activeContext)
+        set({ profile: defaultProfile, metrics, isDemoMode: false, error: null })
       }
     } catch (err: any) {
-      set({ error: err.message || 'Failed to load profile.' })
+      set({ error: err.message || 'Failed to load profile. Check network connection or Firestore rules.' })
     } finally {
       set({ isLoading: false })
     }

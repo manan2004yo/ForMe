@@ -68,8 +68,9 @@ export const useAuthStore = create<AuthState>()(
 
   loginWithEmail: async (email, password, rememberMe = true) => {
     if (!import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY === 'YOUR_API_KEY') {
-      get().setDemoUser()
-      return
+      const msg = 'Firebase is not configured. Please set your VITE_FIREBASE_* environment variables in .env'
+      set({ error: msg, isLoading: false })
+      throw new Error(msg)
     }
     set({ isLoading: true, error: null })
     try {
@@ -84,6 +85,11 @@ export const useAuthStore = create<AuthState>()(
   },
 
   loginWithGoogle: async (rememberMe = true) => {
+    if (!import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY === 'YOUR_API_KEY') {
+      const msg = 'Firebase is not configured. Please set your VITE_FIREBASE_* environment variables in .env'
+      set({ error: msg, isLoading: false })
+      throw new Error(msg)
+    }
     set({ isLoading: true, error: null })
     try {
       await signInWithGoogle(rememberMe)
@@ -97,6 +103,11 @@ export const useAuthStore = create<AuthState>()(
   },
 
   signup: async (email, password, name, rememberMe = true) => {
+    if (!import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.VITE_FIREBASE_API_KEY === 'YOUR_API_KEY') {
+      const msg = 'Firebase is not configured. Please set your VITE_FIREBASE_* environment variables in .env'
+      set({ error: msg, isLoading: false })
+      throw new Error(msg)
+    }
     set({ isLoading: true, error: null })
     try {
       await signUpWithEmail(email, password, name, rememberMe)
@@ -112,8 +123,12 @@ export const useAuthStore = create<AuthState>()(
   logout: async () => {
     set({ isLoading: true })
     try {
-      await signOutUser()
-      set({ user: null })
+      if (get().isDemo) {
+        set({ user: null, isDemo: false })
+      } else {
+        await signOutUser()
+        set({ user: null, isDemo: false })
+      }
     } finally {
       set({ isLoading: false })
     }

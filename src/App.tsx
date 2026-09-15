@@ -67,19 +67,30 @@ function AuthenticatedApp() {
         <div className="w-16 h-16 rounded-2xl bg-error/10 flex items-center justify-center mb-4">
           <span className="text-error text-2xl font-bold">!</span>
         </div>
-        <h2 className="text-text-primary font-heading font-bold text-xl mb-2">Database Error</h2>
+        <h2 className="text-text-primary font-heading font-bold text-xl mb-2">Database Connection Error</h2>
         <p className="text-text-secondary text-sm mb-6 max-w-sm">{error}</p>
-        <button onClick={() => logout()} className="btn btn-secondary">
-          Sign Out & Try Again
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => user && loadProfile(user.uid)} 
+            className="btn btn-accent"
+          >
+            Retry Loading
+          </button>
+          <button 
+            onClick={() => logout()} 
+            className="btn btn-secondary"
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
     )
   }
 
   if (!profile) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-bg">
-        <div className="flex flex-col items-center gap-3">
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-bg p-6 text-center">
+        <div className="flex flex-col items-center gap-3 mb-6">
           <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center text-white font-heading font-bold text-xl">
             F
           </div>
@@ -89,6 +100,13 @@ function AuthenticatedApp() {
             <div className="w-2 h-2 rounded-full bg-accent animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
         </div>
+        <p className="text-text-secondary text-sm mb-4">Loading your profile...</p>
+        <button 
+          onClick={() => logout()} 
+          className="text-xs text-text-tertiary underline hover:text-text-secondary"
+        >
+          Cancel & Sign Out
+        </button>
       </div>
     )
   }
