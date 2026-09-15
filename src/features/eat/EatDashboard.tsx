@@ -11,10 +11,12 @@ import { useUserStore } from '@/store/userStore'
 import { useCnsStore } from '@/store/cnsStore'
 import type { MealSlot, FoodLogEntry, NutritionInfo } from '@/types'
 import { FoodSearch } from './FoodSearch'
+import { SnapAndLogModal } from './SnapAndLogModal'
 import { FamilyRecipeSplitter } from './FamilyRecipeSplitter'
 import { ProgressBar, AnimatedNumber } from '@/components/shared'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
+import { v4 as uuidv4 } from 'uuid'
 
 const MEAL_CONFIG: { slot: MealSlot; label: string; icon: any; time: string }[] = [
   { slot: 'breakfast', label: 'Breakfast', icon: Sun, time: 'Morning' },
@@ -37,11 +39,12 @@ function NutritionChip({ label, value, unit, colorClass }: { label: string; valu
   )
 }
 
-function MealSection({ config, entries, onDelete, onBrowse }: {
+function MealSection({ config, entries, onDelete, onBrowse, onSnap }: {
   config: typeof MEAL_CONFIG[0]
   entries: FoodLogEntry[]
   onDelete: (entryId: string) => void
   onBrowse: (slot: MealSlot) => void
+  onSnap: (slot: MealSlot) => void
 }) {
   const [expanded, setExpanded] = useState(true)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -86,10 +89,16 @@ function MealSection({ config, entries, onDelete, onBrowse }: {
         
         <div className="flex items-center gap-2">
           <button
-            onClick={(e) => { e.stopPropagation(); onBrowse(config.slot); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95"
+            onClick={(e) => { e.stopPropagation(); onSnap(config.slot); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-black hover:bg-accent/90 transition-all text-xs font-bold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 shadow-[0_0_10px_rgba(45,212,191,0.2)]"
           >
-            <Search size={14} /> Search food
+            <Sun size={14} /> Snap
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onBrowse(config.slot); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
+          >
+            <Search size={14} /> Search
           </button>
           {hasFood && (
             <button 
@@ -164,9 +173,10 @@ export function EatDashboard() {
   const [showRecipeSplitter, setShowRecipeSplitter] = useState(false)
   const { user } = useAuthStore()
   const { metrics } = useUserStore()
-  const { entries, removeEntry } = useFoodLogStore()
+  const { entries, removeEntry, addEntry } = useFoodLogStore()
   const { getCurrentStatus } = useCnsStore()
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
+  const [snappingSlot, setSnappingSlot] = useState<MealSlot | null>(null)
 
   const cnsStatus = getCurrentStatus()
   const isFried = cnsStatus === 'Fried'
@@ -278,6 +288,7 @@ export function EatDashboard() {
               entries={todayEntries.filter(e => e.meal === config.slot)}
               onDelete={(id) => removeEntry(user?.uid || "demo", id)}
               onBrowse={setBrowsingSlot}
+              onSnap={setSnappingSlot}
             />
           ))}
         </div>
@@ -286,6 +297,30 @@ export function EatDashboard() {
           <div className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto">
             <FoodSearch slot={browsingSlot} onClose={() => setBrowsingSlot(null)} />
           </div>
+        )}
+
+        {snappingSlot && (
+          <SnapAndLogModal 
+            slot={snappingSlot} 
+            onClose={() => setSnappingSlot(null)}
+            onLog={(name, cals, p, c, f) => {
+              const entryId = uuidv4()
+              addEntry(user?.uid || "demo", {
+                id: entryId,
+                date: format(new Date(), 'yyyy-MM-dd'),
+                meal: snappingSlot,
+                foods: [{
+                  id: uuidv4(),
+                  foodId: 'ai-vision',
+                  foodName: name,
+                  quantity: 1,
+                  unit: 'serving',
+                  nutrition: { calories: cals, protein: p, carbs: c, fat: f, fiber: 0 }
+                }]
+              })
+              setSnappingSlot(null)
+            }}
+          />
         )}
       </div>
     </PageTransition>
