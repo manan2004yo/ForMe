@@ -3,6 +3,7 @@
 // ============================================================
 
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download, Coffee, CheckCircle2, Music, Loader2 } from 'lucide-react'
 import { useSpotifyStore } from '@/store/spotifyStore'
 import { useEffect } from 'react'
@@ -31,41 +32,98 @@ function SpotifyWidget() {
   }, [isConnected, fetchCurrentTrack])
 
   return (
-    <div className="glass-panel-intense p-4 mb-8 flex items-center justify-between border-green-500/20 shadow-[0_4px_24px_rgba(34,197,94,0.1)]">
-      <div className="flex items-center gap-3">
+    <motion.div 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={clsx(
+        "relative overflow-hidden p-5 mb-8 rounded-3xl border transition-all duration-700 flex flex-col md:flex-row md:items-center justify-between gap-4",
+        isConnected 
+          ? "bg-gradient-to-br from-[#121212] to-[#1DB954]/10 border-[#1DB954]/30 shadow-[0_8px_32px_rgba(29,185,84,0.15)]"
+          : "bg-[#121212] border-white/10 shadow-xl"
+      )}
+    >
+      {/* Background ambient glow when connected */}
+      {isConnected && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute -top-24 -right-24 w-64 h-64 bg-[#1DB954]/20 rounded-full blur-[80px] pointer-events-none"
+        />
+      )}
+
+      <div className="flex items-center gap-4 relative z-10">
         <div className={clsx(
-          "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-          isConnected ? "bg-green-500/20 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]" : "bg-white/5 text-white/40"
+          "w-14 h-14 rounded-full flex items-center justify-center transition-all duration-700 relative",
+          isConnected ? "bg-[#1DB954] text-black shadow-[0_0_20px_rgba(29,185,84,0.4)]" : "bg-white/5 text-white/40"
         )}>
-          {isConnecting ? <Loader2 size={20} className="animate-spin" /> : <Music size={20} />}
-        </div>
-        <div>
-          <h3 className="font-semibold text-white">Spotify Performance Tracking</h3>
-          {isConnected && currentTrack ? (
-            <p className="text-xs text-green-400 mt-0.5 flex items-center gap-1.5 animate-fade-in">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              Now Playing: <span className="text-white truncate max-w-[150px] inline-block align-bottom">{currentTrack.name}</span> • {currentTrack.bpm} BPM
-            </p>
+          {isConnecting ? (
+            <Loader2 size={24} className="animate-spin" />
           ) : (
-            <p className="text-xs text-white/50 mt-0.5">Link Spotify to track heart rate and BPM correlations</p>
+            <Music size={24} className={isConnected ? "animate-pulse" : ""} />
+          )}
+          {isConnected && (
+            <div className="absolute inset-0 rounded-full border-2 border-[#1DB954] animate-ping opacity-20" />
           )}
         </div>
+        
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-white text-base tracking-tight mb-0.5">Spotify Performance</h3>
+          
+          <div className="h-5 relative overflow-hidden">
+            <AnimatePresence mode="wait">
+              {isConnected && currentTrack ? (
+                <motion.div 
+                  key={currentTrack.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center gap-2 text-sm"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#1DB954] animate-pulse" />
+                  <span className="text-white font-medium truncate max-w-[120px] sm:max-w-[200px]">
+                    {currentTrack.name}
+                  </span>
+                  <span className="text-white/40 text-xs truncate max-w-[80px]">
+                    by {currentTrack.artist}
+                  </span>
+                  <span className="text-[#1DB954] font-bold text-xs bg-[#1DB954]/10 px-1.5 py-0.5 rounded ml-1">
+                    {currentTrack.bpm} BPM
+                  </span>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="disconnected"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-sm text-white/40"
+                >
+                  {isConnecting ? "Connecting to Spotify..." : "Link to track BPM correlations"}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
+
       <button
         onClick={() => {
           if (isConnected) disconnect()
           else connect()
         }}
+        disabled={isConnecting}
         className={clsx(
-          "px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95",
+          "relative z-10 px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 active:scale-95 flex items-center justify-center gap-2",
           isConnected 
-            ? "bg-white/10 text-white/70 hover:bg-white/15" 
-            : "bg-green-500 text-black hover:bg-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+            ? "bg-white/5 text-white hover:bg-white/10 border border-white/10" 
+            : "bg-[#1DB954] text-black hover:bg-[#1ed760] shadow-[0_4px_14px_rgba(29,185,84,0.4)]"
         )}
       >
-        {isConnected ? 'Disconnect' : 'Connect'}
+        {isConnecting && <Loader2 size={16} className="animate-spin" />}
+        {isConnected ? 'Disconnect' : 'Connect Account'}
       </button>
-    </div>
+    </motion.div>
   )
 }
 
