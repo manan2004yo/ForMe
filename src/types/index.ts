@@ -282,6 +282,7 @@ export interface LoggedSet {
   weight?: number
   reps: number
   rir?: number
+  trackBpm?: number
 }
 
 export interface LoggedExercise {

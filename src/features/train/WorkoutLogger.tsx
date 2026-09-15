@@ -4,7 +4,9 @@
 // ============================================================
 
 import { useState, useCallback } from 'react'
-import { Check, Plus, Minus, ChevronDown, ChevronUp, X, Dumbbell } from 'lucide-react'
+import { Check, Plus, Minus, ChevronDown, ChevronUp, X, Dumbbell, Music } from 'lucide-react'
+import { useSpotifyStore, type SpotifyTrack } from '@/store/spotifyStore'
+import { useEffect } from 'react'
 import { useProgressStore } from '@/store/progressStore'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
@@ -15,6 +17,7 @@ interface SetLog {
   reps: number
   weightKg: number | null
   completed: boolean
+  trackBpm?: number
 }
 
 interface ExerciseLog {
@@ -110,10 +113,12 @@ function ExerciseSection({
   exerciseLog,
   exercise,
   onChange,
+  currentTrack,
 }: {
   exerciseLog: ExerciseLog
   exercise: PlannedExercise
   onChange: (log: ExerciseLog) => void
+  currentTrack: SpotifyTrack | null
 }) {
   const [expanded, setExpanded] = useState(true)
   const completedSets = exerciseLog.sets.filter(s => s.completed).length
@@ -158,6 +163,11 @@ function ExerciseSection({
                 exercise={exercise}
                 onChange={updated => {
                   const newSets = [...exerciseLog.sets]
+                  if (updated.completed && !set.completed && currentTrack) {
+                    updated.trackBpm = currentTrack.bpm
+                  } else if (!updated.completed) {
+                    updated.trackBpm = undefined
+                  }
                   newSets[i] = updated
                   onChange({ ...exerciseLog, sets: newSets })
                 }}
@@ -182,6 +192,15 @@ function ExerciseSection({
 
 export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) {
   const { user } = useAuthStore()
+  const { isConnected, currentTrack, fetchCurrentTrack } = useSpotifyStore()
+
+  useEffect(() => {
+    if (isConnected) {
+      fetchCurrentTrack()
+      const interval = setInterval(fetchCurrentTrack, 10000)
+      return () => clearInterval(interval)
+    }
+  }, [isConnected, fetchCurrentTrack])
   const { logWorkout } = useProgressStore()
   const toast = useToastStore()
   const [startTime] = useState(Date.now())
@@ -223,6 +242,7 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
           sets: el.sets.filter(s => s.completed).map(s => ({
             reps: s.reps,
             weight: s.weightKg || undefined,
+            trackBpm: s.trackBpm,
           })),
         })),
         completed: totalSetsCompleted > 0,
@@ -248,7 +268,15 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
             <div className="font-heading font-bold text-lg text-text-primary truncate">
               {day.dayLabel}
             </div>
-            <div className="text-xs text-text-secondary mt-0.5">
+            {isConnected && currentTrack && (
+              <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit mt-1 border border-emerald-500/20">
+                <Music size={10} className="animate-pulse" />
+                <span className="truncate max-w-[120px]">{currentTrack.name}</span>
+                <span className="text-emerald-500/50">•</span>
+                <span className="opacity-80">{currentTrack.bpm} BPM</span>
+              </div>
+            )}
+            <div className="text-xs text-text-secondary mt-1">
               {totalSetsCompleted}/{totalSets} sets · {elapsedMin}m elapsed
             </div>
           </div>
@@ -272,6 +300,7 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
               key={exercise.exerciseId}
               exercise={exercise}
               exerciseLog={exerciseLogs[i]}
+              currentTrack={currentTrack}
               onChange={updated => {
                 const newLogs = [...exerciseLogs]
                 newLogs[i] = updated

@@ -7,7 +7,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
 import { useTrainStore } from '@/store/trainStore'
-import { LogOut, Target, Edit3, Shield, User, Save, Flame, Activity, BookOpen, Settings, Lock } from 'lucide-react'
+import { useAchievementStore } from '@/store/achievementStore'
+import { LogOut, Target, Edit3, Shield, User, Save, Flame, Activity, BookOpen, Settings, Lock, Trophy } from 'lucide-react'
 import { useToastStore } from '@/store/toastStore'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
@@ -22,6 +23,7 @@ export function ProfilePage() {
   const { user, logout } = useAuthStore()
   const { profile, isDemoMode, saveProfile } = useUserStore()
   const { templates: trainTemplates } = useTrainStore()
+  const { unlockedAchievements } = useAchievementStore()
   
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -215,19 +217,22 @@ export function ProfilePage() {
           </div>
         </div>
 
-        {/* Saved Templates */}
+        {/* Saved Templates & Library */}
         <div className="bg-[#121212] border border-white/5 rounded-3xl p-6 shadow-xl mb-8">
           <h3 className="font-semibold text-white mb-6">Your Library</h3>
           <div className="grid grid-cols-2 gap-4">
+            <button 
+              onClick={() => navigate('/profile/achievements')}
+              className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent group"
+            >
+              <Trophy size={24} className="text-yellow-500 mb-2 group-hover:scale-110 transition-transform" />
+              <div className="text-xl font-bold text-white">{unlockedAchievements.length}</div>
+              <div className="text-xs text-white/50 group-hover:text-white/70 transition-colors">Achievements</div>
+            </button>
             <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
               <Activity size={24} className="text-accent mb-2" />
               <div className="text-xl font-bold text-white">{trainTemplates.length}</div>
-              <div className="text-xs text-white/50">Workout Templates</div>
-            </div>
-            <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
-              <BookOpen size={24} className="text-blue-400 mb-2" />
-              <div className="text-xl font-bold text-white">0</div>
-              <div className="text-xs text-white/50">Meal Templates</div>
+              <div className="text-xs text-white/50">Workouts</div>
             </div>
           </div>
         </div>
