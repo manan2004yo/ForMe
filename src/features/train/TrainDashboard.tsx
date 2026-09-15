@@ -3,7 +3,9 @@
 // ============================================================
 
 import { useState } from 'react'
-import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download, Coffee, CheckCircle2 } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download, Coffee, CheckCircle2, Music, Loader2 } from 'lucide-react'
+import { useSpotifyStore } from '@/store/spotifyStore'
+import { useEffect } from 'react'
 import { useTrainStore } from '@/store/trainStore'
 import { useProgressStore } from '@/store/progressStore'
 import { useAuthStore } from '@/store/authStore'
@@ -16,6 +18,56 @@ import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 import { AlertTriangle } from 'lucide-react'
 import { useToastStore } from '@/store/toastStore'
+
+function SpotifyWidget() {
+  const { isConnected, isConnecting, currentTrack, connect, disconnect, fetchCurrentTrack } = useSpotifyStore()
+
+  useEffect(() => {
+    if (isConnected) {
+      fetchCurrentTrack()
+      const interval = setInterval(fetchCurrentTrack, 10000)
+      return () => clearInterval(interval)
+    }
+  }, [isConnected, fetchCurrentTrack])
+
+  return (
+    <div className="glass-panel-intense p-4 mb-8 flex items-center justify-between border-green-500/20 shadow-[0_4px_24px_rgba(34,197,94,0.1)]">
+      <div className="flex items-center gap-3">
+        <div className={clsx(
+          "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+          isConnected ? "bg-green-500/20 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]" : "bg-white/5 text-white/40"
+        )}>
+          {isConnecting ? <Loader2 size={20} className="animate-spin" /> : <Music size={20} />}
+        </div>
+        <div>
+          <h3 className="font-semibold text-white">Spotify Performance Tracking</h3>
+          {isConnected && currentTrack ? (
+            <p className="text-xs text-green-400 mt-0.5 flex items-center gap-1.5 animate-fade-in">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              Now Playing: <span className="text-white truncate max-w-[150px] inline-block align-bottom">{currentTrack.name}</span> • {currentTrack.bpm} BPM
+            </p>
+          ) : (
+            <p className="text-xs text-white/50 mt-0.5">Link Spotify to track heart rate and BPM correlations</p>
+          )}
+        </div>
+      </div>
+      <button
+        onClick={() => {
+          if (isConnected) disconnect()
+          else connect()
+        }}
+        className={clsx(
+          "px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95",
+          isConnected 
+            ? "bg-white/10 text-white/70 hover:bg-white/15" 
+            : "bg-green-500 text-black hover:bg-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+        )}
+      >
+        {isConnected ? 'Disconnect' : 'Connect'}
+      </button>
+    </div>
+  )
+}
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -186,12 +238,7 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse }: {
               >
                 <Save size={14} /> Save template
               </button>
-              <button 
-                onClick={() => useToastStore.getState().info("Duplicating days coming soon.")}
-                className="px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all flex items-center gap-1.5 active:scale-95"
-              >
-                Duplicate
-              </button>
+
             </div>
           </div>
         </div>
@@ -242,6 +289,8 @@ export function TrainDashboard() {
             )}
           </div>
         </header>
+
+        <SpotifyWidget />
 
         {cnsStatus === 'Fried' && (
           <div className="mb-8 p-4 rounded-2xl bg-error/10 border border-error/20 flex gap-4 items-start">
