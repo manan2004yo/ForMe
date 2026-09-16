@@ -123,20 +123,6 @@ function MealSection({ slot, label, foods, onBrowse }: {
             </div>
           ))}
           
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5 mb-2">
-            <button 
-              onClick={() => useToastStore.getState().info("Meal editing coming soon.")}
-              className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5"
-            >
-              Edit meal
-            </button>
-            <button 
-              onClick={() => useToastStore.getState().info("Copying meals coming soon.")}
-              className="text-xs font-medium text-white/50 hover:text-white transition-colors active:scale-95 px-2 py-1 rounded-md hover:bg-white/5"
-            >
-              Copy previous meal
-            </button>
-          </div>
           <div className="grid grid-cols-4 gap-2 mt-4 p-3 bg-white/5 rounded-xl border border-white/5">
             <NutritionChip label="Calories" value={totals.calories} unit="kcal" colorClass="text-white" />
             <NutritionChip label="Protein" value={totals.protein} unit="g" colorClass="text-emerald-400" />
