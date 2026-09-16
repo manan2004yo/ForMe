@@ -209,9 +209,15 @@ export const useSpotifyStore = create<SpotifyState>()(
             return
           }
 
-          const trackId = data.item.id
-          const trackName = data.item.name
-          const artistName = data.item.artists.map((a: any) => a.name).join(', ')
+          const trackId = data.item.id || 'unknown'
+          const trackName = data.item.name || 'Unknown Audio'
+          
+          let artistName = 'Unknown Artist'
+          if (data.item.artists && Array.isArray(data.item.artists)) {
+            artistName = data.item.artists.map((a: any) => a.name).join(', ')
+          } else if (data.item.show && data.item.show.name) {
+            artistName = data.item.show.name // For podcasts
+          }
 
           set({
             currentTrack: {
@@ -221,7 +227,8 @@ export const useSpotifyStore = create<SpotifyState>()(
             }
           })
 
-        } catch (err) {
+        } catch (err: any) {
+          useToastStore.getState().error(`Track fetch error: ${err.message}`)
           console.error("Failed to fetch track", err)
         }
       }
