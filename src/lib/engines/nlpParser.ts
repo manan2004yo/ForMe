@@ -181,7 +181,7 @@ export function convertToLoggedItems(parsed: ParsedFoodEntry, customKatoriGrams 
 
 export function sumNutrition(items: LoggedFoodItem[]) {
   return items.reduce((acc, item) => ({
-    calories: acc.calories + item.nutrition.calories,
+    calories: Math.round(acc.calories + item.nutrition.calories),
     protein: parseFloat((acc.protein + item.nutrition.protein).toFixed(1)),
     carbs: parseFloat((acc.carbs + item.nutrition.carbs).toFixed(1)),
     fat: parseFloat((acc.fat + item.nutrition.fat).toFixed(1)),

@@ -52,8 +52,16 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
   todayTotals: () => {
     const { entries, selectedDate } = get()
     const dayEntries = entries.filter(e => e.date === selectedDate)
-    const allItems = dayEntries.flatMap(e => e.foods)
-    return sumNutrition(allItems)
+    return dayEntries.reduce((acc, e) => {
+      const t = e.totals || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
+      return {
+        calories: acc.calories + t.calories,
+        protein: parseFloat((acc.protein + t.protein).toFixed(1)),
+        carbs: parseFloat((acc.carbs + t.carbs).toFixed(1)),
+        fat: parseFloat((acc.fat + t.fat).toFixed(1)),
+        fiber: parseFloat((acc.fiber + t.fiber).toFixed(1)),
+      }
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
   },
 
   entriesForDate: (date: string) => {

@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { Plus, Search, Trash2, ChevronDown, ChevronUp, Sun, Sunset, Moon, Coffee } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
+import { useEffect } from 'react'
 import { useUserStore } from '@/store/userStore'
 import { useCnsStore } from '@/store/cnsStore'
 import { useToastStore } from '@/store/toastStore'
@@ -53,16 +54,19 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap, onEdit }: {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const Icon = config.icon
   
-  const allFoods = entries.flatMap(e => e.foods)
-  const totals: NutritionInfo = allFoods.reduce((acc, f) => ({
-    calories: acc.calories + f.nutrition.calories,
-    protein: acc.protein + f.nutrition.protein,
-    carbs: acc.carbs + f.nutrition.carbs,
-    fat: acc.fat + f.nutrition.fat,
-    fiber: acc.fiber + f.nutrition.fiber,
-  }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
+  const hasFood = entries.length > 0
+  const totals: NutritionInfo = entries.reduce((acc, e) => {
+    const t = e.totals || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
+    return {
+      calories: acc.calories + t.calories,
+      protein: acc.protein + t.protein,
+      carbs: acc.carbs + t.carbs,
+      fat: acc.fat + t.fat,
+      fiber: acc.fiber + t.fiber,
+    }
+  }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
 
-  const hasFood = allFoods.length > 0
+  
 
   return (
     <div className="glass-panel overflow-hidden mb-4 transition-all duration-300 hover:shadow-card-hover">
@@ -180,8 +184,14 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap, onEdit }: {
 export function EatDashboard() {
   const [showRecipeSplitter, setShowRecipeSplitter] = useState(false)
   const { user } = useAuthStore()
-  const { metrics } = useUserStore()
-  const { entries, removeEntry, addFoodEntry, updateEntry } = useFoodLogStore()
+  const { profile, metrics } = useUserStore()
+  const { entries, removeEntry, addFoodEntry, updateEntry, loadLogs, selectedDate } = useFoodLogStore()
+
+  useEffect(() => {
+    if (user) {
+      loadLogs(user.uid, selectedDate)
+    }
+  }, [user, loadLogs, selectedDate])
   const { getCurrentStatus } = useCnsStore()
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
   const [snappingSlot, setSnappingSlot] = useState<MealSlot | null>(null)
@@ -193,12 +203,11 @@ export function EatDashboard() {
   const todayEntries = entries.filter(e => e.date === format(new Date(), 'yyyy-MM-dd'))
 
   const totals = todayEntries.reduce((acc, entry) => {
-    entry.foods.forEach(f => {
-      acc.calories += f.nutrition.calories
-      acc.protein += f.nutrition.protein
-      acc.carbs += f.nutrition.carbs
-      acc.fat += f.nutrition.fat
-    })
+    const t = entry.totals || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
+    acc.calories += t.calories
+    acc.protein += t.protein
+    acc.carbs += t.carbs
+    acc.fat += t.fat
     return acc
   }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
 
