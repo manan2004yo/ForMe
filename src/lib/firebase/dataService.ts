@@ -89,9 +89,13 @@ export async function getFoodLogsByDate(uid: string, date: string): Promise<Food
     const ref = collection(db, 'users', uid, 'foodLogs')
     const q = query(ref, where('date', '==', date), orderBy('createdAt'))
     const snap = await getDocs(q)
-    const entries = snap.docs.map(d => d.data() as FoodLogEntry)
-    saveLocalFoodLogs(uid, entries, date)
-    return entries
+    const cloudEntries = snap.docs.map(d => d.data() as FoodLogEntry)
+    const localEntries = getLocalFoodLogs(uid, date)
+    const cloudIds = new Set(cloudEntries.map(e => e.id))
+    const unsyncedLocal = localEntries.filter(e => !cloudIds.has(e.id))
+    const merged = [...cloudEntries, ...unsyncedLocal]
+    saveLocalFoodLogs(uid, merged, date)
+    return merged
   } catch {
     return getLocalFoodLogs(uid, date)
   }
@@ -176,9 +180,14 @@ export async function getWeightHistory(uid: string): Promise<WeightEntry[]> {
     const ref = collection(db, 'users', uid, 'weightHistory')
     const q = query(ref, orderBy('date', 'desc'), limit(90))
     const snap = await getDocs(q)
-    const entries = snap.docs.map(d => d.data() as WeightEntry)
-    localStorage.setItem(`forme_weight_${uid}`, JSON.stringify(entries))
-    return entries
+    const cloudEntries = snap.docs.map(d => d.data() as WeightEntry)
+    const localEntries = getLocalWeightHistory(uid)
+    const cloudIds = new Set(cloudEntries.map(e => e.id))
+    const unsyncedLocal = localEntries.filter(e => !cloudIds.has(e.id))
+    const merged = [...cloudEntries, ...unsyncedLocal]
+    merged.sort((a, b) => b.date.localeCompare(a.date))
+    localStorage.setItem(`forme_weight_${uid}`, JSON.stringify(merged))
+    return merged
   } catch {
     return getLocalWeightHistory(uid)
   }
@@ -211,7 +220,14 @@ export async function getWaistHistory(uid: string): Promise<WaistEntry[]> {
     const ref = collection(db, 'users', uid, 'waistHistory')
     const q = query(ref, orderBy('date', 'desc'), limit(90))
     const snap = await getDocs(q)
-    return snap.docs.map(d => d.data() as WaistEntry)
+    const cloudEntries = snap.docs.map(d => d.data() as WaistEntry)
+    const localEntries = getLocalWaistHistory(uid)
+    const cloudIds = new Set(cloudEntries.map(e => e.id))
+    const unsyncedLocal = localEntries.filter(e => !cloudIds.has(e.id))
+    const merged = [...cloudEntries, ...unsyncedLocal]
+    merged.sort((a, b) => b.date.localeCompare(a.date))
+    localStorage.setItem(`forme_waist_${uid}`, JSON.stringify(merged))
+    return merged
   } catch {
     return getLocalWaistHistory(uid)
   }
@@ -245,9 +261,14 @@ export async function getWorkoutLogs(uid: string, limitCount = 30): Promise<Work
     const ref = collection(db, 'users', uid, 'workoutLogs')
     const q = query(ref, orderBy('date', 'desc'), limit(limitCount))
     const snap = await getDocs(q)
-    const entries = snap.docs.map(d => d.data() as WorkoutLogEntry)
-    localStorage.setItem(`forme_workouts_${uid}`, JSON.stringify(entries))
-    return entries
+    const cloudEntries = snap.docs.map(d => d.data() as WorkoutLogEntry)
+    const localEntries = getLocalWorkoutLogs(uid)
+    const cloudIds = new Set(cloudEntries.map(e => e.id))
+    const unsyncedLocal = localEntries.filter(e => !cloudIds.has(e.id))
+    const merged = [...cloudEntries, ...unsyncedLocal]
+    merged.sort((a, b) => b.date.localeCompare(a.date))
+    localStorage.setItem(`forme_workouts_${uid}`, JSON.stringify(merged))
+    return merged
   } catch {
     return getLocalWorkoutLogs(uid)
   }
@@ -279,7 +300,13 @@ export async function getSavedMeals(uid: string): Promise<SavedMeal[]> {
   try {
     const ref = collection(db, 'users', uid, 'savedMeals')
     const snap = await getDocs(ref)
-    return snap.docs.map(d => d.data() as SavedMeal)
+    const cloudEntries = snap.docs.map(d => d.data() as SavedMeal)
+    const localEntries = getLocalSavedMeals(uid)
+    const cloudIds = new Set(cloudEntries.map(e => e.id))
+    const unsyncedLocal = localEntries.filter(e => !cloudIds.has(e.id))
+    const merged = [...cloudEntries, ...unsyncedLocal]
+    localStorage.setItem(`forme_savedmeals_${uid}`, JSON.stringify(merged))
+    return merged
   } catch {
     return getLocalSavedMeals(uid)
   }
@@ -309,7 +336,13 @@ export async function getFamilyRecipes(uid: string): Promise<any[]> {
   try {
     const ref = collection(db, 'users', uid, 'familyRecipes')
     const snap = await getDocs(ref)
-    return snap.docs.map(d => d.data())
+    const cloudEntries = snap.docs.map(d => d.data())
+    const localEntries = getLocalFamilyRecipes(uid)
+    const cloudIds = new Set(cloudEntries.map(e => e.id))
+    const unsyncedLocal = localEntries.filter((e: any) => !cloudIds.has(e.id))
+    const merged = [...cloudEntries, ...unsyncedLocal]
+    localStorage.setItem(`forme_familyrecipes_${uid}`, JSON.stringify(merged))
+    return merged
   } catch {
     return getLocalFamilyRecipes(uid)
   }
