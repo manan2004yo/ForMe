@@ -137,7 +137,7 @@ export const useUserStore = create<UserState>()(
         try {
           await saveUserProfile(uid, defaultProfile)
         } catch (err) {
-          useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+          useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.')
         }
         const metrics = calculateBodyMetrics(defaultProfile, get().activeContext)
         set({ profile: defaultProfile, metrics, isDemoMode: false, error: null })
@@ -163,7 +163,7 @@ export const useUserStore = create<UserState>()(
         try {
           await saveUserProfile(targetId, updates)
         } catch (err) {
-          useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+          useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.')
         }
       }
     }

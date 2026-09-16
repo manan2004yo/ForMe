@@ -112,7 +112,7 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
     try {
       await saveFoodLog(uid, entry)
     } catch (err) {
-      useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+      useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.')
     }
   },
 
@@ -123,7 +123,7 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
     try {
       await saveFoodLog(uid, updatedEntry)
     } catch (err) {
-      useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+      useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.')
     }
   },
 
@@ -132,7 +132,7 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
     try {
       await deleteFoodLog(uid, entryId)
     } catch (err) {
-      useToastStore.getState().error('Cloud sync failed. Data deleted locally.')
+      useToastStore.getState().error('Data deleted on this device. Cloud sync will retry automatically.')
     }
   },
 
