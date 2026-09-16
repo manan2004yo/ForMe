@@ -45,7 +45,11 @@ function base64encode(input: ArrayBuffer) {
 }
 
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID
-const REDIRECT_URI = window.location.origin + '/callback' // Dynamically captures HTTPS
+// Handle Cloudflare preview URLs by forcing the production URL for Spotify auth,
+// but keep localhost for local development.
+const REDIRECT_URI = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? window.location.origin + '/callback'
+  : 'https://forme-693.pages.dev/callback'
 
 export const useSpotifyStore = create<SpotifyState>()(
   persist(
