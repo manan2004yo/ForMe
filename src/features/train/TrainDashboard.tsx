@@ -9,12 +9,13 @@ import { useSpotifyStore } from '@/store/spotifyStore'
 import { useEffect } from 'react'
 import { useTrainStore } from '@/store/trainStore'
 import { useProgressStore } from '@/store/progressStore'
-import { useAuthStore } from '@/store/authStore'
-import { useCnsStore } from '@/store/cnsStore'
-import { v4 as uuidv4 } from 'uuid'
-import type { PlannedExercise, WorkoutLogEntry, LoggedExercise, LoggedSet } from '@/types'
 import { TrainExerciseSearch } from './TrainExerciseSearch'
 import { MuscleHeatmap } from './MuscleHeatmap'
+import { WorkoutLogger } from './WorkoutLogger'
+import type { PlannedExercise } from '@/types'
+import { useCnsStore } from '@/store/cnsStore'
+import { v4 as uuidv4 } from 'uuid'
+import type { WorkoutDay } from '@/store/trainStore'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 import { AlertTriangle } from 'lucide-react'
@@ -87,9 +88,6 @@ function SpotifyWidget() {
                   <span className="text-white/40 text-xs truncate max-w-[80px]">
                     by {currentTrack.artist}
                   </span>
-                  <span className="text-[#1DB954] font-bold text-xs bg-[#1DB954]/10 px-1.5 py-0.5 rounded ml-1">
-                    {currentTrack.bpm} BPM
-                  </span>
                 </motion.div>
               ) : (
                 <motion.div 
@@ -99,7 +97,7 @@ function SpotifyWidget() {
                   exit={{ opacity: 0 }}
                   className="text-sm text-white/40"
                 >
-                  {isConnecting ? "Connecting to Spotify..." : "Link to track BPM correlations"}
+                  {isConnecting ? "Connecting to Spotify..." : "Link your Spotify account"}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -162,51 +160,17 @@ function ExerciseRow({ exercise, onRemove }: { exercise: PlannedExercise, onRemo
   )
 }
 
-function DaySection({ dayIndex, isRestDay, exercises, onBrowse }: {
+function DaySection({ dayIndex, isRestDay, exercises, onBrowse, onStartWorkout }: {
   dayIndex: number
   isRestDay: boolean
   exercises: PlannedExercise[]
   onBrowse: (dayIndex: number) => void
+  onStartWorkout: () => void
 }) {
   const [expanded, setExpanded] = useState(true)
   const { toggleRestDay, removeExerciseFromDay, saveAsTemplate } = useTrainStore()
-  const { logWorkout } = useProgressStore()
-  const { user } = useAuthStore()
   
   const hasExercises = exercises.length > 0
-
-  const handleLogWorkout = async () => {
-    if (!user) return
-    
-    // Convert planned exercises to logged exercises
-    const loggedExercises: LoggedExercise[] = exercises.map(ex => {
-      // Mock completed sets based on planned sets and reps
-      const mockSets: LoggedSet[] = Array.from({ length: ex.sets }).map((_, i) => ({
-        id: uuidv4(),
-        reps: ex.repRange[1], // Assuming they hit max reps in the range
-        weight: 0, // No weight specified in planner, default 0
-        rpe: (10 - (ex.rir || 8))
-      }))
-      
-      return {
-        exerciseId: ex.exerciseId,
-        exerciseName: ex.exerciseName,
-        muscleGroup: ex.muscleGroup,
-        sets: mockSets
-      }
-    })
-
-    const logEntry: Omit<WorkoutLogEntry, 'id' | 'createdAt'> = {
-      userId: user.uid,
-      date: new Date().toISOString().split('T')[0],
-      planDayLabel: DAY_NAMES[dayIndex],
-      exercises: loggedExercises,
-      completed: true
-    }
-
-    await logWorkout(user.uid, logEntry)
-    alert(`Workout logged! Your ${DAY_NAMES[dayIndex]} workout volume has been added to the Heatmap.`)
-  }
 
   return (
     <div className="glass-panel overflow-hidden mb-4 transition-all duration-300 hover:shadow-card-hover">
@@ -281,7 +245,7 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse }: {
           
           <div className="flex justify-between p-2 border-t border-white/5 mt-2">
             <button 
-              onClick={(e) => { e.stopPropagation(); handleLogWorkout(); }}
+              onClick={(e) => { e.stopPropagation(); onStartWorkout(); }}
               className="px-4 py-1.5 text-xs font-bold text-black bg-accent hover:bg-accent/90 rounded-lg transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(45,212,191,0.2)] active:scale-95"
             >
               <CheckCircle2 size={14} /> Log Workout
@@ -317,6 +281,7 @@ export function TrainDashboard() {
   const { currentPlan, templates, loadTemplate, clearPlan } = useTrainStore()
   const { getCurrentStatus } = useCnsStore()
   const [browsingDay, setBrowsingDay] = useState<number | null>(null)
+  const [activeWorkoutDay, setActiveWorkoutDay] = useState<WorkoutDay | null>(null)
   const cnsStatus = getCurrentStatus()
 
   return (
@@ -402,6 +367,7 @@ export function TrainDashboard() {
               isRestDay={day.isRestDay}
               exercises={day.exercises}
               onBrowse={setBrowsingDay}
+              onStartWorkout={() => setActiveWorkoutDay(day)}
             />
           ))}
         </div>
@@ -410,6 +376,20 @@ export function TrainDashboard() {
           <div className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto">
             <TrainExerciseSearch dayIndex={browsingDay} onClose={() => setBrowsingDay(null)} />
           </div>
+        )}
+
+        {activeWorkoutDay !== null && (
+          <WorkoutLogger 
+            day={{
+              dayLabel: DAY_NAMES[activeWorkoutDay.dayIndex],
+              dayOfWeek: activeWorkoutDay.dayIndex,
+              muscleGroups: [],
+              exercises: activeWorkoutDay.exercises,
+              estimatedDurationMin: 60
+            }} 
+            onClose={() => setActiveWorkoutDay(null)}
+            onComplete={() => setActiveWorkoutDay(null)}
+          />
         )}
       </div>
     </PageTransition>

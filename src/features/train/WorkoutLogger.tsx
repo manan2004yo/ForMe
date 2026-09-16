@@ -163,11 +163,6 @@ function ExerciseSection({
                 exercise={exercise}
                 onChange={updated => {
                   const newSets = [...exerciseLog.sets]
-                  if (updated.completed && !set.completed && currentTrack) {
-                    updated.trackBpm = currentTrack.bpm
-                  } else if (!updated.completed) {
-                    updated.trackBpm = undefined
-                  }
                   newSets[i] = updated
                   onChange({ ...exerciseLog, sets: newSets })
                 }}
@@ -239,21 +234,24 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
           exerciseId: el.exerciseId,
           exerciseName: el.exerciseName,
           muscleGroup: day.exercises[i]?.muscleGroup || 'core',
-          sets: el.sets.filter(s => s.completed).map(s => ({
-            reps: s.reps,
-            weight: s.weightKg || undefined,
-            trackBpm: s.trackBpm,
-          })),
+          sets: el.sets.filter(s => s.completed).map(s => {
+            const loggedSet: any = { reps: s.reps }
+            if (s.weightKg) loggedSet.weight = s.weightKg
+            return loggedSet
+          }),
         })),
         completed: totalSetsCompleted > 0,
         notes,
       })
       toast.success(`Workout complete! ${totalSetsCompleted} sets in ${Math.max(1, elapsedMin)} min 🔥`)
       onComplete()
+    } catch (error) {
+      console.error('Failed to save workout:', error)
+      toast.error('Failed to save workout. Please check your connection and try again.')
     } finally {
       setIsSaving(false)
     }
-  }, [user, exerciseLogs, notes, day, elapsedMin, logWorkout, totalSetsCompleted, onComplete])
+  }, [user, exerciseLogs, notes, day, elapsedMin, logWorkout, totalSetsCompleted, onComplete, toast])
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -272,8 +270,6 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
               <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full w-fit mt-1 border border-emerald-500/20">
                 <Music size={10} className="animate-pulse" />
                 <span className="truncate max-w-[120px]">{currentTrack.name}</span>
-                <span className="text-emerald-500/50">•</span>
-                <span className="opacity-80">{currentTrack.bpm} BPM</span>
               </div>
             )}
             <div className="text-xs text-text-secondary mt-1">

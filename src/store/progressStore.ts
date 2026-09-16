@@ -13,6 +13,7 @@ import {
   saveWaistEntry, getWaistHistory, saveWorkoutPlan, getWorkoutPlan,
   saveDietPlan, getDietPlan
 } from '@/lib/firebase/dataService'
+import { useToastStore } from '@/store/toastStore'
 
 interface ProgressState {
   workoutPlan: WorkoutPlan | null
@@ -66,12 +67,20 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
   saveWorkoutPlan: async (uid: string, plan: WorkoutPlan) => {
     set({ workoutPlan: plan })
-    await saveWorkoutPlan(uid, plan)
+    try {
+      await saveWorkoutPlan(uid, plan)
+    } catch (err) {
+      useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+    }
   },
 
   saveDietPlan: async (uid: string, plan: DailyDietPlan) => {
     set({ dietPlan: plan })
-    await saveDietPlan(uid, plan)
+    try {
+      await saveDietPlan(uid, plan)
+    } catch (err) {
+      useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+    }
   },
 
   logWorkout: async (uid: string, entry) => {
@@ -81,7 +90,11 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       createdAt: new Date().toISOString(),
     }
     set(s => ({ workoutLogs: [full, ...s.workoutLogs] }))
-    await saveWorkoutLog(uid, full)
+    try {
+      await saveWorkoutLog(uid, full)
+    } catch (err) {
+      useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+    }
   },
 
   addWeightEntry: async (uid: string, weightKg: number, notes?: string) => {
@@ -93,7 +106,11 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       notes,
     }
     set(s => ({ weightHistory: [entry, ...s.weightHistory] }))
-    await saveWeightEntry(uid, entry)
+    try {
+      await saveWeightEntry(uid, entry)
+    } catch (err) {
+      useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+    }
   },
 
   addWaistEntry: async (uid: string, waistCm: number, notes?: string, extra?: { chestCm?: number; armsCm?: number; thighsCm?: number; hipsCm?: number }) => {
@@ -106,7 +123,11 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       ...extra,
     }
     set(s => ({ waistHistory: [entry, ...s.waistHistory] }))
-    await saveWaistEntry(uid, entry)
+    try {
+      await saveWaistEntry(uid, entry)
+    } catch (err) {
+      useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+    }
   },
 
   getLatestWeight: () => {

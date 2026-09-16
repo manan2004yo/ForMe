@@ -16,17 +16,32 @@ import type {
   BodyCompositionEntry, WeeklyReport
 } from '@/types'
 
+// Helper to remove undefined properties before sending to Firestore
+function sanitizeForFirestore(obj: any): any {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeForFirestore);
+  const result: any = {};
+  for (const key of Object.keys(obj)) {
+    if (obj[key] !== undefined) {
+      result[key] = sanitizeForFirestore(obj[key]);
+    }
+  }
+  return result;
+}
+
 // ─── User Profile ─────────────────────────────────────────────
 
 export async function saveUserProfile(uid: string, profile: Partial<UserProfile>): Promise<void> {
   const ref = doc(db, 'users', uid)
+  if (!navigator.onLine) throw new Error('offline')
   try {
-    await setDoc(ref, {
+    await setDoc(ref, sanitizeForFirestore({
       ...profile,
       updatedAt: serverTimestamp(),
-    }, { merge: true })
+    }), { merge: true })
   } catch (error) {
     console.warn('Firestore write error (saveUserProfile):', error)
+    throw error
   }
   
   // Also save to localStorage as offline backup
@@ -59,10 +74,12 @@ function getLocalProfile(uid: string): UserProfile | null {
 
 export async function saveFoodLog(uid: string, entry: FoodLogEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'foodLogs', entry.id)
+  if (!navigator.onLine) throw new Error('offline')
   try {
     await setDoc(ref, { ...entry, updatedAt: serverTimestamp() })
   } catch (error) {
     console.warn('Firestore write error (saveFoodLog):', error)
+    throw error
   }
   saveLocalFoodLog(uid, entry)
 }
@@ -81,10 +98,12 @@ export async function getFoodLogsByDate(uid: string, date: string): Promise<Food
 }
 
 export async function deleteFoodLog(uid: string, entryId: string): Promise<void> {
+  if (!navigator.onLine) throw new Error('offline')
   try {
     await deleteDoc(doc(db, 'users', uid, 'foodLogs', entryId))
   } catch (error) {
     console.warn('Firestore write error (deleteFoodLog):', error)
+    throw error
   }
   deleteLocalFoodLog(uid, entryId)
 }
@@ -139,10 +158,12 @@ function deleteLocalFoodLog(uid: string, entryId: string) {
 
 export async function saveWeightEntry(uid: string, entry: WeightEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'weightHistory', entry.id)
+  if (!navigator.onLine) throw new Error('offline')
   try {
-    await setDoc(ref, entry)
+    await setDoc(ref, sanitizeForFirestore(entry))
   } catch (error) {
     console.warn('Firestore write error (saveWeightEntry):', error)
+    throw error
   }
   const local = getLocalWeightHistory(uid)
   const updated = local.filter(e => e.id !== entry.id)
@@ -172,10 +193,12 @@ function getLocalWeightHistory(uid: string): WeightEntry[] {
 
 export async function saveWaistEntry(uid: string, entry: WaistEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'waistHistory', entry.id)
+  if (!navigator.onLine) throw new Error('offline')
   try {
-    await setDoc(ref, entry)
+    await setDoc(ref, sanitizeForFirestore(entry))
   } catch (error) {
     console.warn('Firestore write error (saveWaistEntry):', error)
+    throw error
   }
   const local = getLocalWaistHistory(uid)
   const updated = local.filter(e => e.id !== entry.id)
@@ -203,10 +226,12 @@ function getLocalWaistHistory(uid: string): WaistEntry[] {
 
 export async function saveWorkoutLog(uid: string, entry: WorkoutLogEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'workoutLogs', entry.id)
+  if (!navigator.onLine) throw new Error('offline')
   try {
-    await setDoc(ref, entry)
+    await setDoc(ref, sanitizeForFirestore(entry))
   } catch (error) {
     console.warn('Firestore write error (saveWorkoutLog):', error)
+    throw error
   }
   const local = getLocalWorkoutLogs(uid)
   const updated = local.filter(e => e.id !== entry.id)
@@ -236,10 +261,12 @@ function getLocalWorkoutLogs(uid: string): WorkoutLogEntry[] {
 
 export async function saveMeal(uid: string, meal: SavedMeal): Promise<void> {
   const ref = doc(db, 'users', uid, 'savedMeals', meal.id)
+  if (!navigator.onLine) throw new Error('offline')
   try {
-    await setDoc(ref, meal)
+    await setDoc(ref, sanitizeForFirestore(meal))
   } catch (error) {
     console.warn('Firestore write error (saveMeal):', error)
+    throw error
   }
   const local = getLocalSavedMeals(uid)
   const updated = local.filter(m => m.id !== meal.id)
@@ -264,10 +291,12 @@ function getLocalSavedMeals(uid: string): SavedMeal[] {
 
 export async function saveFamilyRecipe(uid: string, recipe: any): Promise<void> {
   const ref = doc(db, 'users', uid, 'familyRecipes', recipe.id)
+  if (!navigator.onLine) throw new Error('offline')
   try {
-    await setDoc(ref, recipe)
+    await setDoc(ref, sanitizeForFirestore(recipe))
   } catch (error) {
     console.warn('Firestore write error (saveFamilyRecipe):', error)
+    throw error
   }
   const local = getLocalFamilyRecipes(uid)
   const updated = local.filter((r: any) => r.id !== recipe.id)
@@ -294,10 +323,12 @@ function getLocalFamilyRecipes(uid: string): any[] {
 
 export async function saveWorkoutPlan(uid: string, plan: WorkoutPlan): Promise<void> {
   const ref = doc(db, 'users', uid, 'workoutPlan', 'current')
+  if (!navigator.onLine) throw new Error('offline')
   try {
-    await setDoc(ref, plan)
+    await setDoc(ref, sanitizeForFirestore(plan))
   } catch (error) {
     console.warn('Firestore write error (saveWorkoutPlan):', error)
+    throw error
   }
   localStorage.setItem(`forme_workoutplan_${uid}`, JSON.stringify(plan))
 }
@@ -321,10 +352,12 @@ function getLocalWorkoutPlan(uid: string): WorkoutPlan | null {
 
 export async function saveDietPlan(uid: string, plan: DailyDietPlan): Promise<void> {
   const ref = doc(db, 'users', uid, 'dietPlan', 'current')
+  if (!navigator.onLine) throw new Error('offline')
   try {
-    await setDoc(ref, plan)
+    await setDoc(ref, sanitizeForFirestore(plan))
   } catch (error) {
     console.warn('Firestore write error (saveDietPlan):', error)
+    throw error
   }
   localStorage.setItem(`forme_dietplan_${uid}`, JSON.stringify(plan))
 }
@@ -342,4 +375,34 @@ export async function getDietPlan(uid: string): Promise<DailyDietPlan | null> {
 function getLocalDietPlan(uid: string): DailyDietPlan | null {
   const raw = localStorage.getItem(`forme_dietplan_${uid}`)
   return raw ? JSON.parse(raw) : null
+}
+
+// ─── Account Deletion ─────────────────────────────────────────
+
+export async function deleteUserData(uid: string): Promise<void> {
+  if (!navigator.onLine) throw new Error('offline')
+  const subcollections = ['foodLogs', 'weightHistory', 'waistHistory', 'workoutLogs', 'savedMeals', 'familyRecipes', 'cns']
+  
+  // Delete subcollection documents
+  for (const col of subcollections) {
+    try {
+      const snap = await getDocs(collection(db, 'users', uid, col))
+      const promises = snap.docs.map(d => deleteDoc(d.ref))
+      await Promise.all(promises)
+    } catch (error) {
+      console.warn(`Failed to delete subcollection ${col}:`, error)
+    }
+  }
+
+  // Delete specific known documents
+  try { await deleteDoc(doc(db, 'users', uid, 'workoutPlan', 'current')) } catch (e) {}
+  try { await deleteDoc(doc(db, 'users', uid, 'dietPlan', 'current')) } catch (e) {}
+
+  // Delete the root user document
+  try {
+    await deleteDoc(doc(db, 'users', uid))
+  } catch (error) {
+    console.warn('Failed to delete user doc:', error)
+    throw error
+  }
 }

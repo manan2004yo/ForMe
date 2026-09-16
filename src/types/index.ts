@@ -22,6 +22,7 @@ export interface UserProfile {
   email: string
   name: string
   avatar?: string
+  progressPhotos?: string[]
 
   // Personal
   age: number
@@ -282,7 +283,6 @@ export interface LoggedSet {
   weight?: number
   reps: number
   rir?: number
-  trackBpm?: number
 }
 
 export interface LoggedExercise {

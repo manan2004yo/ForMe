@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import type { UserProfile, BodyMetrics } from '@/types'
 import { calculateBodyMetrics } from '@/lib/calculations/bodyMetrics'
 import { saveUserProfile, getUserProfile } from '@/lib/firebase/dataService'
+import { useToastStore } from '@/store/toastStore'
 
 // Demo profile for exploration
 export const DEMO_PROFILE: UserProfile = {
@@ -133,7 +134,11 @@ export const useUserStore = create<UserState>()(
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
-        await saveUserProfile(uid, defaultProfile)
+        try {
+          await saveUserProfile(uid, defaultProfile)
+        } catch (err) {
+          useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+        }
         const metrics = calculateBodyMetrics(defaultProfile, get().activeContext)
         set({ profile: defaultProfile, metrics, isDemoMode: false, error: null })
       }
@@ -154,7 +159,13 @@ export const useUserStore = create<UserState>()(
 
     if (!isDemoMode) {
       const targetId = profile.id || updates.id || (profile as any).uid
-      if (targetId) await saveUserProfile(targetId, updates)
+      if (targetId) {
+        try {
+          await saveUserProfile(targetId, updates)
+        } catch (err) {
+          useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+        }
+      }
     }
   },
 

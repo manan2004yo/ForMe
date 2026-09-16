@@ -17,6 +17,7 @@ import {
   browserSessionPersistence,
   User,
   UserCredential,
+  deleteUser,
 } from 'firebase/auth'
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, googleProvider, db } from './config'
@@ -88,6 +89,14 @@ export async function signOutUser(): Promise<void> {
 
 export async function resetPassword(email: string): Promise<void> {
   return sendPasswordResetEmail(auth, email)
+}
+
+// ─── Delete Account ───────────────────────────────────────────
+
+export async function deleteUserAccount(): Promise<void> {
+  const user = auth.currentUser
+  if (!user) throw new Error("No authenticated user")
+  await deleteUser(user)
 }
 
 // ─── Create User Document in Firestore ───────────────────────

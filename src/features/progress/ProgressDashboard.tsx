@@ -18,7 +18,7 @@ import { clsx } from 'clsx'
 export function ProgressDashboard() {
   const { user } = useAuthStore()
   const { profile, metrics, loadProfile } = useUserStore()
-  const { loadLogs } = useFoodLogStore()
+  const { loadLogs, entriesForDate } = useFoodLogStore()
   const { loadAll, weightHistory, waistHistory, addWeightEntry, addWaistEntry, workoutLogs } = useProgressStore()
 
   const [logWeight, setLogWeight] = useState('')
@@ -67,6 +67,24 @@ export function ProgressDashboard() {
     setLogWaist('')
     setIsLogging(false)
   }
+
+  // Nutrition Adherence Logic (last 7 days)
+  const targetCals = metrics.caloricTarget || 2000
+  let daysHit = 0
+  let daysLogged = 0
+  
+  for(let i=0; i<7; i++) {
+    const d = format(subDays(new Date(), i), 'yyyy-MM-dd')
+    const dayEntries = entriesForDate(d)
+    if (dayEntries.length > 0) {
+      daysLogged++
+      const cals = dayEntries.reduce((sum, e) => sum + e.foods.reduce((s, f) => s + f.nutrition.calories, 0), 0)
+      if (Math.abs(cals - targetCals) / targetCals <= 0.15) {
+        daysHit++
+      }
+    }
+  }
+  const adherence = daysLogged > 0 ? Math.round((daysHit / daysLogged) * 100) : 0
 
   const chartData = sortedWeightHistory.map(entry => ({
     date: format(new Date(entry.date), 'MMM d'),
@@ -281,8 +299,10 @@ export function ProgressDashboard() {
               </div>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-heading font-bold text-white">85%</span>
-              <span className="text-emerald-400 text-sm font-medium">+2% this week</span>
+              <span className="text-3xl font-heading font-bold text-white">{adherence}%</span>
+              <span className={clsx("text-sm font-medium", adherence >= 80 ? "text-emerald-400" : "text-amber-400")}>
+                {daysHit}/{daysLogged || 7} days on target
+              </span>
             </div>
           </div>
         </div>

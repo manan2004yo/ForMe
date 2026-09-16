@@ -5,7 +5,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { User } from 'firebase/auth'
-import { observeAuthState, signUpWithEmail, signInWithEmail, signInWithGoogle, signOutUser, resetPassword } from '@/lib/firebase/authService'
+import { observeAuthState, signUpWithEmail, signInWithEmail, signInWithGoogle, signOutUser, resetPassword, deleteUserAccount } from '@/lib/firebase/authService'
+import { deleteUserData } from '@/lib/firebase/dataService'
 
 interface AuthState {
   user: User | { uid: string; email: string; displayName: string } | null
@@ -21,6 +22,7 @@ interface AuthState {
   loginWithGoogle: (rememberMe?: boolean) => Promise<void>
   signup: (email: string, password: string, name: string, rememberMe?: boolean) => Promise<void>
   logout: () => Promise<void>
+  deleteAccount: () => Promise<void>
   sendPasswordReset: (email: string) => Promise<void>
   clearError: () => void
   setDemoUser: () => void
@@ -129,6 +131,54 @@ export const useAuthStore = create<AuthState>()(
         await signOutUser()
         set({ user: null, isDemo: false })
       }
+      
+      // Clear all local storage keys that belong to FORME state
+      const keys = Object.keys(localStorage)
+      for (const key of keys) {
+        if (key.startsWith('forme_') || key.startsWith('forme-')) {
+          localStorage.removeItem(key)
+        }
+      }
+      
+      // Also clear any lingering third-party OAuth verifiers
+      localStorage.removeItem('spotify_code_verifier')
+      
+      // Force reload to completely wipe Zustand in-memory state for all stores
+      window.location.href = '/'
+    } finally {
+      set({ isLoading: false })
+    }
+  },
+
+  deleteAccount: async () => {
+    const user = get().user
+    if (!user || user.uid === 'demo') {
+      await get().logout()
+      return
+    }
+
+    set({ isLoading: true, error: null })
+    try {
+      // 1. Delete all Firestore data for this user
+      await deleteUserData(user.uid)
+      
+      // 2. Delete the Firebase Auth account
+      await deleteUserAccount()
+      
+      // 3. Clean up local state
+      set({ user: null })
+      const keys = Object.keys(localStorage)
+      for (const key of keys) {
+        if (key.startsWith('forme_') || key.startsWith('forme-')) {
+          localStorage.removeItem(key)
+        }
+      }
+      
+      // 4. Force reload to wipe in-memory state
+      window.location.href = '/'
+    } catch (err: any) {
+      set({ error: err.code === 'auth/requires-recent-login' ? 'For your security, please sign out and sign back in before deleting your account.' : 'Failed to delete account. Please try again.' })
+      throw err
     } finally {
       set({ isLoading: false })
     }

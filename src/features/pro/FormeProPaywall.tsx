@@ -189,7 +189,7 @@ export function FormeProPaywall({ onClose }: { onClose?: () => void }) {
             <div className="space-y-4 mb-8">
               <Feature text="Auto-Regulating CNS Engine" />
               <Feature text="Vision AI 'Snap & Log' Food" />
-              <Feature text="Spotify BPM Analytics" />
+              <Feature text="Advanced Analytics & Charts" />
               <Feature text="Menu Hacker (Zomato Sync)" />
               <Feature text="Priority Cloud Backups" />
             </div>

@@ -12,8 +12,10 @@ import { useAchievementEngine } from '@/lib/engines/useAchievementEngine'
 
 // Feature imports
 import { LandingPage } from '@/features/auth/LandingPage'
+import { ToastContainer } from '@/components/ui/ToastContainer'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { SignupPage } from '@/features/auth/SignupPage'
+import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
 import { AppShell } from '@/components/layout/AppShell'
 import { HomeDashboard } from '@/features/home/HomeDashboard'
@@ -139,15 +141,6 @@ function AppRoutes() {
   const { user, isInitialized, initialize } = useAuthStore()
 
   useEffect(() => {
-    // Intercept Spotify OAuth Callback
-    const urlParams = new URLSearchParams(window.location.search)
-    const code = urlParams.get('code')
-    if (code) {
-      useSpotifyStore.getState().handleCallback(code)
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
-
     const unsubscribe = initialize()
     return unsubscribe
   }, [initialize])
@@ -173,6 +166,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/signup" element={user ? <Navigate to="/" replace /> : <SignupPage />} />
+      <Route path="/forgot-password" element={user ? <Navigate to="/" replace /> : <ForgotPasswordPage />} />
       <Route path="/landing" element={<LandingPage />} />
       <Route
         path="/*"
@@ -187,6 +181,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppRoutes />
+      <ToastContainer />
     </BrowserRouter>
   )
 }

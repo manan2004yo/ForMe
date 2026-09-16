@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { FoodLogEntry, LoggedFoodItem, MealSlot, NutritionInfo } from '@/types'
 import { saveFoodLog, getFoodLogsByDate, getRecentFoodLogs, deleteFoodLog } from '@/lib/firebase/dataService'
+import { useToastStore } from '@/store/toastStore'
 import { format } from 'date-fns'
 
 const today = () => format(new Date(), 'yyyy-MM-dd')
@@ -108,19 +109,31 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
     }
 
     set(state => ({ entries: [...state.entries, entry] }))
-    await saveFoodLog(uid, entry)
+    try {
+      await saveFoodLog(uid, entry)
+    } catch (err) {
+      useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+    }
   },
 
   updateEntry: async (uid: string, entryId: string, updatedEntry: FoodLogEntry) => {
     set(state => ({
       entries: state.entries.map(e => e.id === entryId ? updatedEntry : e)
     }))
-    await saveFoodLog(uid, updatedEntry)
+    try {
+      await saveFoodLog(uid, updatedEntry)
+    } catch (err) {
+      useToastStore.getState().error('Cloud sync failed. Data saved locally.')
+    }
   },
 
   removeEntry: async (uid: string, entryId: string) => {
     set(state => ({ entries: state.entries.filter(e => e.id !== entryId) }))
-    await deleteFoodLog(uid, entryId)
+    try {
+      await deleteFoodLog(uid, entryId)
+    } catch (err) {
+      useToastStore.getState().error('Cloud sync failed. Data deleted locally.')
+    }
   },
 
   setDate: (date: string) => {

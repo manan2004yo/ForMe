@@ -5,7 +5,6 @@ export interface SpotifyTrack {
   id: string
   name: string
   artist: string
-  bpm: number
 }
 
 interface SpotifyState {
@@ -139,19 +138,48 @@ export const useSpotifyStore = create<SpotifyState>()(
         const { accessToken, expiresAt } = get()
         if (!accessToken || !expiresAt) return
 
-        // Basic Token Refresh Logic
+        // Token Refresh Logic
         if (Date.now() > expiresAt) {
-          // Token expired. We should ideally refresh it here using refreshToken.
-          // For simplicity right now, force a disconnect to prompt re-login.
-          // (A full production app implements the refresh token POST here).
-          set({ isConnected: false, accessToken: null, error: "Session expired. Please reconnect." })
-          return;
+          const { refreshToken } = get()
+          if (!refreshToken || !SPOTIFY_CLIENT_ID) {
+            set({ isConnected: false, accessToken: null, error: "Session expired. Please reconnect." })
+            return
+          }
+          
+          try {
+            const payload = {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({
+                client_id: SPOTIFY_CLIENT_ID,
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken,
+              }),
+            }
+            const body = await fetch('https://accounts.spotify.com/api/token', payload)
+            const response = await body.json()
+            if (!body.ok) throw new Error(response.error_description || 'Failed to refresh token')
+            
+            const newAccessToken = response.access_token
+            set({
+              accessToken: newAccessToken,
+              refreshToken: response.refresh_token || refreshToken,
+              expiresAt: Date.now() + response.expires_in * 1000,
+            })
+            // Use the new token for the subsequent API call
+          } catch (err) {
+            set({ isConnected: false, accessToken: null, error: "Session expired. Please reconnect." })
+            return
+          }
         }
+        
+        // Grab token again in case it refreshed
+        const validToken = get().accessToken
 
         try {
           // 1. Get Currently Playing
           const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
+            headers: { 'Authorization': `Bearer ${validToken}` }
           })
 
           if (res.status === 204) {
@@ -175,26 +203,11 @@ export const useSpotifyStore = create<SpotifyState>()(
           const trackName = data.item.name
           const artistName = data.item.artists.map((a: any) => a.name).join(', ')
 
-          // 2. Attempt to get BPM (Audio Features)
-          let bpm = 0
-          try {
-            const afRes = await fetch(`https://api.spotify.com/v1/audio-features/${trackId}`, {
-              headers: { 'Authorization': `Bearer ${accessToken}` }
-            })
-            if (afRes.ok) {
-              const afData = await afRes.json()
-              bpm = Math.round(afData.tempo || 0)
-            }
-          } catch (e) {
-            // Ignore Audio Features failure if deprecated/unavailable
-          }
-
           set({
             currentTrack: {
               id: trackId,
               name: trackName,
               artist: artistName,
-              bpm
             }
           })
 

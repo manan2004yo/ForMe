@@ -6,14 +6,17 @@ import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
 
 export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
-  const { logout } = useAuthStore()
+  const { deleteAccount } = useAuthStore()
   const { isIncognito, toggleIncognito } = useUserStore()
   const navigate = useNavigate()
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm("Are you sure you want to permanently delete your account and all data? This cannot be undone.")) {
-      logout()
-      navigate('/')
+      try {
+        await deleteAccount()
+      } catch (err) {
+        // Error toast is handled by global state or we can just let authStore's error state show it
+      }
     }
   }
 
