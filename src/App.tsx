@@ -13,6 +13,7 @@ import { useAchievementEngine } from '@/lib/engines/useAchievementEngine'
 // Feature imports
 import { LandingPage } from '@/features/auth/LandingPage'
 import { ToastContainer } from '@/components/ui/ToastContainer'
+import { useToastStore } from '@/store/toastStore'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { SignupPage } from '@/features/auth/SignupPage'
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
