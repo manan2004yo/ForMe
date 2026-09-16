@@ -360,8 +360,8 @@ interface AlertProps {
   className?: string
 }
 
-export * from './ToastContainer'
-export * from './AnimatedCounter'
+export { ToastContainer } from './ToastContainer'
+export { AnimatedCounter } from './AnimatedCounter'
 
 export function Alert({ type = 'info', children, className }: AlertProps) {
   const colors = {

@@ -59,7 +59,9 @@ export const useSpotifyStore = create<SpotifyState>()(
 
       connect: async () => {
         if (!SPOTIFY_CLIENT_ID) {
-          set({ error: "Missing VITE_SPOTIFY_CLIENT_ID in environment variables." })
+          const msg = "Missing VITE_SPOTIFY_CLIENT_ID in environment variables."
+          set({ error: msg })
+          useToastStore.getState().error(msg)
           return
         }
         
@@ -93,7 +95,9 @@ export const useSpotifyStore = create<SpotifyState>()(
         
         const codeVerifier = window.localStorage.getItem('spotify_code_verifier')
         if (!codeVerifier) {
-          set({ isConnecting: false, error: "Auth flow error: Missing code verifier." })
+          const msg = "Auth flow error: Missing code verifier."
+          set({ isConnecting: false, error: msg })
+          useToastStore.getState().error(msg)
           return
         }
 
