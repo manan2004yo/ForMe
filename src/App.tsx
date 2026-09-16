@@ -2,7 +2,7 @@
 // FORME — Main App with Routing & Auth Guard
 // ============================================================
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '@/store/authStore'
@@ -33,11 +33,20 @@ function SpotifyCallback() {
   const location = useLocation()
   const navigate = useNavigate()
   
+  const processedCode = useRef<string | null>(null)
+  
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const code = params.get('code')
     const error = params.get('error')
-    if (code) {
+    
+    // Prevent double-firing the same code (React Strict Mode / re-renders)
+    if (code && processedCode.current !== code) {
+      processedCode.current = code
+      
+      // Clear URL so it doesn't get processed again on reload
+      window.history.replaceState({}, document.title, window.location.pathname)
+      
       useSpotifyStore.getState().handleCallback(code).then(() => {
         navigate('/train')
       })
