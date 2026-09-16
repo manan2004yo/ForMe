@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useToastStore } from './toastStore'
 
 export interface SpotifyTrack {
   id: string
