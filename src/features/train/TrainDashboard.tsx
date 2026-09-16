@@ -97,7 +97,11 @@ function SpotifyWidget() {
                   exit={{ opacity: 0 }}
                   className="text-sm text-white/40"
                 >
-                  {isConnecting ? "Connecting to Spotify..." : "Link your Spotify account"}
+                  {isConnecting 
+                    ? "Connecting to Spotify..." 
+                    : isConnected 
+                      ? "Connected. Play a song to see it here." 
+                      : "Link your Spotify account"}
                 </motion.div>
               )}
             </AnimatePresence>
