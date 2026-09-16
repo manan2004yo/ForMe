@@ -311,13 +311,13 @@ export function TrainDashboard() {
                 }}
                 className="px-4 py-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 active:scale-95"
               >
-                <Trash2 size={16} />
+                <Trash2 size={16} /> Clear Plan
               </button>
             )}
           </div>
         </header>
 
-        <SpotifyWidget />
+
 
         {cnsStatus === 'Fried' && (
           <div className="mb-8 p-4 rounded-2xl bg-error/10 border border-error/20 flex gap-4 items-start">
@@ -327,7 +327,7 @@ export function TrainDashboard() {
             <div>
               <h3 className="font-heading font-bold text-error mb-1">CNS Warning: Overtraining Risk</h3>
               <p className="text-error/80 text-sm leading-relaxed">
-                Your AI Engine detects that your Central Nervous System is fried based on your recent sleep and fatigue logs. 
+                Your AI Engine detects high recovery strain based on your recent sleep and fatigue logs. 
                 Consider taking an active recovery day or dropping your volume by 20% today.
               </p>
             </div>
@@ -374,6 +374,10 @@ export function TrainDashboard() {
               onStartWorkout={() => setActiveWorkoutDay(day)}
             />
           ))}
+        </div>
+
+        <div className="mt-8">
+          <SpotifyWidget />
         </div>
 
         {browsingDay !== null && (

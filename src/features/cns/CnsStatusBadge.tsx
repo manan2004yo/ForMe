@@ -18,9 +18,9 @@ export function CnsStatusBadge({ className }: { className?: string }) {
       label: 'Fatigued'
     },
     'Fried': {
-      color: 'text-error bg-error/10 border-error/20',
-      icon: AlertTriangle,
-      label: 'Fried CNS'
+      color: 'bg-error text-white shadow-[0_0_15px_rgba(239,68,68,0.5)] border border-error/50',
+      icon: Activity,
+      label: 'High Recovery Strain'
     }
   }
 

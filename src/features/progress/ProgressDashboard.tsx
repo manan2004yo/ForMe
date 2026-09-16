@@ -53,7 +53,7 @@ export function ProgressDashboard() {
     if (isNaN(w) || w <= 20 || w >= 300) return
     setIsLogging(true)
     try {
-      if (user && user.uid !== 'demo') {
+      if (user) {
         await addWeightEntry(user.uid, w)
       }
       setLogWeight('')

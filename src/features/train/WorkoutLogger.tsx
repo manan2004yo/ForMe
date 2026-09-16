@@ -185,6 +185,8 @@ function ExerciseSection({
   )
 }
 
+import { Portal } from '@/components/layout/Portal'
+
 export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) {
   const { user } = useAuthStore()
   const { isConnected, currentTrack, fetchCurrentTrack } = useSpotifyStore()
@@ -254,7 +256,8 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
   }, [user, exerciseLogs, notes, day, elapsedMin, logWorkout, totalSetsCompleted, onComplete, toast])
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <Portal>
+      <div className="modal-backdrop" onClick={onClose}>
       <div
         className="modal-content"
         style={{ maxHeight: '90vh' }}
@@ -347,5 +350,6 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
         </div>
       </div>
     </div>
+    </Portal>
   )
 }

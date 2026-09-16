@@ -160,7 +160,7 @@ export function HomeDashboard() {
   const { todayTotals, loadLogs } = useFoodLogStore()
 
   useEffect(() => {
-    if (user && user.uid !== 'demo') {
+    if (user) {
       loadProfile(user.uid)
       loadLogs(user.uid)
     }

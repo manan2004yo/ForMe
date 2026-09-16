@@ -69,7 +69,7 @@ export const useCnsStore = create<CnsState>()(
         }))
 
         // Sync to Firestore
-        if (uid !== 'demo') {
+        if (uid) {
           try {
             const cleanLog = Object.fromEntries(Object.entries(completeLog).filter(([_, v]) => v !== undefined))
             await setDoc(doc(db, 'users', uid, 'cns', date), cleanLog)

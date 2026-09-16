@@ -73,7 +73,7 @@ function AuthenticatedApp() {
   useAchievementEngine()
 
   useEffect(() => {
-    if (user && user.uid !== 'demo') {
+    if (user) {
       loadProfile(user.uid)
     }
   }, [user, loadProfile])

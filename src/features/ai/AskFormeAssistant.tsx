@@ -121,7 +121,7 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
       setIsTyping(true)
 
       setTimeout(() => {
-        if (user && user.uid !== 'demo') {
+        if (user) {
           useFoodLogStore.getState().addFoodEntry(user.uid, mealSlot, [mockItem])
         }
         setMessages(prev => [...prev, {

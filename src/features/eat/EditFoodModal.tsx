@@ -8,6 +8,8 @@ interface EditFoodModalProps {
   onSave: (newQty: number) => void
 }
 
+import { Portal } from '@/components/layout/Portal'
+
 export function EditFoodModal({ entry, onClose, onSave }: EditFoodModalProps) {
   const food = entry.foods[0]
   const [qty, setQty] = useState(String(food?.quantity || 1))
@@ -22,6 +24,7 @@ export function EditFoodModal({ entry, onClose, onSave }: EditFoodModalProps) {
   }
 
   return (
+    <Portal>
     <div className="modal-backdrop" onClick={onClose}>
       <div 
         className="modal-content max-w-sm w-full mx-4" 
@@ -60,5 +63,6 @@ export function EditFoodModal({ entry, onClose, onSave }: EditFoodModalProps) {
         </div>
       </div>
     </div>
+    </Portal>
   )
 }
