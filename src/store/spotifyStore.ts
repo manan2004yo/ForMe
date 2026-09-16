@@ -112,7 +112,7 @@ export const useSpotifyStore = create<SpotifyState>()(
               code,
               redirect_uri: REDIRECT_URI,
               code_verifier: codeVerifier,
-            }),
+            }).toString(),
           }
 
           const body = await fetch('https://accounts.spotify.com/api/token', payload)
