@@ -35,10 +35,14 @@ function SpotifyCallback() {
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const code = params.get('code')
+    const error = params.get('error')
     if (code) {
       useSpotifyStore.getState().handleCallback(code).then(() => {
         navigate('/train')
       })
+    } else if (error) {
+      useToastStore.getState().error(`Spotify auth error: ${error}`)
+      navigate('/train')
     } else {
       navigate('/train')
     }
