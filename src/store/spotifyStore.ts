@@ -109,17 +109,17 @@ export const useSpotifyStore = create<SpotifyState>()(
         try {
           const payload = {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
               client_id: SPOTIFY_CLIENT_ID,
               grant_type: 'authorization_code',
               code,
               redirect_uri: REDIRECT_URI,
               code_verifier: codeVerifier,
-            }).toString(),
+            }),
           }
 
-          const body = await fetch('https://accounts.spotify.com/api/token', payload)
+          const body = await fetch('/api/spotify-token', payload)
           const response = await body.json()
 
           if (!body.ok) throw new Error(response.error_description || 'Failed to fetch token')
