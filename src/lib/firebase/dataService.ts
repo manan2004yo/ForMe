@@ -164,6 +164,12 @@ function deleteLocalFoodLog(uid: string, entryId: string) {
 
 export async function saveWeightEntry(uid: string, entry: WeightEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'weightHistory', entry.id)
+  
+  const local = getLocalWeightHistory(uid)
+  const updated = local.filter(e => e.id !== entry.id)
+  updated.push(entry)
+  localStorage.setItem(`forme_weight_${uid}`, JSON.stringify(updated))
+
   if (!navigator.onLine) throw new Error('offline')
   try {
     await setDoc(ref, sanitizeForFirestore(entry))
@@ -171,10 +177,6 @@ export async function saveWeightEntry(uid: string, entry: WeightEntry): Promise<
     console.warn('Firestore write error (saveWeightEntry):', error)
     throw error
   }
-  const local = getLocalWeightHistory(uid)
-  const updated = local.filter(e => e.id !== entry.id)
-  updated.push(entry)
-  localStorage.setItem(`forme_weight_${uid}`, JSON.stringify(updated))
 }
 
 export async function getWeightHistory(uid: string): Promise<WeightEntry[]> {
@@ -204,6 +206,12 @@ function getLocalWeightHistory(uid: string): WeightEntry[] {
 
 export async function saveWaistEntry(uid: string, entry: WaistEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'waistHistory', entry.id)
+  
+  const local = getLocalWaistHistory(uid)
+  const updated = local.filter(e => e.id !== entry.id)
+  updated.push(entry)
+  localStorage.setItem(`forme_waist_${uid}`, JSON.stringify(updated))
+
   if (!navigator.onLine) throw new Error('offline')
   try {
     await setDoc(ref, sanitizeForFirestore(entry))
@@ -211,10 +219,6 @@ export async function saveWaistEntry(uid: string, entry: WaistEntry): Promise<vo
     console.warn('Firestore write error (saveWaistEntry):', error)
     throw error
   }
-  const local = getLocalWaistHistory(uid)
-  const updated = local.filter(e => e.id !== entry.id)
-  updated.push(entry)
-  localStorage.setItem(`forme_waist_${uid}`, JSON.stringify(updated))
 }
 
 export async function getWaistHistory(uid: string): Promise<WaistEntry[]> {
@@ -283,19 +287,21 @@ function getLocalWorkoutLogs(uid: string): WorkoutLogEntry[] {
 
 // ─── Saved Meals & Recipes ──────────────────────────────────────
 
-export async function saveMeal(uid: string, meal: SavedMeal): Promise<void> {
+export async function saveSavedMeal(uid: string, meal: SavedMeal): Promise<void> {
   const ref = doc(db, 'users', uid, 'savedMeals', meal.id)
+
+  const local = getLocalSavedMeals(uid)
+  const updated = local.filter(e => e.id !== meal.id)
+  updated.push(meal)
+  localStorage.setItem(`forme_savedmeals_${uid}`, JSON.stringify(updated))
+
   if (!navigator.onLine) throw new Error('offline')
   try {
     await setDoc(ref, sanitizeForFirestore(meal))
   } catch (error) {
-    console.warn('Firestore write error (saveMeal):', error)
+    console.warn('Firestore write error (saveSavedMeal):', error)
     throw error
   }
-  const local = getLocalSavedMeals(uid)
-  const updated = local.filter(m => m.id !== meal.id)
-  updated.push(meal)
-  localStorage.setItem(`forme_savedmeals_${uid}`, JSON.stringify(updated))
 }
 
 export async function getSavedMeals(uid: string): Promise<SavedMeal[]> {
