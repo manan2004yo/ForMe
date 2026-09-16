@@ -187,8 +187,8 @@ export const useSpotifyStore = create<SpotifyState>()(
         const validToken = get().accessToken
 
         try {
-          // 1. Get Currently Playing
-          const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing?additional_types=track,episode', {
+          // 1. Get Currently Playing via proxy to bypass aggressive adblockers
+          const res = await fetch('/api/spotify-playing', {
             headers: { 'Authorization': `Bearer ${validToken}` }
           })
 
