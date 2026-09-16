@@ -337,7 +337,7 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
           {/* Finish */}
           <button
             onClick={handleSave}
-            disabled={isSaving || totalSetsCompleted === 0}
+            disabled={isSaving}
             className="btn btn-accent btn-lg w-full"
             id="finish-workout"
           >
