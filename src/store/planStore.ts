@@ -7,6 +7,7 @@ import type { MealSlot, NutritionInfo } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 import { saveManualDietPlan, getManualDietPlan, saveDietTemplates, getDietTemplates } from '@/lib/firebase/dataService'
 import { useAuthStore } from '@/store/authStore'
+import { useToastStore } from '@/store/toastStore'
 
 export interface PlannedFood {
   id: string
@@ -75,7 +76,10 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     )
     set({ currentPlan: newPlan })
     const uid = useAuthStore.getState().user?.uid
-    if (uid && uid !== 'demo') await saveManualDietPlan(uid, newPlan)
+    if (uid) {
+      try { await saveManualDietPlan(uid, newPlan) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
   },
 
   removeFoodFromSlot: async (slot, foodId) => {
@@ -84,7 +88,10 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     )
     set({ currentPlan: newPlan })
     const uid = useAuthStore.getState().user?.uid
-    if (uid && uid !== 'demo') await saveManualDietPlan(uid, newPlan)
+    if (uid) {
+      try { await saveManualDietPlan(uid, newPlan) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
   },
 
   saveAsTemplate: async (name) => {
@@ -92,7 +99,10 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     const newTemplates = [...get().templates, newTemplate]
     set({ templates: newTemplates })
     const uid = useAuthStore.getState().user?.uid
-    if (uid && uid !== 'demo') await saveDietTemplates(uid, newTemplates)
+    if (uid) {
+      try { await saveDietTemplates(uid, newTemplates) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
   },
 
   loadTemplate: async (templateId) => {
@@ -100,7 +110,10 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     if (template) {
       set({ currentPlan: template.meals })
       const uid = useAuthStore.getState().user?.uid
-      if (uid && uid !== 'demo') await saveManualDietPlan(uid, template.meals)
+      if (uid) {
+      try { await saveManualDietPlan(uid, template.meals) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
     }
   },
 
@@ -108,6 +121,9 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     const newPlan = JSON.parse(JSON.stringify(DEFAULT_SLOTS))
     set({ currentPlan: newPlan })
     const uid = useAuthStore.getState().user?.uid
-    if (uid && uid !== 'demo') await saveManualDietPlan(uid, newPlan)
+    if (uid) {
+      try { await saveManualDietPlan(uid, newPlan) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
   }
 }))

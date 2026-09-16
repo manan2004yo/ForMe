@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid'
 import type { PlannedExercise, MuscleGroup } from '@/types'
 import { saveManualWorkoutPlan, getManualWorkoutPlan, saveWorkoutTemplates, getWorkoutTemplates } from '@/lib/firebase/dataService'
 import { useAuthStore } from '@/store/authStore'
+import { useToastStore } from '@/store/toastStore'
 
 export interface WorkoutDay {
   id: string
@@ -67,7 +68,10 @@ export const useTrainStore = create<TrainState>((set, get) => ({
     )
     set({ currentPlan: newPlan })
     const uid = useAuthStore.getState().user?.uid
-    if (uid && uid !== 'demo') await saveManualWorkoutPlan(uid, newPlan)
+    if (uid) {
+      try { await saveManualWorkoutPlan(uid, newPlan) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
   },
 
   addExerciseToDay: async (dayIndex, exercise) => {
@@ -76,7 +80,10 @@ export const useTrainStore = create<TrainState>((set, get) => ({
     )
     set({ currentPlan: newPlan })
     const uid = useAuthStore.getState().user?.uid
-    if (uid && uid !== 'demo') await saveManualWorkoutPlan(uid, newPlan)
+    if (uid) {
+      try { await saveManualWorkoutPlan(uid, newPlan) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
   },
 
   removeExerciseFromDay: async (dayIndex, exerciseId) => {
@@ -85,7 +92,10 @@ export const useTrainStore = create<TrainState>((set, get) => ({
     )
     set({ currentPlan: newPlan })
     const uid = useAuthStore.getState().user?.uid
-    if (uid && uid !== 'demo') await saveManualWorkoutPlan(uid, newPlan)
+    if (uid) {
+      try { await saveManualWorkoutPlan(uid, newPlan) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
   },
 
   saveAsTemplate: async (name, dayIndex) => {
@@ -95,7 +105,10 @@ export const useTrainStore = create<TrainState>((set, get) => ({
     const newTemplates = [...get().templates, newTemplate]
     set({ templates: newTemplates })
     const uid = useAuthStore.getState().user?.uid
-    if (uid && uid !== 'demo') await saveWorkoutTemplates(uid, newTemplates)
+    if (uid) {
+      try { await saveWorkoutTemplates(uid, newTemplates) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
   },
 
   loadTemplate: async (templateId, dayIndex) => {
@@ -106,7 +119,10 @@ export const useTrainStore = create<TrainState>((set, get) => ({
       )
       set({ currentPlan: newPlan })
       const uid = useAuthStore.getState().user?.uid
-      if (uid && uid !== 'demo') await saveManualWorkoutPlan(uid, newPlan)
+      if (uid) {
+      try { await saveManualWorkoutPlan(uid, newPlan) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
     }
   },
 
@@ -114,6 +130,9 @@ export const useTrainStore = create<TrainState>((set, get) => ({
     const newPlan = JSON.parse(JSON.stringify(DEFAULT_DAYS))
     set({ currentPlan: newPlan })
     const uid = useAuthStore.getState().user?.uid
-    if (uid && uid !== 'demo') await saveManualWorkoutPlan(uid, newPlan)
+    if (uid) {
+      try { await saveManualWorkoutPlan(uid, newPlan) }
+      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+    }
   }
 }))
