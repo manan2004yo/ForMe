@@ -340,12 +340,12 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
           {/* Finish */}
           <button
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || totalSetsCompleted === 0}
             className="btn btn-accent btn-lg w-full"
             id="finish-workout"
           >
             <Dumbbell size={18} />
-            {isSaving ? 'Saving...' : 'Finish Workout'}
+            {isSaving ? 'Saving...' : totalSetsCompleted === 0 ? 'Complete at least 1 set' : 'Finish Workout'}
           </button>
         </div>
       </div>

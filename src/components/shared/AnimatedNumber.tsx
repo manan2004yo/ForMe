@@ -34,10 +34,7 @@ export function AnimatedNumber({ value, duration = 600, className }: AnimatedNum
     requestAnimationFrame(animate);
   }, [value, duration]);
 
-  // Format to 1 decimal place if it's a float, otherwise whole number
-  const formatted = displayValue % 1 !== 0 
-    ? displayValue.toFixed(1) 
-    : Math.round(displayValue).toString();
+  const formatted = Math.round(displayValue).toString();
 
   return <span className={className}>{formatted}</span>;
 }
