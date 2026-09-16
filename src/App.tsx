@@ -30,16 +30,17 @@ import { AchievementsPage } from '@/features/profile/AchievementsPage'
 
 function SpotifyCallback() {
   const location = useLocation()
+  const navigate = useNavigate()
   
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const code = params.get('code')
     if (code) {
       useSpotifyStore.getState().handleCallback(code).then(() => {
-        window.location.href = '/train' // Redirect to train dashboard after success
+        navigate('/train')
       })
     } else {
-      window.location.href = '/train' // Fallback
+      navigate('/train')
     }
   }, [location])
 

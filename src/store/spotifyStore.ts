@@ -127,6 +127,7 @@ export const useSpotifyStore = create<SpotifyState>()(
           
         } catch (err: any) {
           set({ isConnecting: false, error: err.message, isConnected: false })
+          useToastStore.getState().error(`Spotify Error: ${err.message}`)
         }
       },
 
