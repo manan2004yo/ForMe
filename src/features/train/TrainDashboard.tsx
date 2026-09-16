@@ -8,6 +8,7 @@ import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download, Coffee, CheckCirc
 import { useSpotifyStore } from '@/store/spotifyStore'
 import { useEffect } from 'react'
 import { useTrainStore } from '@/store/trainStore'
+import { useAuthStore } from '@/store/authStore'
 import { useProgressStore } from '@/store/progressStore'
 import { TrainExerciseSearch } from './TrainExerciseSearch'
 import { MuscleHeatmap } from './MuscleHeatmap'
@@ -282,8 +283,15 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse, onStartWorkout }
 }
 
 export function TrainDashboard() {
-  const { currentPlan, templates, loadTemplate, clearPlan } = useTrainStore()
+  const { currentPlan, templates, loadTemplate, clearPlan, loadAll, isLoading } = useTrainStore()
   const { getCurrentStatus } = useCnsStore()
+  const { user } = useAuthStore()
+  
+  useEffect(() => {
+    if (user) {
+      loadAll(user.uid)
+    }
+  }, [user, loadAll])
   const [browsingDay, setBrowsingDay] = useState<number | null>(null)
   const [activeWorkoutDay, setActiveWorkoutDay] = useState<WorkoutDay | null>(null)
   const cnsStatus = getCurrentStatus()

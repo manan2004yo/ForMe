@@ -3,9 +3,10 @@
 // ============================================================
 
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import { v4 as uuidv4 } from 'uuid'
 import type { PlannedExercise, MuscleGroup } from '@/types'
+import { saveManualWorkoutPlan, getManualWorkoutPlan, saveWorkoutTemplates, getWorkoutTemplates } from '@/lib/firebase/dataService'
+import { useAuthStore } from '@/store/authStore'
 
 export interface WorkoutDay {
   id: string
@@ -24,6 +25,8 @@ export interface WorkoutTemplate {
 interface TrainState {
   currentPlan: WorkoutDay[]
   templates: WorkoutTemplate[]
+  isLoading: boolean
+  loadAll: (uid: string) => Promise<void>
   toggleRestDay: (dayIndex: number) => void
   addExerciseToDay: (dayIndex: number, exercise: Omit<PlannedExercise, 'id'>) => void
   removeExerciseFromDay: (dayIndex: number, exerciseId: string) => void
@@ -39,54 +42,78 @@ const DEFAULT_DAYS: WorkoutDay[] = Array.from({ length: 7 }, (_, i) => ({
   exercises: [],
 }))
 
-export const useTrainStore = create<TrainState>()(
-  persist(
-    (set, get) => ({
-      currentPlan: JSON.parse(JSON.stringify(DEFAULT_DAYS)),
-      templates: [],
-      toggleRestDay: (dayIndex) => {
-        set(state => ({
-          currentPlan: state.currentPlan.map(d => 
-            d.dayIndex === dayIndex ? { ...d, isRestDay: !d.isRestDay } : d
-          )
-        }))
-      },
-      addExerciseToDay: (dayIndex, exercise) => {
-        set(state => ({
-          currentPlan: state.currentPlan.map(d => 
-            d.dayIndex === dayIndex ? { ...d, exercises: [...d.exercises, { ...exercise, id: uuidv4() }] } : d
-          )
-        }))
-      },
-      removeExerciseFromDay: (dayIndex, exerciseId) => {
-        set(state => ({
-          currentPlan: state.currentPlan.map(d => 
-            d.dayIndex === dayIndex ? { ...d, exercises: d.exercises.filter(e => e.id !== exerciseId) } : d
-          )
-        }))
-      },
-      saveAsTemplate: (name, dayIndex) => {
-        const day = get().currentPlan.find(d => d.dayIndex === dayIndex)
-        if (day && day.exercises.length > 0) {
-          set(state => ({
-            templates: [...state.templates, { id: uuidv4(), name, exercises: JSON.parse(JSON.stringify(day.exercises)) }]
-          }))
-        }
-      },
-      loadTemplate: (templateId, dayIndex) => {
-        const template = get().templates.find(t => t.id === templateId)
-        if (template) {
-          set(state => ({
-            currentPlan: state.currentPlan.map(d => 
-              d.dayIndex === dayIndex ? { ...d, exercises: JSON.parse(JSON.stringify(template.exercises)), isRestDay: false } : d
-            )
-          }))
-        }
-      },
-      clearPlan: () => {
-        set({ currentPlan: JSON.parse(JSON.stringify(DEFAULT_DAYS)) })
-      }
-    }),
-    { name: 'forme-train-store' }
-  )
-)
+export const useTrainStore = create<TrainState>((set, get) => ({
+  currentPlan: JSON.parse(JSON.stringify(DEFAULT_DAYS)),
+  templates: [],
+  isLoading: false,
+
+  loadAll: async (uid: string) => {
+    set({ isLoading: true })
+    try {
+      const [plan, temps] = await Promise.all([
+        getManualWorkoutPlan(uid),
+        getWorkoutTemplates(uid)
+      ])
+      if (plan) set({ currentPlan: plan })
+      if (temps) set({ templates: temps })
+    } finally {
+      set({ isLoading: false })
+    }
+  },
+
+  toggleRestDay: async (dayIndex) => {
+    const newPlan = get().currentPlan.map(d => 
+      d.dayIndex === dayIndex ? { ...d, isRestDay: !d.isRestDay } : d
+    )
+    set({ currentPlan: newPlan })
+    const uid = useAuthStore.getState().user?.uid
+    if (uid && uid !== 'demo') await saveManualWorkoutPlan(uid, newPlan)
+  },
+
+  addExerciseToDay: async (dayIndex, exercise) => {
+    const newPlan = get().currentPlan.map(d => 
+      d.dayIndex === dayIndex ? { ...d, exercises: [...d.exercises, { ...exercise, id: uuidv4() }] } : d
+    )
+    set({ currentPlan: newPlan })
+    const uid = useAuthStore.getState().user?.uid
+    if (uid && uid !== 'demo') await saveManualWorkoutPlan(uid, newPlan)
+  },
+
+  removeExerciseFromDay: async (dayIndex, exerciseId) => {
+    const newPlan = get().currentPlan.map(d => 
+      d.dayIndex === dayIndex ? { ...d, exercises: d.exercises.filter(e => e.id !== exerciseId) } : d
+    )
+    set({ currentPlan: newPlan })
+    const uid = useAuthStore.getState().user?.uid
+    if (uid && uid !== 'demo') await saveManualWorkoutPlan(uid, newPlan)
+  },
+
+  saveAsTemplate: async (name, dayIndex) => {
+    const day = get().currentPlan.find(d => d.dayIndex === dayIndex)
+    if (!day) return
+    const newTemplate: WorkoutTemplate = { id: uuidv4(), name, exercises: day.exercises }
+    const newTemplates = [...get().templates, newTemplate]
+    set({ templates: newTemplates })
+    const uid = useAuthStore.getState().user?.uid
+    if (uid && uid !== 'demo') await saveWorkoutTemplates(uid, newTemplates)
+  },
+
+  loadTemplate: async (templateId, dayIndex) => {
+    const template = get().templates.find(t => t.id === templateId)
+    if (template) {
+      const newPlan = get().currentPlan.map(d => 
+        d.dayIndex === dayIndex ? { ...d, exercises: template.exercises, isRestDay: false } : d
+      )
+      set({ currentPlan: newPlan })
+      const uid = useAuthStore.getState().user?.uid
+      if (uid && uid !== 'demo') await saveManualWorkoutPlan(uid, newPlan)
+    }
+  },
+
+  clearPlan: async () => {
+    const newPlan = JSON.parse(JSON.stringify(DEFAULT_DAYS))
+    set({ currentPlan: newPlan })
+    const uid = useAuthStore.getState().user?.uid
+    if (uid && uid !== 'demo') await saveManualWorkoutPlan(uid, newPlan)
+  }
+}))

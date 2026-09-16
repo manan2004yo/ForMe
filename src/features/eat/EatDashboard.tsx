@@ -185,7 +185,7 @@ export function EatDashboard() {
   const [showRecipeSplitter, setShowRecipeSplitter] = useState(false)
   const { user } = useAuthStore()
   const { profile, metrics } = useUserStore()
-  const { entries, removeEntry, addFoodEntry, updateEntry, loadLogs, selectedDate } = useFoodLogStore()
+  const { entries, removeEntry, addFoodEntry, updateEntry, loadLogs, selectedDate, isLoading } = useFoodLogStore()
 
   useEffect(() => {
     if (user) {
@@ -236,6 +236,15 @@ export function EatDashboard() {
           </h1>
         </header>
 
+        {isLoading ? (
+          <div className="flex flex-col gap-4 animate-pulse mt-8">
+            <div className="h-48 bg-white/5 rounded-3xl w-full"></div>
+            <div className="h-20 bg-white/5 rounded-2xl w-full"></div>
+            <div className="h-20 bg-white/5 rounded-2xl w-full"></div>
+            <div className="h-20 bg-white/5 rounded-2xl w-full"></div>
+          </div>
+        ) : (
+          <>
         {/* Daily Summary */}
         <div className="glass-panel-intense p-6 mb-8 relative overflow-hidden">
           {isFried && (
@@ -368,8 +377,10 @@ export function EatDashboard() {
             }}
           />
         )}
+      </>
+        )}
       </div>
-    </PageTransition>
+      </PageTransition>
       {showRecipeSplitter && <FamilyRecipeSplitter onClose={() => setShowRecipeSplitter(false)} />}
     </>
   )

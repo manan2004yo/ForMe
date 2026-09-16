@@ -10,6 +10,8 @@ import {
   limit, serverTimestamp, Timestamp
 } from 'firebase/firestore'
 import { db } from './config'
+import type { PlannedMealSlot, DietTemplate } from '@/store/planStore'
+import type { WorkoutDay as ManualWorkoutDay, WorkoutTemplate } from '@/store/trainStore'
 import type {
   UserProfile, FoodLogEntry, WorkoutLogEntry, WorkoutPlan,
   DailyDietPlan, WeightEntry, WaistEntry, SavedMeal,
@@ -439,4 +441,132 @@ export async function deleteUserData(uid: string): Promise<void> {
     console.warn('Failed to delete user doc:', error)
     throw error
   }
+}
+
+// ─── Manual Diet Plan (PlanStore) ─────────────────────────────────────────────
+
+export async function saveManualDietPlan(uid: string, plan: PlannedMealSlot[]): Promise<void> {
+  const ref = doc(db, 'users', uid, 'manualDietPlan', 'current')
+  localStorage.setItem(`forme_manual_diet_${uid}`, JSON.stringify(plan))
+  if (!navigator.onLine) return
+  try {
+    await setDoc(ref, { plan: sanitizeForFirestore(plan) })
+  } catch (error) {
+    console.warn('Firestore write error:', error)
+  }
+}
+
+export async function getManualDietPlan(uid: string): Promise<PlannedMealSlot[] | null> {
+  try {
+    const ref = doc(db, 'users', uid, 'manualDietPlan', 'current')
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      const data = snap.data().plan as PlannedMealSlot[]
+      localStorage.setItem(`forme_manual_diet_${uid}`, JSON.stringify(data))
+      return data
+    }
+    return getLocalManualDietPlan(uid)
+  } catch {
+    return getLocalManualDietPlan(uid)
+  }
+}
+
+function getLocalManualDietPlan(uid: string): PlannedMealSlot[] | null {
+  const raw = localStorage.getItem(`forme_manual_diet_${uid}`)
+  return raw ? JSON.parse(raw) : null
+}
+
+export async function saveDietTemplates(uid: string, templates: DietTemplate[]): Promise<void> {
+  const ref = doc(db, 'users', uid, 'dietTemplates', 'all')
+  localStorage.setItem(`forme_diet_templates_${uid}`, JSON.stringify(templates))
+  if (!navigator.onLine) return
+  try {
+    await setDoc(ref, { templates: sanitizeForFirestore(templates) })
+  } catch (error) {
+    console.warn('Firestore write error:', error)
+  }
+}
+
+export async function getDietTemplates(uid: string): Promise<DietTemplate[]> {
+  try {
+    const ref = doc(db, 'users', uid, 'dietTemplates', 'all')
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      const data = snap.data().templates as DietTemplate[]
+      localStorage.setItem(`forme_diet_templates_${uid}`, JSON.stringify(data))
+      return data
+    }
+    return getLocalDietTemplates(uid)
+  } catch {
+    return getLocalDietTemplates(uid)
+  }
+}
+
+function getLocalDietTemplates(uid: string): DietTemplate[] {
+  const raw = localStorage.getItem(`forme_diet_templates_${uid}`)
+  return raw ? JSON.parse(raw) : []
+}
+
+// ─── Manual Workout Plan (TrainStore) ─────────────────────────────────────────
+
+export async function saveManualWorkoutPlan(uid: string, plan: ManualWorkoutDay[]): Promise<void> {
+  const ref = doc(db, 'users', uid, 'manualWorkoutPlan', 'current')
+  localStorage.setItem(`forme_manual_workout_${uid}`, JSON.stringify(plan))
+  if (!navigator.onLine) return
+  try {
+    await setDoc(ref, { plan: sanitizeForFirestore(plan) })
+  } catch (error) {
+    console.warn('Firestore write error:', error)
+  }
+}
+
+export async function getManualWorkoutPlan(uid: string): Promise<ManualWorkoutDay[] | null> {
+  try {
+    const ref = doc(db, 'users', uid, 'manualWorkoutPlan', 'current')
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      const data = snap.data().plan as ManualWorkoutDay[]
+      localStorage.setItem(`forme_manual_workout_${uid}`, JSON.stringify(data))
+      return data
+    }
+    return getLocalManualWorkoutPlan(uid)
+  } catch {
+    return getLocalManualWorkoutPlan(uid)
+  }
+}
+
+function getLocalManualWorkoutPlan(uid: string): ManualWorkoutDay[] | null {
+  const raw = localStorage.getItem(`forme_manual_workout_${uid}`)
+  return raw ? JSON.parse(raw) : null
+}
+
+export async function saveWorkoutTemplates(uid: string, templates: WorkoutTemplate[]): Promise<void> {
+  const ref = doc(db, 'users', uid, 'workoutTemplates', 'all')
+  localStorage.setItem(`forme_workout_templates_${uid}`, JSON.stringify(templates))
+  if (!navigator.onLine) return
+  try {
+    await setDoc(ref, { templates: sanitizeForFirestore(templates) })
+  } catch (error) {
+    console.warn('Firestore write error:', error)
+  }
+}
+
+export async function getWorkoutTemplates(uid: string): Promise<WorkoutTemplate[]> {
+  try {
+    const ref = doc(db, 'users', uid, 'workoutTemplates', 'all')
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      const data = snap.data().templates as WorkoutTemplate[]
+      localStorage.setItem(`forme_workout_templates_${uid}`, JSON.stringify(data))
+      return data
+    }
+    return getLocalWorkoutTemplates(uid)
+  } catch {
+    return getLocalWorkoutTemplates(uid)
+  }
+}
+
+function getLocalWorkoutTemplates(uid: string): WorkoutTemplate[] {
+  const raw = localStorage.getItem(`forme_workout_templates_${uid}`)
+  return raw ? JSON.parse(raw) : []
 }

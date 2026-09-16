@@ -5,6 +5,8 @@
 import { useState } from 'react'
 import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download } from 'lucide-react'
 import { usePlanStore } from '@/store/planStore'
+import { useAuthStore } from '@/store/authStore'
+import { useEffect } from 'react'
 import type { MealSlot, NutritionInfo } from '@/types'
 import { PlanFoodSearch } from './PlanFoodSearch'
 import { SmartGroceryEngine } from './SmartGroceryEngine'
@@ -137,8 +139,15 @@ function MealSection({ slot, label, foods, onBrowse }: {
 
 export function PlanDashboard() {
   const [showGroceryEngine, setShowGroceryEngine] = useState(false)
-  const { currentPlan, templates, saveAsTemplate, loadTemplate, clearPlan } = usePlanStore()
+  const { currentPlan, templates, saveAsTemplate, loadTemplate, clearPlan, loadAll, isLoading } = usePlanStore()
   const { metrics } = useUserStore()
+  const { user } = useAuthStore()
+  
+  useEffect(() => {
+    if (user) {
+      loadAll(user.uid)
+    }
+  }, [user, loadAll])
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
 
   const totals = currentPlan.reduce((acc, slot) => {
@@ -160,7 +169,15 @@ export function PlanDashboard() {
     <>
       <PageTransition>
       <div className="page relative">
-        <header className="page-header mb-8 flex items-end justify-between">
+        {isLoading ? (
+          <div className="flex flex-col gap-4 animate-pulse mt-8">
+            <div className="h-64 bg-white/5 rounded-3xl w-full"></div>
+            <div className="h-32 bg-white/5 rounded-2xl w-full"></div>
+            <div className="h-32 bg-white/5 rounded-2xl w-full"></div>
+          </div>
+        ) : (
+          <>
+          <header className="page-header mb-8 flex items-end justify-between">
           <div>
             <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
               Diet Plan
@@ -272,8 +289,10 @@ export function PlanDashboard() {
             <PlanFoodSearch slot={browsingSlot} onClose={() => setBrowsingSlot(null)} />
           </div>
         )}
-      </div>
-    </PageTransition>
+              </>
+          )}
+        </div>
+      </PageTransition>
       {showGroceryEngine && <SmartGroceryEngine onClose={() => setShowGroceryEngine(false)} />}
     </>
   )

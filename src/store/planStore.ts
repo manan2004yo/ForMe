@@ -3,9 +3,10 @@
 // ============================================================
 
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { MealSlot, NutritionInfo } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
+import { saveManualDietPlan, getManualDietPlan, saveDietTemplates, getDietTemplates } from '@/lib/firebase/dataService'
+import { useAuthStore } from '@/store/authStore'
 
 export interface PlannedFood {
   id: string
@@ -31,6 +32,8 @@ export interface DietTemplate {
 interface PlanState {
   currentPlan: PlannedMealSlot[]
   templates: DietTemplate[]
+  isLoading: boolean
+  loadAll: (uid: string) => Promise<void>
   addFoodToSlot: (slot: MealSlot, food: Omit<PlannedFood, 'id'>) => void
   removeFoodFromSlot: (slot: MealSlot, foodId: string) => void
   saveAsTemplate: (name: string) => void
@@ -47,40 +50,64 @@ const DEFAULT_SLOTS: PlannedMealSlot[] = [
   { slot: 'post_workout', label: 'Post-Workout', foods: [] },
 ]
 
-export const usePlanStore = create<PlanState>()(
-  persist(
-    (set, get) => ({
-      currentPlan: JSON.parse(JSON.stringify(DEFAULT_SLOTS)),
-      templates: [],
-      addFoodToSlot: (slot, food) => {
-        set(state => ({
-          currentPlan: state.currentPlan.map(m => 
-            m.slot === slot ? { ...m, foods: [...m.foods, { ...food, id: uuidv4() }] } : m
-          )
-        }))
-      },
-      removeFoodFromSlot: (slot, foodId) => {
-        set(state => ({
-          currentPlan: state.currentPlan.map(m => 
-            m.slot === slot ? { ...m, foods: m.foods.filter(f => f.id !== foodId) } : m
-          )
-        }))
-      },
-      saveAsTemplate: (name) => {
-        set(state => ({
-          templates: [...state.templates, { id: uuidv4(), name, meals: JSON.parse(JSON.stringify(state.currentPlan)) }]
-        }))
-      },
-      loadTemplate: (templateId) => {
-        const template = get().templates.find(t => t.id === templateId)
-        if (template) {
-          set({ currentPlan: JSON.parse(JSON.stringify(template.meals)) })
-        }
-      },
-      clearPlan: () => {
-        set({ currentPlan: JSON.parse(JSON.stringify(DEFAULT_SLOTS)) })
-      }
-    }),
-    { name: 'forme-plan-store' }
-  )
-)
+export const usePlanStore = create<PlanState>((set, get) => ({
+  currentPlan: JSON.parse(JSON.stringify(DEFAULT_SLOTS)),
+  templates: [],
+  isLoading: false,
+
+  loadAll: async (uid: string) => {
+    set({ isLoading: true })
+    try {
+      const [plan, temps] = await Promise.all([
+        getManualDietPlan(uid),
+        getDietTemplates(uid)
+      ])
+      if (plan) set({ currentPlan: plan })
+      if (temps) set({ templates: temps })
+    } finally {
+      set({ isLoading: false })
+    }
+  },
+
+  addFoodToSlot: async (slot, food) => {
+    const newPlan = get().currentPlan.map(m => 
+      m.slot === slot ? { ...m, foods: [...m.foods, { ...food, id: uuidv4() }] } : m
+    )
+    set({ currentPlan: newPlan })
+    const uid = useAuthStore.getState().user?.uid
+    if (uid && uid !== 'demo') await saveManualDietPlan(uid, newPlan)
+  },
+
+  removeFoodFromSlot: async (slot, foodId) => {
+    const newPlan = get().currentPlan.map(m => 
+      m.slot === slot ? { ...m, foods: m.foods.filter(f => f.id !== foodId) } : m
+    )
+    set({ currentPlan: newPlan })
+    const uid = useAuthStore.getState().user?.uid
+    if (uid && uid !== 'demo') await saveManualDietPlan(uid, newPlan)
+  },
+
+  saveAsTemplate: async (name) => {
+    const newTemplate: DietTemplate = { id: uuidv4(), name, meals: get().currentPlan }
+    const newTemplates = [...get().templates, newTemplate]
+    set({ templates: newTemplates })
+    const uid = useAuthStore.getState().user?.uid
+    if (uid && uid !== 'demo') await saveDietTemplates(uid, newTemplates)
+  },
+
+  loadTemplate: async (templateId) => {
+    const template = get().templates.find(t => t.id === templateId)
+    if (template) {
+      set({ currentPlan: template.meals })
+      const uid = useAuthStore.getState().user?.uid
+      if (uid && uid !== 'demo') await saveManualDietPlan(uid, template.meals)
+    }
+  },
+
+  clearPlan: async () => {
+    const newPlan = JSON.parse(JSON.stringify(DEFAULT_SLOTS))
+    set({ currentPlan: newPlan })
+    const uid = useAuthStore.getState().user?.uid
+    if (uid && uid !== 'demo') await saveManualDietPlan(uid, newPlan)
+  }
+}))

@@ -20,7 +20,7 @@ export function ProgressDashboard() {
   const { user } = useAuthStore()
   const { profile, metrics, loadProfile } = useUserStore()
   const { loadLogs, entriesForDate } = useFoodLogStore()
-  const { loadAll, weightHistory, waistHistory, addWeightEntry, addWaistEntry, workoutLogs } = useProgressStore()
+  const { loadAll, weightHistory, waistHistory, addWeightEntry, addWaistEntry, workoutLogs, isLoading } = useProgressStore()
   const toast = useToastStore()
 
   const [logWeight, setLogWeight] = useState('')
@@ -30,7 +30,7 @@ export function ProgressDashboard() {
   const [showMorph, setShowMorph] = useState(false)
 
   useEffect(() => {
-    if (user && user.uid !== 'demo') {
+    if (user) {
       loadProfile(user.uid)
       loadLogs(user.uid)
       loadAll(user.uid)
