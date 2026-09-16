@@ -14,6 +14,7 @@ import type { MealSlot, FoodLogEntry, NutritionInfo } from '@/types'
 import { FoodSearch } from './FoodSearch'
 import { SnapAndLogModal } from './SnapAndLogModal'
 import { FamilyRecipeSplitter } from './FamilyRecipeSplitter'
+import { EditFoodModal } from './EditFoodModal'
 import { ProgressBar, AnimatedNumber } from '@/components/shared'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
@@ -184,6 +185,7 @@ export function EatDashboard() {
   const { getCurrentStatus } = useCnsStore()
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
   const [snappingSlot, setSnappingSlot] = useState<MealSlot | null>(null)
+  const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null)
 
   const cnsStatus = getCurrentStatus()
   const isFried = cnsStatus === 'Fried'
@@ -296,39 +298,41 @@ export function EatDashboard() {
               onDelete={(id) => removeEntry(user?.uid || "demo", id)}
               onBrowse={setBrowsingSlot}
               onSnap={setSnappingSlot}
-              onEdit={(entry) => {
-                // For MVP, simple prompt to edit quantity of the first food in the entry
-                const food = entry.foods[0]
-                if (!food) return
-                const newQtyStr = window.prompt(`Edit quantity for ${food.foodName} (${food.unit}):`, String(food.quantity))
-                if (newQtyStr) {
-                  const newQty = parseFloat(newQtyStr)
-                  if (!isNaN(newQty) && newQty > 0) {
-                    const ratio = newQty / food.quantity
-                    const updatedFood = {
-                      ...food,
-                      quantity: newQty,
-                      gramsConsumed: food.gramsConsumed * ratio,
-                      nutrition: {
-                        calories: food.nutrition.calories * ratio,
-                        protein: food.nutrition.protein * ratio,
-                        carbs: food.nutrition.carbs * ratio,
-                        fat: food.nutrition.fat * ratio,
-                        fiber: food.nutrition.fiber * ratio,
-                      }
-                    }
-                    updateEntry(user?.uid || "demo", entry.id, {
-                      ...entry,
-                      foods: [updatedFood],
-                      totals: updatedFood.nutrition,
-                      updatedAt: new Date().toISOString()
-                    })
-                  }
-                }
-              }}
+              onEdit={(entry) => setEditingEntry(entry)}
             />
           ))}
         </div>
+
+        {editingEntry && (
+          <EditFoodModal
+            entry={editingEntry}
+            onClose={() => setEditingEntry(null)}
+            onSave={(newQty) => {
+              const food = editingEntry.foods[0]
+              if (!food) return
+              const ratio = newQty / food.quantity
+              const updatedFood = {
+                ...food,
+                quantity: newQty,
+                gramsConsumed: food.gramsConsumed * ratio,
+                nutrition: {
+                  calories: food.nutrition.calories * ratio,
+                  protein: food.nutrition.protein * ratio,
+                  carbs: food.nutrition.carbs * ratio,
+                  fat: food.nutrition.fat * ratio,
+                  fiber: food.nutrition.fiber * ratio,
+                }
+              }
+              updateEntry(user?.uid || "demo", editingEntry.id, {
+                ...editingEntry,
+                foods: [updatedFood],
+                totals: updatedFood.nutrition,
+                updatedAt: new Date().toISOString()
+              })
+              setEditingEntry(null)
+            }}
+          />
+        )}
 
         {browsingSlot && (
           <div className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto">

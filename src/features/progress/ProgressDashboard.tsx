@@ -7,6 +7,7 @@ import { useUserStore } from '@/store/userStore'
 import { useAuthStore } from '@/store/authStore'
 import { useProgressStore } from '@/store/progressStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
+import { useToastStore } from '@/store/toastStore'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import { TrendingDown, TrendingUp, Plus, Activity, BookOpen, Dumbbell, ShieldAlert, ArrowRight, Save } from 'lucide-react'
 import { format, subDays } from 'date-fns'
@@ -20,6 +21,7 @@ export function ProgressDashboard() {
   const { profile, metrics, loadProfile } = useUserStore()
   const { loadLogs, entriesForDate } = useFoodLogStore()
   const { loadAll, weightHistory, waistHistory, addWeightEntry, addWaistEntry, workoutLogs } = useProgressStore()
+  const toast = useToastStore()
 
   const [logWeight, setLogWeight] = useState('')
   const [logWaist, setLogWaist] = useState('')
@@ -50,11 +52,15 @@ export function ProgressDashboard() {
     const w = parseFloat(logWeight)
     if (isNaN(w) || w <= 20 || w >= 300) return
     setIsLogging(true)
-    if (user && user.uid !== 'demo') {
-      await addWeightEntry(user.uid, w)
+    try {
+      if (user && user.uid !== 'demo') {
+        await addWeightEntry(user.uid, w)
+      }
+      setLogWeight('')
+      toast.success('Weight logged successfully!')
+    } finally {
+      setIsLogging(false)
     }
-    setLogWeight('')
-    setIsLogging(false)
   }
 
   const handleLogMeasurement = async () => {

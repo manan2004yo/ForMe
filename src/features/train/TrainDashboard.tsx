@@ -142,7 +142,7 @@ function ExerciseRow({ exercise, onRemove }: { exercise: PlannedExercise, onRemo
             {exercise.sets} sets • {exercise.repRange[0]}-{exercise.repRange[1]} reps
           </span>
           <span className="text-xs text-accent/70 bg-accent/10 px-1.5 py-0.5 rounded">
-            {10 - (exercise.rir || 8)} RIR
+            {exercise.rir ?? 2} RIR
           </span>
         </div>
       </div>

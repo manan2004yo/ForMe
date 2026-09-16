@@ -56,8 +56,8 @@ export const useAuthStore = create<AuthState>()(
       ? false
       : import.meta.env.VITE_FIREBASE_API_KEY !== 'YOUR_API_KEY'
 
-    if (!isConfigured) {
-      // No real Firebase — mark as initialized but no user
+    if (get().isDemo || !isConfigured) {
+      // No real Firebase or in Demo Mode — mark as initialized but no user
       set({ isInitialized: true })
       return () => {}
     }

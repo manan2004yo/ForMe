@@ -140,7 +140,7 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
           ) : (
             <div className="flex flex-col">
               {filtered.map(food => {
-                const defaultGrams = food.gramsPerUnit[food.defaultUnit] || 100
+                const defaultGrams = (food.gramsPerUnit[food.defaultUnit] || 100) * food.defaultPortion
                 const nutrition = getNutritionForGrams(food, defaultGrams)
                 const isJustAdded = addedId === food.id
 
