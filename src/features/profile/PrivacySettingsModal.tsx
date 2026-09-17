@@ -2,6 +2,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 import { useUserStore } from '@/store/userStore'
+import { useFoodLogStore } from '@/store/foodLogStore'
 import { clsx } from 'clsx'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Download, EyeOff, Shield, Trash2 } from 'lucide-react'
@@ -14,7 +15,38 @@ export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
   const toast = useToastStore()
 
   const handleExport = () => {
-    toast.success("Exporting your data to CSV. This will be sent to your email.")
+    const { entries } = useFoodLogStore.getState()
+    if (!entries || entries.length === 0) {
+      toast.error("No food data to export.")
+      return
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,Date,Meal,Food Item,Calories,Protein,Carbs,Fats\n"
+    
+    entries.forEach(entry => {
+      entry.foods.forEach(item => {
+        const row = [
+          entry.date,
+          entry.meal,
+          `"${item.foodName.replace(/"/g, '""')}"`,
+          Math.round(item.nutrition.calories),
+          item.nutrition.protein,
+          item.nutrition.carbs,
+          item.nutrition.fat
+        ].join(",")
+        csvContent += row + "\n"
+      })
+    })
+
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `forme_nutrition_export_${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    toast.success("CSV export downloaded successfully.")
   }
 
   return (

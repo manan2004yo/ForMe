@@ -193,7 +193,7 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
   useEffect(() => {
     if (isConnected) {
       fetchCurrentTrack()
-      const interval = setInterval(fetchCurrentTrack, 10000)
+      const interval = setInterval(fetchCurrentTrack, 30000)
       return () => clearInterval(interval)
     }
   }, [isConnected, fetchCurrentTrack])
