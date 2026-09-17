@@ -1,7 +1,12 @@
+// ============================================================
+// FORME — Forgot Password Page
+// ============================================================
+
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
-import { ArrowLeft, CheckCircle } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { useToastStore } from '@/store/toastStore'
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate()
@@ -13,9 +18,13 @@ export function ForgotPasswordPage() {
     e.preventDefault()
     clearError()
     setSuccess(false)
+    
+    if (!email) return
+    
     try {
       await sendPasswordReset(email)
       setSuccess(true)
+      useToastStore.getState().success('Password reset email sent!')
     } catch {
       // error handled in store
     }
@@ -27,64 +36,79 @@ export function ForgotPasswordPage() {
       <div className="pt-12 pb-8">
         <button onClick={() => navigate('/login')} className="btn btn-ghost btn-sm -ml-2 mb-8">
           <ArrowLeft size={16} />
-          Back to login
+          Back to Login
         </button>
 
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shadow-accent">
             <span className="text-white font-heading font-bold text-lg">F</span>
           </div>
-          <span className="font-heading font-bold text-2xl text-text-primary">FORME</span>
+          <span className="text-2xl font-heading font-black tracking-tighter text-white">
+            FORME<span className="text-accent">.</span>
+          </span>
         </div>
 
-        <h1 className="font-heading font-bold text-3xl text-text-primary mb-2">Reset Password</h1>
-        <p className="text-text-secondary">Enter your email and we'll send you a link to reset your password.</p>
+        <h1 className="text-3xl font-heading font-bold text-white tracking-tight mb-2">
+          Reset Password
+        </h1>
+        <p className="text-white/60">
+          Enter your email address and we'll send you a link to reset your password.
+        </p>
       </div>
 
-      {/* Form */}
-      {success ? (
-        <div className="bg-[#121212] border border-accent/20 p-6 rounded-2xl flex flex-col items-center text-center animate-fade-in">
-          <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center text-accent mb-4">
-            <CheckCircle size={24} />
+      {/* Main Content */}
+      <div className="flex-1">
+        {error && (
+          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-6">
+            {error}
           </div>
-          <h2 className="text-lg font-bold text-text-primary mb-2">Check your email</h2>
-          <p className="text-text-secondary text-sm mb-6">
-            We sent a password reset link to <span className="font-medium text-text-primary">{email}</span>.
-          </p>
-          <button onClick={() => navigate('/login')} className="btn btn-primary w-full">
-            Return to Login
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {error && (
-            <div className="bg-error-light border border-error/20 text-error text-sm px-4 py-3 rounded-xl animate-fade-in">
-              {error}
+        )}
+
+        {success ? (
+          <div className="p-6 rounded-2xl bg-[#121212] border border-accent/20 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-accent/20 text-accent flex items-center justify-center mx-auto mb-2">
+              <span className="text-2xl">📧</span>
             </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">Email address</label>
-            <input
-              type="email"
-              className="input-field"
-              placeholder="you@example.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              autoComplete="email"
-              required
-            />
+            <h3 className="text-white font-medium text-lg">Check your inbox</h3>
+            <p className="text-white/60 text-sm">
+              We've sent a password reset link to <span className="text-white font-medium">{email}</span>.
+            </p>
+            <button 
+              onClick={() => navigate('/login')}
+              className="btn btn-primary w-full mt-4"
+            >
+              Return to Login
+            </button>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5 ml-1">Email</label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full bg-[#121212] border border-white/5 rounded-2xl px-4 py-3.5 text-white placeholder-white/30 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary w-full mt-4"
-            disabled={isLoading || !email.trim()}
-          >
-            {isLoading ? 'Sending...' : 'Send Reset Link'}
-          </button>
-        </form>
-      )}
+            <button 
+              type="submit" 
+              className="btn btn-primary w-full h-12 text-base font-semibold"
+              disabled={isLoading || !email}
+            >
+              {isLoading ? 'Sending Link...' : 'Send Reset Link'}
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   )
 }
