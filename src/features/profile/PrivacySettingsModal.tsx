@@ -115,7 +115,7 @@ export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
           setShowDeleteConfirm(false)
           try {
             await deleteAccount()
-          } catch (e) {}
+          } catch {}
         }}
       />
     </motion.div>

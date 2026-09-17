@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // ============================================================
 // FORME — Toast Component
 // Global notification toasts

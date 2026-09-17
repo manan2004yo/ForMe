@@ -71,7 +71,7 @@ export const useCnsStore = create<CnsState>()(
         // Sync to Firestore
         if (uid) {
           try {
-            const cleanLog = Object.fromEntries(Object.entries(completeLog).filter(([_, v]) => v !== undefined))
+            const cleanLog = Object.fromEntries(Object.entries(completeLog).filter(([_k, v]) => v !== undefined))
             await setDoc(doc(db, 'users', uid, 'cns', date), cleanLog)
           } catch (error) {
             console.error('Failed to sync CNS log to Firestore:', error)

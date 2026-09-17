@@ -1,8 +1,0 @@
-{
-  "rules": {
-    "no-unused-vars": "off",
-    "react/purity": "off",
-    "react-hooks/exhaustive-deps": "off",
-    "no-empty": "off"
-  }
-}

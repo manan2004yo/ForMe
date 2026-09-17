@@ -79,7 +79,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     set({ workoutPlan: plan })
     try {
       await saveWorkoutPlan(uid, plan)
-    } catch (err) {
+    } catch {
       useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.')
     }
   },
@@ -88,7 +88,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     set({ dietPlan: plan })
     try {
       await saveDietPlan(uid, plan)
-    } catch (err) {
+    } catch {
       useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.')
     }
   },
@@ -102,7 +102,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     set(s => ({ workoutLogs: [full, ...s.workoutLogs] }))
     try {
       await saveWorkoutLog(uid, full)
-    } catch (err) {
+    } catch {
       useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.')
     }
   },
@@ -118,7 +118,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     set(s => ({ weightHistory: [entry, ...s.weightHistory] }))
     try {
       await saveWeightEntry(uid, entry)
-    } catch (err) {
+    } catch {
       useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.')
     }
   },
@@ -135,7 +135,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     set(s => ({ waistHistory: [entry, ...s.waistHistory] }))
     try {
       await saveWaistEntry(uid, entry)
-    } catch (err) {
+    } catch {
       useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.')
     }
   },

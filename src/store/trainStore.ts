@@ -70,7 +70,7 @@ export const useTrainStore = create<TrainState>((set, get) => ({
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
       try { await saveManualWorkoutPlan(uid, newPlan) }
-      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
     }
   },
 
@@ -82,7 +82,7 @@ export const useTrainStore = create<TrainState>((set, get) => ({
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
       try { await saveManualWorkoutPlan(uid, newPlan) }
-      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
     }
   },
 
@@ -94,7 +94,7 @@ export const useTrainStore = create<TrainState>((set, get) => ({
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
       try { await saveManualWorkoutPlan(uid, newPlan) }
-      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
     }
   },
 
@@ -107,7 +107,7 @@ export const useTrainStore = create<TrainState>((set, get) => ({
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
       try { await saveWorkoutTemplates(uid, newTemplates) }
-      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
     }
   },
 
@@ -121,7 +121,7 @@ export const useTrainStore = create<TrainState>((set, get) => ({
       const uid = useAuthStore.getState().user?.uid
       if (uid) {
       try { await saveManualWorkoutPlan(uid, newPlan) }
-      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
     }
     }
   },
@@ -132,7 +132,7 @@ export const useTrainStore = create<TrainState>((set, get) => ({
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
       try { await saveManualWorkoutPlan(uid, newPlan) }
-      catch (e) { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
     }
   }
 }))

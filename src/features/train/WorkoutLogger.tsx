@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // ============================================================
 // FORME — Workout Logger Modal
 // Log a completed workout session with sets & reps

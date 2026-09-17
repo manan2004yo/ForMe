@@ -448,8 +448,8 @@ export async function deleteUserData(uid: string): Promise<void> {
   }
 
   // Delete specific known documents
-  try { await deleteDoc(doc(db, 'users', uid, 'workoutPlan', 'current')) } catch (e) {}
-  try { await deleteDoc(doc(db, 'users', uid, 'dietPlan', 'current')) } catch (e) {}
+  try { await deleteDoc(doc(db, 'users', uid, 'workoutPlan', 'current')) } catch {}
+  try { await deleteDoc(doc(db, 'users', uid, 'dietPlan', 'current')) } catch {}
 
   // Delete the root user document
   try {

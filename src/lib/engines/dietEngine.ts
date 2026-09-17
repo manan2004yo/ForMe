@@ -269,7 +269,7 @@ function templateToMeal(template: MealTemplate, katoriGrams: number): PlannedMea
 
 // ─── Main Diet Plan Generator ─────────────────────────────────
 
-export function generateDietPlan(profile: UserProfile, metrics: BodyMetrics): DailyDietPlan {
+export function generateDietPlan(profile: UserProfile, _metrics: BodyMetrics): DailyDietPlan {
   const katoriGrams = profile.preferredKatoriGrams || 150
   
   const breakfastTemplates = getBreakfastOptions(profile)
