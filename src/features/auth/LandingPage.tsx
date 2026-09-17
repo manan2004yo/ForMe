@@ -2,10 +2,10 @@
 // FORME - Premium Landing Page
 // ============================================================
 
-import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
-import { ArrowRight, Activity, Flame, Shield } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 export function LandingPage() {
   const navigate = useNavigate()

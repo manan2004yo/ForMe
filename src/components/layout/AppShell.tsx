@@ -2,13 +2,12 @@
 // FORME - Premium App Shell (Sidebar & Bottom Nav)
 // ============================================================
 
-import { useLocation, useNavigate } from 'react-router-dom'
-import { Home, Flame, BookOpen, Activity, TrendingUp, User, Sparkles } from 'lucide-react'
-import { clsx } from 'clsx'
 import { AskFormeAssistant } from '@/features/ai/AskFormeAssistant'
-import { useState } from 'react'
 import { useUserStore } from '@/store/userStore'
-import { ShieldAlert } from 'lucide-react'
+import { clsx } from 'clsx'
+import { Activity, BookOpen, Flame, Home, ShieldAlert, Sparkles, TrendingUp, User } from 'lucide-react'
+import { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const NAV_ITEMS = [
   { path: '/', label: 'Home', icon: Home },

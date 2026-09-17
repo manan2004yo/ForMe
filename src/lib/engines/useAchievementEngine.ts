@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react'
-import { useFoodLogStore } from '@/store/foodLogStore'
-import { useProgressStore } from '@/store/progressStore'
-import { useUserStore } from '@/store/userStore'
 import { useAchievementStore } from '@/store/achievementStore'
 import { useAuthStore } from '@/store/authStore'
+import { useFoodLogStore } from '@/store/foodLogStore'
+import { useProgressStore } from '@/store/progressStore'
 import { useToastStore } from '@/store/toastStore'
+import { useUserStore } from '@/store/userStore'
+import { useEffect, useRef } from 'react'
 import { ACHIEVEMENTS, type EvaluationContext } from './achievementEngine'
 
 export function useAchievementEngine() {

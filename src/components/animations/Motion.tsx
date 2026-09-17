@@ -1,4 +1,4 @@
-import { motion, type Variants, type Transition } from 'framer-motion'
+import { motion, type Transition, type Variants } from 'framer-motion'
 import type { ReactNode } from 'react'
 
 // Apple-style cubic-bezier for buttery smooth reveals

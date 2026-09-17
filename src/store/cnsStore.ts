@@ -1,7 +1,7 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import { db } from '@/lib/firebase/config'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export type CnsStatus = 'Optimal' | 'Moderate Fatigue' | 'Fried'
 

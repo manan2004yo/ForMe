@@ -3,8 +3,8 @@
 // BMR, TDEE, Body Fat, Macro Targets
 // ============================================================
 
-import type { UserProfile, BodyMetrics, FitnessGoal, ActivityLevel } from '@/types'
 import type { ActiveContext } from '@/store/userStore'
+import type { ActivityLevel, BodyMetrics, FitnessGoal, UserProfile } from '@/types'
 
 // ─── Activity Multipliers ─────────────────────────────────────
 

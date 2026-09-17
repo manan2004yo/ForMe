@@ -2,19 +2,17 @@
 // FORME - Premium Diet Plan Dashboard
 // ============================================================
 
-import { useState } from 'react'
-import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download } from 'lucide-react'
-import { usePlanStore } from '@/store/planStore'
+import { PageTransition } from '@/components/layout/PageTransition'
+import { AnimatedNumber, ProgressBar } from '@/components/shared'
 import { useAuthStore } from '@/store/authStore'
-import { useEffect } from 'react'
+import { usePlanStore } from '@/store/planStore'
+import { useUserStore } from '@/store/userStore'
 import type { MealSlot, NutritionInfo } from '@/types'
+import { clsx } from 'clsx'
+import { ChevronDown, ChevronUp, Download, Plus, Save, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { PlanFoodSearch } from './PlanFoodSearch'
 import { SmartGroceryEngine } from './SmartGroceryEngine'
-import { ProgressBar, AnimatedNumber } from '@/components/shared'
-import { PageTransition } from '@/components/layout/PageTransition'
-import { clsx } from 'clsx'
-import { useUserStore } from '@/store/userStore'
-import { useToastStore } from '@/store/toastStore'
 
 function NutritionChip({ label, value, unit, colorClass }: { label: string; value: number; unit: string; colorClass: string }) {
   return (

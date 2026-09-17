@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { X } from 'lucide-react'
 import type { FoodLogEntry } from '@/types'
+import { X } from 'lucide-react'
+import { useState } from 'react'
 
 interface EditFoodModalProps {
   entry: FoodLogEntry

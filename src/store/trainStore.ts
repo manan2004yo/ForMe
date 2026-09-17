@@ -2,12 +2,12 @@
 // FORME - Train Store (Manual Workout Planning)
 // ============================================================
 
-import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
-import type { PlannedExercise, MuscleGroup } from '@/types'
-import { saveManualWorkoutPlan, getManualWorkoutPlan, saveWorkoutTemplates, getWorkoutTemplates } from '@/lib/firebase/dataService'
+import { getManualWorkoutPlan, getWorkoutTemplates, saveManualWorkoutPlan, saveWorkoutTemplates } from '@/lib/firebase/dataService'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
+import type { PlannedExercise } from '@/types'
+import { v4 as uuidv4 } from 'uuid'
+import { create } from 'zustand'
 
 export interface WorkoutDay {
   id: string

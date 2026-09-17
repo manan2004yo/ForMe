@@ -1,11 +1,11 @@
-import { useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Play, Pause, Camera, Upload, Loader2, ImagePlus } from 'lucide-react'
-import { useUserStore } from '@/store/userStore'
+import { saveUserProfile } from '@/lib/firebase/dataService'
+import { uploadProgressPhoto } from '@/lib/firebase/storageService'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
-import { uploadProgressPhoto } from '@/lib/firebase/storageService'
-import { saveUserProfile } from '@/lib/firebase/dataService'
+import { useUserStore } from '@/store/userStore'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Camera, ImagePlus, Loader2, Pause, Play, X } from 'lucide-react'
+import { useRef, useState } from 'react'
 
 export function CinematicProgressMorph({ onClose }: { onClose: () => void }) {
   const { user } = useAuthStore()

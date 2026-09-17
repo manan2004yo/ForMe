@@ -1,9 +1,8 @@
-import { useMemo } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { StatCard } from '@/components/shared'
 import { useProgressStore } from '@/store/progressStore'
 import { format, parseISO } from 'date-fns'
-import type { MuscleGroup } from '@/types'
+import { useMemo } from 'react'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 export function VolumeChart() {
   const { workoutLogs } = useProgressStore()

@@ -2,12 +2,12 @@
 // FORME — Food Log Store
 // ============================================================
 
-import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
-import type { FoodLogEntry, LoggedFoodItem, MealSlot, NutritionInfo } from '@/types'
-import { saveFoodLog, getFoodLogsByDate, getRecentFoodLogs, deleteFoodLog } from '@/lib/firebase/dataService'
+import { deleteFoodLog, getFoodLogsByDate, getRecentFoodLogs, saveFoodLog } from '@/lib/firebase/dataService'
 import { useToastStore } from '@/store/toastStore'
+import type { FoodLogEntry, LoggedFoodItem, MealSlot, NutritionInfo } from '@/types'
 import { format } from 'date-fns'
+import { v4 as uuidv4 } from 'uuid'
+import { create } from 'zustand'
 
 const today = () => format(new Date(), 'yyyy-MM-dd')
 

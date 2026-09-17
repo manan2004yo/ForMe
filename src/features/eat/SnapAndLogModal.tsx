@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Camera, X, Upload, Activity, Check, ChefHat } from 'lucide-react'
 import { useToastStore } from '@/store/toastStore'
 import type { MealSlot } from '@/types'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Activity, Camera, Check, ChefHat, X } from 'lucide-react'
+import { useRef, useState } from 'react'
 
 interface SnapAndLogModalProps {
   slot: MealSlot

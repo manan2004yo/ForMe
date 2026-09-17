@@ -3,11 +3,13 @@
 // Generates personalized Indian meal plans
 // ============================================================
 
-import type {
-  UserProfile, BodyMetrics, DailyDietPlan, PlannedMeal,
-  MealPlanItem, MealSlot
-} from '@/types'
 import { FOOD_MAP, getNutritionForGrams } from '@/lib/data/indianFoods'
+import type {
+  BodyMetrics, DailyDietPlan,
+  MealPlanItem, MealSlot,
+  PlannedMeal,
+  UserProfile
+} from '@/types'
 
 // ─── Meal Templates by Profile ───────────────────────────────
 

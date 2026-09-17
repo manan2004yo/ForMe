@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Moon, Battery, Activity, Check, ChevronRight } from 'lucide-react'
-import { useCnsStore } from '@/store/cnsStore'
 import { useAuthStore } from '@/store/authStore'
+import { useCnsStore } from '@/store/cnsStore'
 import clsx from 'clsx'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Activity, Battery, Check, ChevronRight, Moon } from 'lucide-react'
+import { useState } from 'react'
 
 export function DailyCheckInCard() {
   const { user } = useAuthStore()

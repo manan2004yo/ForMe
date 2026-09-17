@@ -1,5 +1,5 @@
-import { useUserStore, type ActiveContext } from '@/store/userStore'
-import { MapPin, UtensilsCrossed, Users, Stethoscope, Home } from 'lucide-react'
+import { useUserStore, type ActiveContext } from '@/store/userStore';
+import { Home, MapPin, Stethoscope, Users, UtensilsCrossed } from 'lucide-react';
 
 const CONTEXTS: { id: ActiveContext; label: string; icon: any; color: string; desc: string }[] = [
   { id: 'normal', label: 'Normal Routine', icon: Home, color: 'text-text-primary bg-bg-surface2', desc: 'Standard caloric and protein targets.' },

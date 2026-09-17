@@ -2,25 +2,25 @@
 // FORME - Premium Progress Dashboard
 // ============================================================
 
-import { useState, useEffect, useMemo } from 'react'
-import { useUserStore } from '@/store/userStore'
-import { useAuthStore } from '@/store/authStore'
-import { useProgressStore } from '@/store/progressStore'
-import { useFoodLogStore } from '@/store/foodLogStore'
-import { useToastStore } from '@/store/toastStore'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
-import { TrendingDown, TrendingUp, Plus, Activity, BookOpen, Dumbbell, ShieldAlert, ArrowRight, Save } from 'lucide-react'
-import { format, subDays } from 'date-fns'
-import { AnimatedNumber } from '@/components/shared'
 import { PageTransition } from '@/components/layout/PageTransition'
-import { CinematicProgressMorph } from './CinematicProgressMorph'
+import { AnimatedNumber } from '@/components/shared'
+import { useAuthStore } from '@/store/authStore'
+import { useFoodLogStore } from '@/store/foodLogStore'
+import { useProgressStore } from '@/store/progressStore'
+import { useToastStore } from '@/store/toastStore'
+import { useUserStore } from '@/store/userStore'
 import { clsx } from 'clsx'
+import { format, subDays } from 'date-fns'
+import { Activity, BookOpen, Dumbbell, Plus, Save, TrendingDown, TrendingUp } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { CinematicProgressMorph } from './CinematicProgressMorph'
 
 export function ProgressDashboard() {
   const { user } = useAuthStore()
   const { profile, metrics, loadProfile } = useUserStore()
   const { loadLogs, entriesForDate } = useFoodLogStore()
-  const { loadAll, weightHistory, waistHistory, addWeightEntry, addWaistEntry, workoutLogs, isLoading } = useProgressStore()
+  const { loadAll, weightHistory, waistHistory, addWeightEntry, addWaistEntry, workoutLogs } = useProgressStore()
   const toast = useToastStore()
 
   const [logWeight, setLogWeight] = useState('')
@@ -46,7 +46,6 @@ export function ProgressDashboard() {
   const isLosing = profile.fitnessGoal.includes('lose') || profile.fitnessGoal.includes('lean') || profile.fitnessGoal === 'body_recomposition'
   const progressText = isLosing ? 'lost' : 'gained'
   const totalChange = hasWeightData ? Math.abs(currentWeight - sortedWeightHistory[0].weightKg).toFixed(1) : "0.0"
-  const goalDiff = Math.abs((profile.weightKg - 5) - currentWeight).toFixed(1) // Assuming target is profile.weightKg - 5 for demo purposes
 
   const handleLogWeight = async () => {
     const w = parseFloat(logWeight)

@@ -3,15 +3,13 @@
 // Log a completed workout session with sets & reps
 // ============================================================
 
-import { useState, useCallback } from 'react'
-import { Check, Plus, Minus, ChevronDown, ChevronUp, X, Dumbbell, Music } from 'lucide-react'
-import { useSpotifyStore, type SpotifyTrack } from '@/store/spotifyStore'
-import { useEffect } from 'react'
-import { useProgressStore } from '@/store/progressStore'
 import { useAuthStore } from '@/store/authStore'
+import { useProgressStore } from '@/store/progressStore'
+import { useSpotifyStore, type SpotifyTrack } from '@/store/spotifyStore'
 import { useToastStore } from '@/store/toastStore'
-import type { WorkoutDay, PlannedExercise } from '@/types'
-import { v4 as uuidv4 } from 'uuid'
+import type { PlannedExercise, WorkoutDay } from '@/types'
+import { Check, ChevronDown, ChevronUp, Dumbbell, Minus, Music, Plus, X } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface SetLog {
   reps: number
@@ -200,8 +198,8 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
   }, [isConnected, fetchCurrentTrack])
   const { logWorkout } = useProgressStore()
   const toast = useToastStore()
-  const [startTime] = useState(Date.now())
-  const [currentTime, setCurrentTime] = useState(Date.now())
+  const [startTime] = useState(() => Date.now())
+  const [currentTime, setCurrentTime] = useState(() => Date.now())
   const [notes, setNotes] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 

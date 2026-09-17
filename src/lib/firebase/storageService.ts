@@ -1,6 +1,6 @@
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
-import { storage } from './config'
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage'
 import { v4 as uuidv4 } from 'uuid'
+import { storage } from './config'
 
 export async function uploadProgressPhoto(
   uid: string, 

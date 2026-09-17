@@ -1,12 +1,11 @@
-import { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { UtensilsCrossed, Plus, Search, ChevronRight, Calculator, Check, ArrowLeft } from 'lucide-react'
-import { clsx } from 'clsx'
-import { v4 as uuidv4 } from 'uuid'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useToastStore } from '@/store/toastStore'
-import type { LoggedFoodItem, NutritionInfo } from '@/types'
+import type { LoggedFoodItem } from '@/types'
+import { motion } from 'framer-motion'
+import { ArrowLeft, Calculator, Check, Plus, Search } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 
 import { INDIAN_FOODS } from '@/lib/data/indianFoods'
 

@@ -2,11 +2,11 @@
 // FORME - Plan Food Search Component
 // ============================================================
 
-import { useState, useMemo, useRef, useEffect } from 'react'
-import { Search, X, Plus } from 'lucide-react'
 import { INDIAN_FOODS, getNutritionForGrams } from '@/lib/data/indianFoods'
-import type { MealSlot } from '@/types'
 import { usePlanStore } from '@/store/planStore'
+import type { MealSlot } from '@/types'
+import { Plus, Search, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 const CATEGORIES = ['All', 'Breads', 'Rice', 'Dal & Legumes', 'Vegetables', 'Dairy', 'Proteins', 'Snacks', 'Fruits', 'Beverages']
 

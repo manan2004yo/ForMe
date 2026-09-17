@@ -2,11 +2,11 @@
 // FORME — User Profile Store
 // ============================================================
 
-import { create } from 'zustand'
-import type { UserProfile, BodyMetrics } from '@/types'
 import { calculateBodyMetrics } from '@/lib/calculations/bodyMetrics'
-import { saveUserProfile, getUserProfile } from '@/lib/firebase/dataService'
+import { getUserProfile, saveUserProfile } from '@/lib/firebase/dataService'
 import { useToastStore } from '@/store/toastStore'
+import type { BodyMetrics, UserProfile } from '@/types'
+import { create } from 'zustand'
 
 // Demo profile for exploration
 export const DEMO_PROFILE: UserProfile = {

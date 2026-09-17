@@ -2,19 +2,16 @@
 // FORME - Premium Profile Page
 // ============================================================
 
+import { PageTransition } from '@/components/layout/PageTransition'
+import { useAchievementStore } from '@/store/achievementStore'
+import { useAuthStore } from '@/store/authStore'
+import { useTrainStore } from '@/store/trainStore'
+import { useUserStore } from '@/store/userStore'
+import type { UserProfile } from '@/types'
+import { Activity, Crown, Edit3, Lock, LogOut, Save, Settings, Shield, Target, Trophy, User } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '@/store/authStore'
-import { useUserStore } from '@/store/userStore'
-import { useTrainStore } from '@/store/trainStore'
-import { useAchievementStore } from '@/store/achievementStore'
-import { LogOut, Target, Edit3, Shield, User, Save, Flame, Activity, BookOpen, Settings, Lock, Trophy } from 'lucide-react'
-import { useToastStore } from '@/store/toastStore'
-import { PageTransition } from '@/components/layout/PageTransition'
-import { clsx } from 'clsx'
-import type { UserProfile } from '@/types'
 import { FormeProPaywall } from '../pro/FormeProPaywall'
-import { Crown } from 'lucide-react'
 import { AppSettingsModal } from './AppSettingsModal'
 import { PrivacySettingsModal } from './PrivacySettingsModal'
 
@@ -32,8 +29,6 @@ export function ProfilePage() {
   const [showAppSettings, setShowAppSettings] = useState(false)
   const [showPrivacySettings, setShowPrivacySettings] = useState(false)
   const { isPro } = useAuthStore()
-  const { info } = useToastStore()
-
 
   if (!profile) return null
 

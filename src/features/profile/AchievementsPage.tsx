@@ -1,10 +1,10 @@
-import { useAchievementStore } from '@/store/achievementStore'
+import { PageTransition } from '@/components/layout/PageTransition'
 import { ACHIEVEMENTS } from '@/lib/engines/achievementEngine'
-import { ArrowLeft, Lock, Trophy } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useAchievementStore } from '@/store/achievementStore'
 import { clsx } from 'clsx'
 import { motion } from 'framer-motion'
-import { PageTransition } from '@/components/layout/PageTransition'
+import { ArrowLeft, Lock, Trophy } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 export function AchievementsPage() {
   const navigate = useNavigate()

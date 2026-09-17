@@ -2,11 +2,11 @@
 // FORME — Zustand Auth Store
 // ============================================================
 
+import { deleteUserAccount, observeAuthState, resetPassword, signInWithEmail, signInWithGoogle, signOutUser, signUpWithEmail } from '@/lib/firebase/authService'
+import { deleteUserData } from '@/lib/firebase/dataService'
+import type { User } from 'firebase/auth'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { User } from 'firebase/auth'
-import { observeAuthState, signUpWithEmail, signInWithEmail, signInWithGoogle, signOutUser, resetPassword, deleteUserAccount } from '@/lib/firebase/authService'
-import { deleteUserData } from '@/lib/firebase/dataService'
 
 interface AuthState {
   user: User | { uid: string; email: string; displayName: string } | null

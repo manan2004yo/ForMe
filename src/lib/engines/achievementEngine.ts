@@ -1,4 +1,4 @@
-import type { FoodLogEntry, WorkoutLogEntry, UserProfile, BodyMetrics } from '@/types'
+import type { BodyMetrics, FoodLogEntry, UserProfile, WorkoutLogEntry } from '@/types'
 
 export interface AchievementDef {
   id: string

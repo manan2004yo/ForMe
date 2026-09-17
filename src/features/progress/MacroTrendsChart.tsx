@@ -1,9 +1,8 @@
-import { useMemo } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts'
 import { StatCard } from '@/components/shared'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { format, subDays } from 'date-fns'
-import type { NutritionInfo } from '@/types'
+import { useMemo } from 'react'
+import { Bar, BarChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 export function MacroTrendsChart({ calTarget }: { calTarget: number }) {
   const { entries } = useFoodLogStore()

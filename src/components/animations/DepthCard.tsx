@@ -1,5 +1,5 @@
-import { ReactNode, MouseEvent } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { MouseEvent, ReactNode } from 'react'
 
 interface DepthCardProps {
   children: ReactNode

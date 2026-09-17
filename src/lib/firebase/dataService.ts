@@ -4,19 +4,30 @@
 // Falls back to localStorage for offline support
 // ============================================================
 
-import {
-  doc, getDoc, setDoc, updateDoc, collection,
-  query, where, orderBy, getDocs, addDoc, deleteDoc,
-  limit, serverTimestamp, Timestamp
-} from 'firebase/firestore'
-import { db } from './config'
-import type { PlannedMealSlot, DietTemplate } from '@/store/planStore'
+import type { DietTemplate, PlannedMealSlot } from '@/store/planStore'
 import type { WorkoutDay as ManualWorkoutDay, WorkoutTemplate } from '@/store/trainStore'
 import type {
-  UserProfile, FoodLogEntry, WorkoutLogEntry, WorkoutPlan,
-  DailyDietPlan, WeightEntry, WaistEntry, SavedMeal,
-  BodyCompositionEntry, WeeklyReport
+  DailyDietPlan,
+  FoodLogEntry,
+  SavedMeal,
+  UserProfile,
+  WaistEntry,
+  WeightEntry,
+  WorkoutLogEntry, WorkoutPlan
 } from '@/types'
+import {
+  collection,
+  deleteDoc,
+  doc, getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  where
+} from 'firebase/firestore'
+import { db } from './config'
 
 // Helper to remove undefined properties before sending to Firestore
 function sanitizeForFirestore(obj: any): any {

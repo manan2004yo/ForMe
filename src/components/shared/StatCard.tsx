@@ -1,5 +1,5 @@
-import React from 'react';
 import { clsx } from 'clsx';
+import React from 'react';
 import { InteractivePress } from '../animations/Motion';
 
 interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {

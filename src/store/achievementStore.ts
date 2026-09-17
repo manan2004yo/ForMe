@@ -1,5 +1,5 @@
+import { getAchievements, saveAchievements } from '@/lib/firebase/dataService'
 import { create } from 'zustand'
-import { saveAchievements, getAchievements } from '@/lib/firebase/dataService'
 
 export interface UnlockedAchievement {
   id: string

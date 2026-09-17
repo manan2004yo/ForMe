@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface AnimatedNumberProps {
   value: number;
@@ -32,7 +32,7 @@ export function AnimatedNumber({ value, duration = 600, className }: AnimatedNum
     };
 
     requestAnimationFrame(animate);
-  }, [value, duration]);
+  }, [value, duration, displayValue]);
 
   const formatted = Math.round(displayValue).toString();
 

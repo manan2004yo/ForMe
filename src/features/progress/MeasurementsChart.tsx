@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { StatCard } from '@/components/shared'
 import type { WaistEntry } from '@/types'
+import { useMemo } from 'react'
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 export function MeasurementsChart({ entries }: { entries: WaistEntry[] }) {
   const data = useMemo(() => {

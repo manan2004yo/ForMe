@@ -2,17 +2,16 @@
 // FORME - Contextual AI Coach
 // ============================================================
 
-import { useState, useRef, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
-import { Sparkles, X, Send, Loader2, Info } from 'lucide-react'
-import { useUserStore } from '@/store/userStore'
-import { useAuthStore } from '@/store/authStore'
-import { useTrainStore } from '@/store/trainStore'
-import { useFoodLogStore } from '@/store/foodLogStore'
-import type { LoggedFoodItem, MealSlot } from '@/types'
 import { askForme, type AIContext } from '@/lib/ai/modelRouter'
-import { v4 as uuidv4 } from 'uuid'
+import { useAuthStore } from '@/store/authStore'
+import { useFoodLogStore } from '@/store/foodLogStore'
+import { useTrainStore } from '@/store/trainStore'
+import { useUserStore } from '@/store/userStore'
 import { clsx } from 'clsx'
+import { Info, Loader2, Send, Sparkles, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
+import { v4 as uuidv4 } from 'uuid'
 
 interface Message {
   id: string
@@ -79,7 +78,7 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
         actions: greeting.actions
       }])
     }
-  }, [isOpen])
+  }, [isOpen, messages.length, getContextualGreeting])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })

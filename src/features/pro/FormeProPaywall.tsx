@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Crown, CheckCircle2, Zap, ArrowRight, ShieldCheck, X } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { db } from '@/lib/firebase/config'
+import { useAuthStore } from '@/store/authStore'
 import { doc, setDoc } from 'firebase/firestore'
+import { ArrowRight, CheckCircle2, Crown, ShieldCheck, X, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 // Singleton promise to ensure script is only injected once even in Strict Mode
 let razorpayPromise: Promise<boolean> | null = null;

@@ -3,13 +3,13 @@
 // Browse and search Indian foods by category
 // ============================================================
 
-import { useState, useMemo, useRef, useEffect } from 'react'
-import { Search, X, Plus, Filter } from 'lucide-react'
 import { INDIAN_FOODS, getNutritionForGrams } from '@/lib/data/indianFoods'
-import type { MealSlot, LoggedFoodItem } from '@/types'
-import { v4 as uuidv4 } from 'uuid'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
+import type { LoggedFoodItem, MealSlot } from '@/types'
+import { Plus, Search, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 
 const CATEGORIES = ['All', 'Breads', 'Rice', 'Dal & Legumes', 'Vegetables', 'Dairy', 'Proteins', 'Snacks', 'Fruits', 'Beverages']
 

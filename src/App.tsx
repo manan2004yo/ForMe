@@ -2,32 +2,32 @@
 // FORME — Main App with Routing & Auth Guard
 // ============================================================
 
-import { useEffect, useRef } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
-import { useAuthStore } from '@/store/authStore'
-import { useUserStore } from '@/store/userStore'
-import { useSpotifyStore } from '@/store/spotifyStore'
 import { useAchievementEngine } from '@/lib/engines/useAchievementEngine'
 import { useAchievementStore } from '@/store/achievementStore'
+import { useAuthStore } from '@/store/authStore'
+import { useSpotifyStore } from '@/store/spotifyStore'
+import { useUserStore } from '@/store/userStore'
+import { AnimatePresence } from 'framer-motion'
+import { useEffect, useRef } from 'react'
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 // Feature imports
-import { LandingPage } from '@/features/auth/LandingPage'
+import { AppShell } from '@/components/layout/AppShell'
 import { ToastContainer } from '@/components/ui/ToastContainer'
-import { useToastStore } from '@/store/toastStore'
+import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
+import { LandingPage } from '@/features/auth/LandingPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { SignupPage } from '@/features/auth/SignupPage'
-import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
-import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
-import { AppShell } from '@/components/layout/AppShell'
-import { HomeDashboard } from '@/features/home/HomeDashboard'
 import { EatDashboard } from '@/features/eat/EatDashboard'
+import { HomeDashboard } from '@/features/home/HomeDashboard'
+import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
 import { PlanDashboard } from '@/features/plan/PlanDashboard'
-import { TrainDashboard } from '@/features/train/TrainDashboard'
-import { ProgressDashboard } from '@/features/progress/ProgressDashboard'
-import { ProfilePage } from '@/features/profile/ProfilePage'
-import { IntegrationsPage } from '@/features/profile/IntegrationsPage'
 import { AchievementsPage } from '@/features/profile/AchievementsPage'
+import { IntegrationsPage } from '@/features/profile/IntegrationsPage'
+import { ProfilePage } from '@/features/profile/ProfilePage'
+import { ProgressDashboard } from '@/features/progress/ProgressDashboard'
+import { TrainDashboard } from '@/features/train/TrainDashboard'
+import { useToastStore } from '@/store/toastStore'
 
 
 function SpotifyCallback() {
@@ -57,7 +57,7 @@ function SpotifyCallback() {
     } else {
       navigate('/train')
     }
-  }, [location])
+  }, [location, navigate])
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center bg-bg">

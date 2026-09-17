@@ -2,11 +2,11 @@
 // FORME — Forgot Password Page
 // ============================================================
 
+import { useAuthStore } from '@/store/authStore'
+import { useToastStore } from '@/store/toastStore'
+import { ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '@/store/authStore'
-import { ArrowLeft } from 'lucide-react'
-import { useToastStore } from '@/store/toastStore'
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate()

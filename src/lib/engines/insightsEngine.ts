@@ -1,4 +1,4 @@
-import type { UserProfile, BodyMetrics, FoodLogEntry, WorkoutLogEntry, WeightEntry } from '@/types'
+import type { BodyMetrics, FoodLogEntry, UserProfile, WeightEntry, WorkoutLogEntry } from '@/types'
 
 export interface Insight {
   id: string

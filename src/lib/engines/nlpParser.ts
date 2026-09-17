@@ -4,7 +4,7 @@
 // ============================================================
 
 import { INDIAN_FOODS, getNutritionForGrams } from '@/lib/data/indianFoods'
-import type { FoodItem, PortionUnit, ParsedFoodEntry, LoggedFoodItem, NutritionConfidence } from '@/types'
+import type { FoodItem, LoggedFoodItem, NutritionConfidence, ParsedFoodEntry, PortionUnit } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 
 // ─── Unit Patterns ────────────────────────────────────────────

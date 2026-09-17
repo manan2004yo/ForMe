@@ -2,18 +2,18 @@
 // FORME - Premium Home Dashboard
 // ============================================================
 
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useUserStore } from '@/store/userStore'
+import { PageTransition } from '@/components/layout/PageTransition'
+import { AnimatedNumber, ProgressBar } from '@/components/shared'
+import { CnsStatusBadge } from '@/features/cns/CnsStatusBadge'
+import { DailyCheckInCard } from '@/features/cns/DailyCheckInCard'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
+import { useUserStore } from '@/store/userStore'
 import { useWaterStreakStore } from '@/store/waterStreakStore'
-import { DailyCheckInCard } from '@/features/cns/DailyCheckInCard'
-import { CnsStatusBadge } from '@/features/cns/CnsStatusBadge'
-import { Droplet, Plus, Flame, Activity, ArrowRight, TrendingUp, User, Search, RefreshCw, Moon } from 'lucide-react'
-import { ProgressBar, AnimatedNumber } from '@/components/shared'
-import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
+import { Activity, ArrowRight, Droplet, Flame, Plus, Search, TrendingUp, User } from 'lucide-react'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 function MacroBar({ label, consumed, target, colorClass }: { label: string; consumed: number; target: number; colorClass: string }) {
   return (

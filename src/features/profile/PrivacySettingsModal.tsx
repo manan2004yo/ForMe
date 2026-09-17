@@ -1,17 +1,15 @@
-import { motion } from 'framer-motion'
-import { ArrowLeft, Download, Trash2, Shield, EyeOff } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
-import { useUserStore } from '@/store/userStore'
-import { useNavigate } from 'react-router-dom'
-import { clsx } from 'clsx'
-import { useState } from 'react'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
+import { useUserStore } from '@/store/userStore'
+import { clsx } from 'clsx'
+import { motion } from 'framer-motion'
+import { ArrowLeft, Download, EyeOff, Shield, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 
 export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
   const { deleteAccount } = useAuthStore()
   const { isIncognito, toggleIncognito } = useUserStore()
-  const navigate = useNavigate()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const toast = useToastStore()
 
@@ -117,7 +115,7 @@ export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
           setShowDeleteConfirm(false)
           try {
             await deleteAccount()
-          } catch (err) {}
+          } catch (e) {}
         }}
       />
     </motion.div>

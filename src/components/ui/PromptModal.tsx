@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
 import { Portal } from '@/components/layout/Portal'
+import { useEffect, useRef, useState } from 'react'
 
 interface PromptModalProps {
   isOpen: boolean

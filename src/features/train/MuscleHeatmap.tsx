@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useProgressStore } from '@/store/progressStore'
 import { motion } from 'framer-motion'
 import { Activity } from 'lucide-react'
-import { useProgressStore } from '@/store/progressStore'
+import { useMemo, useState } from 'react'
 
 const COLORS = {
   low: 'rgba(255, 255, 255, 0.1)',       // Rested (cool)

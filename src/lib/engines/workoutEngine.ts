@@ -1,9 +1,10 @@
+/* eslint-disable no-unused-vars */
 // ============================================================
 // FORME — Workout Plan Engine
 // Generates personalized workout splits
 // ============================================================
 
-import type { UserProfile, WorkoutPlan, WorkoutDay, PlannedExercise, MuscleGroup, FitnessGoal } from '@/types'
+import type { MuscleGroup, PlannedExercise, UserProfile, WorkoutDay, WorkoutPlan } from '@/types';
 
 // ─── Exercise Database ────────────────────────────────────────
 
@@ -525,4 +526,4 @@ export function getAlternatives(exerciseId: string, limit: number = 3): { id: st
   return alternatives.slice(0, limit)
 }
 
-export { EXERCISES }
+export { EXERCISES };

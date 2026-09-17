@@ -2,11 +2,10 @@
 // FORME - Train Exercise Search
 // ============================================================
 
-import { useState, useMemo, useRef, useEffect } from 'react'
-import { Search, X, Plus } from 'lucide-react'
 import { EXERCISES } from '@/lib/engines/workoutEngine'
 import { useTrainStore } from '@/store/trainStore'
-import type { MuscleGroup } from '@/types'
+import { Plus, Search, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 const CATEGORIES = ['All', 'chest', 'back', 'shoulders', 'biceps', 'triceps', 'quads', 'hamstrings', 'glutes', 'core', 'full_body']
 
@@ -27,7 +26,7 @@ export function TrainExerciseSearch({ dayIndex, onClose }: TrainExerciseSearchPr
   }, [])
 
   const filteredExercises = useMemo(() => {
-    return Object.entries(EXERCISES).filter(([id, ex]) => {
+    return Object.entries(EXERCISES).filter(([, ex]) => {
       const matchesSearch = ex.name.toLowerCase().includes(query.toLowerCase())
       const matchesCategory = category === 'All' || ex.muscleGroup === category
       return matchesSearch && matchesCategory

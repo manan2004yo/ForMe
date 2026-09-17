@@ -1,5 +1,5 @@
-import { useRef, ReactNode } from 'react'
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
+import { ReactNode, useRef } from 'react'
 
 interface ScrollSceneProps {
   children: ReactNode

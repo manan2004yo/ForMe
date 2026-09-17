@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
 import { AnimatedCounter } from '@/components/ui'
+import { motion } from 'framer-motion'
 
 interface HeroVisualProps {
   score: number

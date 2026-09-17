@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
 import { useAuthStore } from '@/store/authStore'
+import { ReactNode } from 'react'
 import { FormeProPaywall } from './FormeProPaywall'
 
 interface ProGuardProps {

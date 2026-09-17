@@ -1,6 +1,6 @@
 import { useCnsStore } from '@/store/cnsStore'
-import { Activity, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import clsx from 'clsx'
+import { Activity, CheckCircle2 } from 'lucide-react'
 
 export function CnsStatusBadge({ className }: { className?: string }) {
   const { getCurrentStatus } = useCnsStore()

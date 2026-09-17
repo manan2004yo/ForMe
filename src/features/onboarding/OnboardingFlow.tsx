@@ -2,12 +2,12 @@
 // FORME — Multi-Step Onboarding Flow
 // ============================================================
 
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
+import type { ActivityLevel, ComplexityMode, CookingAbility, DietType, EatingEnvironment, FitnessGoal, Gender, TrainingExperience, TrainingLocation, UserProfile, WorkoutDuration } from '@/types'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
-import type { UserProfile, Gender, ActivityLevel, FitnessGoal, DietType, TrainingExperience, TrainingLocation, WorkoutDuration, EatingEnvironment, CookingAbility, ComplexityMode } from '@/types'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const STEPS = [
   'Your Body',

@@ -1,7 +1,7 @@
+import { Button } from '@/components/ui'
 import { useSpotifyStore } from '@/store/spotifyStore'
 import { ArrowLeft, Check, Music } from 'lucide-react'
 import { useNavigate } from 'react-router'
-import { Button } from '@/components/ui'
 
 export function IntegrationsPage() {
   const navigate = useNavigate()

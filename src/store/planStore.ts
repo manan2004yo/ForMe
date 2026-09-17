@@ -2,12 +2,12 @@
 // FORME - Diet Plan Store (Manual Planning)
 // ============================================================
 
-import { create } from 'zustand'
-import type { MealSlot, NutritionInfo } from '@/types'
-import { v4 as uuidv4 } from 'uuid'
-import { saveManualDietPlan, getManualDietPlan, saveDietTemplates, getDietTemplates } from '@/lib/firebase/dataService'
+import { getDietTemplates, getManualDietPlan, saveDietTemplates, saveManualDietPlan } from '@/lib/firebase/dataService'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
+import type { MealSlot, NutritionInfo } from '@/types'
+import { v4 as uuidv4 } from 'uuid'
+import { create } from 'zustand'
 
 export interface PlannedFood {
   id: string

@@ -1,9 +1,8 @@
-import { motion } from 'framer-motion'
-import { ArrowLeft, Bell, Moon, Sun, Smartphone, Activity, Loader2, Music } from 'lucide-react'
 import { useSpotifyStore } from '@/store/spotifyStore'
-import { useState } from 'react'
 import { clsx } from 'clsx'
-import { useIntegrationStore, type Platform } from '@/store/integrationStore'
+import { motion } from 'framer-motion'
+import { ArrowLeft, Bell, Loader2, Moon, Music, Sun } from 'lucide-react'
+import { useState } from 'react'
 
 export function AppSettingsModal({ onClose }: { onClose: () => void }) {
   const [notifications, setNotifications] = useState(true)

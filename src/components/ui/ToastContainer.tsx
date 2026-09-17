@@ -3,9 +3,8 @@
 // Global notification toasts
 // ============================================================
 
-import { useEffect } from 'react'
 import { useToastStore } from '@/store/toastStore'
-import { CheckCircle, XCircle, Info, AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Info, X, XCircle } from 'lucide-react'
 
 const ICONS = {
   success: CheckCircle,

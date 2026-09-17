@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Wallet, Sparkles, Plus, ArrowLeft, Check, ShoppingBag } from 'lucide-react'
+import { ArrowLeft, Plus, ShoppingBag, Sparkles, Wallet } from 'lucide-react'
+import { useState } from 'react'
 
 const BUDGET_FOODS = [
   { name: 'Soya Chunks', protein: 52, costPer100g: 15, category: 'Protein' },

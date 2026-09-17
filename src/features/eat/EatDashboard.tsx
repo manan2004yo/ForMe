@@ -2,24 +2,22 @@
 // FORME - Premium Eat Dashboard
 // ============================================================
 
-import { useState } from 'react'
-import { format } from 'date-fns'
-import { Plus, Search, Trash2, ChevronDown, ChevronUp, Sun, Sunset, Moon, Coffee } from 'lucide-react'
+import { PageTransition } from '@/components/layout/PageTransition'
+import { AnimatedNumber, ProgressBar } from '@/components/shared'
 import { useAuthStore } from '@/store/authStore'
-import { useFoodLogStore } from '@/store/foodLogStore'
-import { useEffect } from 'react'
-import { useUserStore } from '@/store/userStore'
 import { useCnsStore } from '@/store/cnsStore'
-import { useToastStore } from '@/store/toastStore'
-import type { MealSlot, FoodLogEntry, NutritionInfo } from '@/types'
+import { useFoodLogStore } from '@/store/foodLogStore'
+import { useUserStore } from '@/store/userStore'
+import type { FoodLogEntry, MealSlot, NutritionInfo } from '@/types'
+import { clsx } from 'clsx'
+import { format } from 'date-fns'
+import { ChevronDown, ChevronUp, Coffee, Moon, Plus, Search, Sun, Sunset } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
+import { EditFoodModal } from './EditFoodModal'
+import { FamilyRecipeSplitter } from './FamilyRecipeSplitter'
 import { FoodSearch } from './FoodSearch'
 import { SnapAndLogModal } from './SnapAndLogModal'
-import { FamilyRecipeSplitter } from './FamilyRecipeSplitter'
-import { EditFoodModal } from './EditFoodModal'
-import { ProgressBar, AnimatedNumber } from '@/components/shared'
-import { PageTransition } from '@/components/layout/PageTransition'
-import { clsx } from 'clsx'
-import { v4 as uuidv4 } from 'uuid'
 
 const MEAL_CONFIG: { slot: MealSlot; label: string; icon: any; time: string }[] = [
   { slot: 'breakfast', label: 'Breakfast', icon: Sun, time: 'Morning' },
@@ -184,7 +182,7 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap, onEdit }: {
 export function EatDashboard() {
   const [showRecipeSplitter, setShowRecipeSplitter] = useState(false)
   const { user } = useAuthStore()
-  const { profile, metrics } = useUserStore()
+  const { metrics } = useUserStore()
   const { entries, removeEntry, addFoodEntry, updateEntry, loadLogs, selectedDate, isLoading } = useFoodLogStore()
 
   useEffect(() => {

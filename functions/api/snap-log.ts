@@ -15,7 +15,7 @@ export async function onRequestPost(context: any) {
     let mimeType = 'image/jpeg';
     let base64Data = body.image;
     
-    const match = body.image.match(/^data:(image\/[a-zA-Z]*);base64,([^\"]*)$/);
+    const match = body.image.match(/^data:(image\/[a-zA-Z]*);base64,([^"]*)$/);
     if (match) {
       mimeType = match[1];
       base64Data = match[2];
@@ -61,7 +61,7 @@ export async function onRequestPost(context: any) {
       return new Response(JSON.stringify(parsedData), {
         headers: { 'Content-Type': 'application/json' }
       });
-    } catch (parseError) {
+    } catch {
       console.error('Failed to parse Gemini JSON response:', content);
       throw new Error('Invalid JSON format returned from Vision API');
     }

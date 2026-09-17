@@ -2,18 +2,28 @@
 // FORME — Progress & Workout Store
 // ============================================================
 
-import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
-import type {
-  WorkoutPlan, WorkoutLogEntry, WeightEntry, WaistEntry,
-  DailyDietPlan
-} from '@/types'
 import {
-  saveWorkoutLog, getWorkoutLogs, saveWeightEntry, getWeightHistory,
-  saveWaistEntry, getWaistHistory, saveWorkoutPlan, getWorkoutPlan,
-  saveDietPlan, getDietPlan
+  getDietPlan,
+  getWaistHistory,
+  getWeightHistory,
+  getWorkoutLogs,
+  getWorkoutPlan,
+  saveDietPlan,
+  saveWaistEntry,
+  saveWeightEntry,
+  saveWorkoutLog,
+  saveWorkoutPlan
 } from '@/lib/firebase/dataService'
 import { useToastStore } from '@/store/toastStore'
+import type {
+  DailyDietPlan,
+  WaistEntry,
+  WeightEntry,
+  WorkoutLogEntry,
+  WorkoutPlan
+} from '@/types'
+import { v4 as uuidv4 } from 'uuid'
+import { create } from 'zustand'
 
 interface ProgressState {
   workoutPlan: WorkoutPlan | null
