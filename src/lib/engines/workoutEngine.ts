@@ -437,7 +437,6 @@ function buildWorkoutDay(
         sets: ex.isCompound ? 3 : 3,
         repRange: ex.repRange as [number, number],
         restSeconds: ex.restSec,
-        rir: ex.rir,
         difficulty: ex.difficulty as any,
       }
     })
@@ -449,6 +448,9 @@ function buildWorkoutDay(
   )
 
   return {
+    id: `generated_${dayOfWeek}`,
+    dayIndex: dayOfWeek,
+    isRestDay: false,
     dayLabel: splitDay.label,
     dayOfWeek,
     muscleGroups: splitDay.muscles,
@@ -466,14 +468,16 @@ export function generateWorkoutPlan(profile: UserProfile): WorkoutPlan {
   const workoutDays: WorkoutDay[] = days.map((dayOfWeek) => {
     // Provide a simple label based on day of week
     const labels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    
-    return {
-      dayLabel: `${labels[dayOfWeek]} Workout`,
-      dayOfWeek,
-      muscleGroups: [],
-      exercises: [],
-      estimatedDurationMin: 0,
-    }
+        return {
+        id: `day_${dayOfWeek}`,
+        dayIndex: dayOfWeek,
+        isRestDay: false,
+        dayLabel: `${labels[dayOfWeek]} Workout`,
+        dayOfWeek,
+        muscleGroups: [],
+        exercises: [],
+        estimatedDurationMin: 0,
+      }
   })
 
   return {

@@ -19,7 +19,7 @@ export function TrainExerciseSearch({ dayIndex, onClose }: TrainExerciseSearchPr
   const [category, setCategory] = useState('All')
   const inputRef = useRef<HTMLInputElement>(null)
   const { addExerciseToDay } = useTrainStore()
-  const [quickAdd, setQuickAdd] = useState<{exerciseId: string, sets: number, reps: number, rir: number} | null>(null)
+  const [quickAdd, setQuickAdd] = useState<{exerciseId: string, sets: number, reps: number} | null>(null)
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -38,8 +38,7 @@ export function TrainExerciseSearch({ dayIndex, onClose }: TrainExerciseSearchPr
     setQuickAdd({
       exerciseId,
       sets: 3,
-      reps: ex.repRange[0],
-      rir: ex.rir
+      reps: ex.repRange[0]
     })
   }
 
@@ -49,7 +48,6 @@ export function TrainExerciseSearch({ dayIndex, onClose }: TrainExerciseSearchPr
     
     addExerciseToDay(dayIndex, {
       exerciseId: quickAdd.exerciseId,
-      rir: quickAdd.rir,
       exerciseName: ex.name,
       muscleGroup: ex.muscleGroup,
       sets: quickAdd.sets,
@@ -120,10 +118,7 @@ export function TrainExerciseSearch({ dayIndex, onClose }: TrainExerciseSearchPr
                   <span className="text-[10px] text-white/40">Reps</span>
                   <input type="number" value={quickAdd.reps} onChange={e => setQuickAdd({...quickAdd, reps: Number(e.target.value) || 1})} className="w-12 bg-white/10 rounded px-1 py-1 text-white text-xs text-center outline-none" min="1" />
                 </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] text-white/40">RIR</span>
-                  <input type="number" value={quickAdd.rir} onChange={e => setQuickAdd({...quickAdd, rir: Number(e.target.value) || 0})} className="w-12 bg-white/10 rounded px-1 py-1 text-white text-xs text-center outline-none" min="0" max="5" />
-                </div>
+
                 
                 <button onClick={confirmAdd} className="bg-accent text-white p-2 rounded-lg hover:bg-accent/90 ml-1 mt-3">
                   <Plus size={16} />

@@ -5,7 +5,7 @@
 // ============================================================
 
 import type { DietTemplate, PlannedMealSlot } from '@/store/planStore'
-import type { WorkoutDay as ManualWorkoutDay, WorkoutTemplate } from '@/store/trainStore'
+import type { WorkoutTemplate } from '@/store/trainStore'
 import type {
   DailyDietPlan,
   FoodLogEntry,
@@ -13,7 +13,7 @@ import type {
   UserProfile,
   WaistEntry,
   WeightEntry,
-  WorkoutLogEntry, WorkoutPlan
+  WorkoutLogEntry, WorkoutPlan, WorkoutDay as ManualWorkoutDay
 } from '@/types'
 import {
   collection,

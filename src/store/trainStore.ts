@@ -5,17 +5,11 @@
 import { getManualWorkoutPlan, getWorkoutTemplates, saveManualWorkoutPlan, saveWorkoutTemplates } from '@/lib/firebase/dataService'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
-import type { PlannedExercise } from '@/types'
+import type { PlannedExercise, WorkoutDay } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 import { create } from 'zustand'
 
-export interface WorkoutDay {
-  id: string
-  dayIndex: number
-  isRestDay: boolean
-  exercises: PlannedExercise[]
-  notes?: string
-}
+
 
 export interface WorkoutTemplate {
   id: string

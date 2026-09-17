@@ -219,7 +219,7 @@ export interface DailyDietPlan {
 export type MuscleGroup =
   | 'chest' | 'back' | 'shoulders' | 'biceps' | 'triceps'
   | 'quads' | 'hamstrings' | 'glutes' | 'calves' | 'core'
-  | 'full_body' | 'forearms'
+  | 'full_body' | 'forearms' | 'traps' | 'lats' | 'rear_delts'
 
 export type ExerciseType = 'compound' | 'isolation' | 'cardio' | 'bodyweight'
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced'
@@ -244,7 +244,6 @@ export interface WorkoutSet {
   targetReps: [number, number] // [min, max]
   weight?: number // kg
   completedReps?: number
-  rir?: number // reps in reserve
   notes?: string
 }
 
@@ -256,17 +255,20 @@ export interface PlannedExercise {
   sets: number
   repRange: [number, number]
   restSeconds: number
-  rir: number
   notes?: string
   difficulty: Difficulty
 }
 
 export interface WorkoutDay {
-  dayLabel: string // e.g. "Chest + Triceps"
-  dayOfWeek: number
-  muscleGroups: MuscleGroup[]
+  id: string
+  dayIndex: number
+  dayLabel?: string
+  dayOfWeek?: number
+  muscleGroups?: MuscleGroup[]
   exercises: PlannedExercise[]
-  estimatedDurationMin: number
+  estimatedDurationMin?: number
+  isRestDay: boolean
+  notes?: string
 }
 
 export interface WorkoutPlan {
@@ -282,7 +284,6 @@ export interface WorkoutPlan {
 export interface LoggedSet {
   weight?: number
   reps: number
-  rir?: number
 }
 
 export interface LoggedExercise {

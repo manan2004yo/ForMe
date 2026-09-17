@@ -235,7 +235,7 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
       await logWorkout(user.uid, {
         userId: user.uid,
         date: new Date().toISOString().split('T')[0],
-        planDayLabel: day.dayLabel,
+        planDayLabel: day.dayLabel || 'Custom Workout',
         durationMin: Math.max(1, elapsedMin),
         exercises: exerciseLogs.map((el, i) => ({
           exerciseId: el.exerciseId,

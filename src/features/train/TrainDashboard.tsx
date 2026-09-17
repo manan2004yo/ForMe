@@ -17,7 +17,7 @@ import { WorkoutLogger } from './WorkoutLogger'
 import type { PlannedExercise } from '@/types'
 import { useCnsStore } from '@/store/cnsStore'
 import { v4 as uuidv4 } from 'uuid'
-import type { WorkoutDay } from '@/store/trainStore'
+import type { WorkoutDay } from '@/types'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 import { AlertTriangle } from 'lucide-react'
@@ -144,9 +144,6 @@ function ExerciseRow({ exercise, onRemove }: { exercise: PlannedExercise, onRemo
         <div className="flex items-center gap-2 mt-1">
           <span className="text-xs text-white/50">
             {exercise.sets} sets • {exercise.repRange[0]}-{exercise.repRange[1]} reps
-          </span>
-          <span className="text-xs text-accent/70 bg-accent/10 px-1.5 py-0.5 rounded">
-            {exercise.rir ?? 2} RIR
           </span>
         </div>
       </div>
@@ -404,6 +401,9 @@ export function TrainDashboard() {
         {activeWorkoutDay !== null && (
           <WorkoutLogger 
             day={{
+              id: activeWorkoutDay.id,
+              dayIndex: activeWorkoutDay.dayIndex,
+              isRestDay: activeWorkoutDay.isRestDay,
               dayLabel: DAY_NAMES[activeWorkoutDay.dayIndex],
               dayOfWeek: activeWorkoutDay.dayIndex,
               muscleGroups: [],
