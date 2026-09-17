@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Camera, X, Upload, Activity, Check, ChefHat } from 'lucide-react'
+import { useToastStore } from '@/store/toastStore'
 import type { MealSlot } from '@/types'
 
 interface SnapAndLogModalProps {
@@ -14,6 +15,7 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
   const [isScanning, setIsScanning] = useState(false)
   const [result, setResult] = useState<any | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const toast = useToastStore()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -47,9 +49,9 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
         carbs: data.carbs || 0,
         fat: data.fat || 0
       })
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      alert("Failed to analyze image. Ensure your OpenAI API Key is configured in Cloudflare.")
+      toast.error(err.message || "Failed to analyze image. Ensure your Gemini API Key is configured in Cloudflare.")
     } finally {
       setIsScanning(false)
     }
