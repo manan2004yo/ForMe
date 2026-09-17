@@ -8,20 +8,8 @@ import { useIntegrationStore, type Platform } from '@/store/integrationStore'
 export function AppSettingsModal({ onClose }: { onClose: () => void }) {
   const [notifications, setNotifications] = useState(true)
   const [theme, setTheme] = useState('dark')
-  const { connectedPlatforms, isSyncing, connectPlatform, disconnectPlatform } = useIntegrationStore()
-  const [connecting, setConnecting] = useState<Platform | null>(null)
-
   const { isConnected: isSpotifyConnected, isConnecting: isSpotifyConnecting, connect: connectSpotify, disconnect: disconnectSpotify } = useSpotifyStore()
 
-  const handleTogglePlatform = async (platform: Platform) => {
-    if (connectedPlatforms.includes(platform)) {
-      disconnectPlatform(platform)
-    } else {
-      setConnecting(platform)
-      await connectPlatform(platform)
-      setConnecting(null)
-    }
-  }
 
   return (
     <motion.div 
@@ -108,35 +96,6 @@ export function AppSettingsModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div>
-          <h3 className="text-xs font-medium text-white/50 uppercase tracking-wider mb-4">Integrations</h3>
-          <div className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden space-y-1 p-2">
-            
-
-            <button 
-              onClick={() => isSpotifyConnected ? disconnectSpotify() : connectSpotify()}
-              className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center">
-                  <Music size={16} />
-                </div>
-                <div className="text-left">
-                  <span className="font-medium text-white block">Spotify</span>
-                  <span className="text-xs text-white/40">Performance Tracking</span>
-                </div>
-              </div>
-              <span className={clsx(
-                "text-xs font-semibold px-2 py-1 rounded-lg transition-colors flex items-center gap-1",
-                isSpotifyConnected ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-white/50"
-              )}>
-                {isSpotifyConnecting && <Loader2 size={12} className="animate-spin" />}
-                {isSpotifyConnected ? 'Connected' : 'Connect'}
-              </span>
-            </button>
-
-          </div>
-        </div>
       </div>
     </motion.div>
   )

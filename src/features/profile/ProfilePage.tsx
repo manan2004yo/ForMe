@@ -34,7 +34,6 @@ export function ProfilePage() {
   const { isPro } = useAuthStore()
   const { info } = useToastStore()
 
-  const handleComingSoon = () => info("This setting will be available in the next update.")
 
   if (!profile) return null
 

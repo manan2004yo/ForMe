@@ -94,46 +94,6 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
   const handleSend = async (text: string = input) => {
     if (!text.trim() || isTyping) return
 
-    // Handle special action interceptors
-    if (text.startsWith('ACTION:LOG_FOOD:')) {
-      const foodType = text.split(':')[2]
-      
-      let mockItem: LoggedFoodItem
-      let mealSlot: MealSlot = 'lunch'
-      
-      if (foodType === 'roti') {
-        mockItem = {
-          id: 'roti_ai', foodItemId: 'roti_db', foodName: 'Roti (Whole Wheat)',
-          nutrition: { calories: 240, protein: 6, carbs: 40, fat: 4, fiber: 6 },
-          quantity: 2, unit: 'piece', gramsConsumed: 80, confidence: 'high'
-        }
-        mealSlot = 'lunch'
-      } else {
-        mockItem = {
-          id: 'egg_ai', foodItemId: 'egg_db', foodName: 'Whole Egg',
-          nutrition: { calories: 230, protein: 18, carbs: 1.5, fat: 15, fiber: 0 },
-          quantity: 3, unit: 'large', gramsConsumed: 150, confidence: 'high'
-        }
-        mealSlot = 'breakfast'
-      }
-
-      setMessages(prev => [...prev, { id: uuidv4(), role: 'user', content: `Log that for me please.` }])
-      setIsTyping(true)
-
-      setTimeout(() => {
-        if (user) {
-          useFoodLogStore.getState().addFoodEntry(user.uid, mealSlot, [mockItem])
-        }
-        setMessages(prev => [...prev, {
-          id: uuidv4(),
-          role: 'assistant',
-          content: `Done! I've logged ${mockItem.quantity} ${mockItem.foodName} to your ${mealSlot}.`
-        }])
-        setIsTyping(false)
-      }, 1000)
-      return
-    }
-
     const userQuery = text.trim()
     setInput('')
     setMessages(prev => [...prev, { id: uuidv4(), role: 'user', content: userQuery }])
