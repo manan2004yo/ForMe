@@ -107,7 +107,14 @@ export async function askForme(query: string, context: AIContext, provider: AIPr
         })
 
         if (!res.ok) {
-          throw new Error('API failed')
+          let errText = 'API failed'
+          try {
+            const errData = await res.json()
+            errText = errData.error || errText
+          } catch {
+            errText = await res.text()
+          }
+          throw new Error(errText)
         }
         
         const data = await res.json()
@@ -117,9 +124,9 @@ export async function askForme(query: string, context: AIContext, provider: AIPr
           message,
           confidence: 'high'
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('AI Error:', err)
-        return callMockProvider(query, context) // Fallback to mock if API fails/missing
+        throw new Error(err.message || 'Failed to connect to AI Coach backend.')
       }
     case 'gemini':
       throw new Error('Gemini provider not configured')
