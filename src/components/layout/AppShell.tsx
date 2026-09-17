@@ -2,7 +2,6 @@
 // FORME - Premium App Shell (Sidebar & Bottom Nav)
 // ============================================================
 
-import { AskFormeAssistant } from '@/features/ai/AskFormeAssistant'
 import { useUserStore } from '@/store/userStore'
 import { clsx } from 'clsx'
 import { Activity, BookOpen, Flame, Home, ShieldAlert, Sparkles, TrendingUp, User } from 'lucide-react'
@@ -21,7 +20,6 @@ const NAV_ITEMS = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const { isIncognito } = useUserStore()
 
   return (
@@ -62,15 +60,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-6">
-          <button 
-            onClick={() => setIsAssistantOpen(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-white font-medium hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20 outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
-          >
-            <Sparkles size={18} />
-            Ask FORME
-          </button>
-        </div>
       </aside>
 
       {/* --- MAIN CONTENT AREA --- */}
@@ -104,16 +93,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
-      {/* --- FLOATING FAB FOR MOBILE --- */}
-      <button
-        onClick={() => setIsAssistantOpen(true)}
-        className="md:hidden fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-accent text-white shadow-lg shadow-accent/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform outline-none focus-visible:ring-2 focus-visible:ring-white"
-        aria-label="Ask FORME Assistant"
-      >
-        <Sparkles size={24} />
-      </button>
-
-      <AskFormeAssistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
       </div>
     </div>
   )

@@ -635,7 +635,6 @@ FILE: src\components\layout\AppShell.tsx
 // FORME - Premium App Shell (Sidebar & Bottom Nav)
 // ============================================================
 
-import { AskFormeAssistant } from '@/features/ai/AskFormeAssistant'
 import { useUserStore } from '@/store/userStore'
 import { clsx } from 'clsx'
 import { Activity, BookOpen, Flame, Home, ShieldAlert, Sparkles, TrendingUp, User } from 'lucide-react'
@@ -654,7 +653,6 @@ const NAV_ITEMS = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const { isIncognito } = useUserStore()
 
   return (
@@ -695,15 +693,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-6">
-          <button 
-            onClick={() => setIsAssistantOpen(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-accent text-white font-medium hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20 outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
-          >
-            <Sparkles size={18} />
-            Ask FORME
-          </button>
-        </div>
       </aside>
 
       {/* --- MAIN CONTENT AREA --- */}
@@ -737,16 +726,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
-      {/* --- FLOATING FAB FOR MOBILE --- */}
-      <button
-        onClick={() => setIsAssistantOpen(true)}
-        className="md:hidden fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-accent text-white shadow-lg shadow-accent/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform outline-none focus-visible:ring-2 focus-visible:ring-white"
-        aria-label="Ask FORME Assistant"
-      >
-        <Sparkles size={24} />
-      </button>
-
-      <AskFormeAssistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
       </div>
     </div>
   )
@@ -4403,8 +4382,6 @@ FILE: src\features\home\HomeDashboard.tsx
 
 import { PageTransition } from '@/components/layout/PageTransition'
 import { AnimatedNumber, ProgressBar } from '@/components/shared'
-import { CnsStatusBadge } from '@/features/cns/CnsStatusBadge'
-import { DailyCheckInCard } from '@/features/cns/DailyCheckInCard'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useUserStore } from '@/store/userStore'
@@ -4519,7 +4496,6 @@ export function HomeDashboard() {
               <h1 className="font-heading font-bold text-3xl text-white">
                 Hi, {profile.name.split(' ')[0]}
               </h1>
-              <CnsStatusBadge />
             </div>
           </div>
           <button 
@@ -4530,9 +4506,6 @@ export function HomeDashboard() {
             <Search size={18} />
           </button>
         </header>
-
-        {/* CNS ENGINE CHECK-IN */}
-        <DailyCheckInCard />
 
         {/* Nutrition Summary */}
         <section className="glass-panel-intense p-6 md:p-8 mb-6 relative overflow-hidden">
@@ -6484,17 +6457,7 @@ export function IntegrationsPage() {
           </Button>
         </div>
 
-        {/* Health Data Disclaimer */}
-        <div className="mt-8 p-5 rounded-2xl bg-bg-surface2 border border-border/50 text-center flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-3">
-            <ArrowLeft size={16} className="text-white/40 -rotate-90" />
-          </div>
-          <h4 className="text-white font-semibold mb-1">Health Data Syncing</h4>
-          <p className="text-sm text-white/50 max-w-sm">
-            Apple Health, Google Fit, and Garmin integrations require the native FORME iOS or Android application. 
-            Web syncing is currently disabled.
-          </p>
-        </div>
+
       </div>
     </div>
   )
@@ -6509,6 +6472,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 import { useUserStore } from '@/store/userStore'
+import { useFoodLogStore } from '@/store/foodLogStore'
 import { clsx } from 'clsx'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Download, EyeOff, Shield, Trash2 } from 'lucide-react'
@@ -6521,7 +6485,38 @@ export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
   const toast = useToastStore()
 
   const handleExport = () => {
-    toast.success("Exporting your data to CSV. This will be sent to your email.")
+    const { entries } = useFoodLogStore.getState()
+    if (!entries || entries.length === 0) {
+      toast.error("No food data to export.")
+      return
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,Date,Meal,Food Item,Calories,Protein,Carbs,Fats\n"
+    
+    entries.forEach(entry => {
+      entry.foods.forEach(item => {
+        const row = [
+          entry.date,
+          entry.meal,
+          `"${item.foodName.replace(/"/g, '""')}"`,
+          Math.round(item.nutrition.calories),
+          item.nutrition.protein,
+          item.nutrition.carbs,
+          item.nutrition.fat
+        ].join(",")
+        csvContent += row + "\n"
+      })
+    })
+
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `forme_nutrition_export_${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    toast.success("CSV export downloaded successfully.")
   }
 
   return (
@@ -8633,7 +8628,7 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
   useEffect(() => {
     if (isConnected) {
       fetchCurrentTrack()
-      const interval = setInterval(fetchCurrentTrack, 10000)
+      const interval = setInterval(fetchCurrentTrack, 30000)
       return () => clearInterval(interval)
     }
   }, [isConnected, fetchCurrentTrack])

@@ -4,8 +4,6 @@
 
 import { PageTransition } from '@/components/layout/PageTransition'
 import { AnimatedNumber, ProgressBar } from '@/components/shared'
-import { CnsStatusBadge } from '@/features/cns/CnsStatusBadge'
-import { DailyCheckInCard } from '@/features/cns/DailyCheckInCard'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useUserStore } from '@/store/userStore'
@@ -120,7 +118,6 @@ export function HomeDashboard() {
               <h1 className="font-heading font-bold text-3xl text-white">
                 Hi, {profile.name.split(' ')[0]}
               </h1>
-              <CnsStatusBadge />
             </div>
           </div>
           <button 
@@ -131,9 +128,6 @@ export function HomeDashboard() {
             <Search size={18} />
           </button>
         </header>
-
-        {/* CNS ENGINE CHECK-IN */}
-        <DailyCheckInCard />
 
         {/* Nutrition Summary */}
         <section className="glass-panel-intense p-6 md:p-8 mb-6 relative overflow-hidden">

@@ -56,17 +56,7 @@ export function IntegrationsPage() {
           </Button>
         </div>
 
-        {/* Health Data Disclaimer */}
-        <div className="mt-8 p-5 rounded-2xl bg-bg-surface2 border border-border/50 text-center flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-3">
-            <ArrowLeft size={16} className="text-white/40 -rotate-90" />
-          </div>
-          <h4 className="text-white font-semibold mb-1">Health Data Syncing</h4>
-          <p className="text-sm text-white/50 max-w-sm">
-            Apple Health, Google Fit, and Garmin integrations require the native FORME iOS or Android application. 
-            Web syncing is currently disabled.
-          </p>
-        </div>
+
       </div>
     </div>
   )
