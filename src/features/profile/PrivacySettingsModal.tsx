@@ -4,24 +4,19 @@ import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
 import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
+import { useState } from 'react'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { useToastStore } from '@/store/toastStore'
 
 export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
   const { deleteAccount } = useAuthStore()
   const { isIncognito, toggleIncognito } = useUserStore()
   const navigate = useNavigate()
-
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to permanently delete your account and all data? This cannot be undone.")) {
-      try {
-        await deleteAccount()
-      } catch (err) {
-        // Error toast is handled by global state or we can just let authStore's error state show it
-      }
-    }
-  }
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const toast = useToastStore()
 
   const handleExport = () => {
-    alert("Exporting your data to CSV. This will be sent to your email.")
+    toast.success("Exporting your data to CSV. This will be sent to your email.")
   }
 
   return (
@@ -97,7 +92,7 @@ export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
         <div>
           <h3 className="text-xs font-medium text-red-400/50 uppercase tracking-wider mb-4">Danger Zone</h3>
           <div className="bg-[#121212] border border-red-500/10 rounded-2xl overflow-hidden p-2">
-            <button onClick={handleDelete} className="w-full flex items-center gap-3 p-3 hover:bg-red-500/10 rounded-xl transition-colors text-left group">
+            <button onClick={() => setShowDeleteConfirm(true)} className="w-full flex items-center gap-3 p-3 hover:bg-red-500/10 rounded-xl transition-colors text-left group">
               <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center group-hover:bg-red-500/20">
                 <Trash2 size={16} />
               </div>
@@ -110,6 +105,21 @@ export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
         </div>
 
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Delete Account"
+        message="Are you sure you want to permanently delete your account and all data? This cannot be undone."
+        confirmText="Delete Permanently"
+        isDestructive={true}
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          setShowDeleteConfirm(false)
+          try {
+            await deleteAccount()
+          } catch (err) {}
+        }}
+      />
     </motion.div>
   )
 }

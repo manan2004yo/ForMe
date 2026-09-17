@@ -201,8 +201,14 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
   const { logWorkout } = useProgressStore()
   const toast = useToastStore()
   const [startTime] = useState(Date.now())
+  const [currentTime, setCurrentTime] = useState(Date.now())
   const [notes, setNotes] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(Date.now()), 60000)
+    return () => clearInterval(timer)
+  }, [])
 
   const [exerciseLogs, setExerciseLogs] = useState<ExerciseLog[]>(() =>
     day.exercises.map(ex => ({
@@ -221,7 +227,7 @@ export function WorkoutLogger({ day, onClose, onComplete }: WorkoutLoggerProps) 
     0
   )
   const totalSets = exerciseLogs.reduce((acc, el) => acc + el.sets.length, 0)
-  const elapsedMin = Math.round((Date.now() - startTime) / 60000)
+  const elapsedMin = Math.max(1, Math.round((currentTime - startTime) / 60000))
 
   const handleSave = useCallback(async () => {
     if (!user) return

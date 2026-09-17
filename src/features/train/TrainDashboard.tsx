@@ -21,6 +21,8 @@ import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 import { AlertTriangle } from 'lucide-react'
 import { useToastStore } from '@/store/toastStore'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { PromptModal } from '@/components/ui/PromptModal'
 
 function SpotifyWidget() {
   const { isConnected, isConnecting, currentTrack, connect, disconnect, fetchCurrentTrack } = useSpotifyStore()
@@ -173,6 +175,7 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse, onStartWorkout }
   onStartWorkout: () => void
 }) {
   const [expanded, setExpanded] = useState(true)
+  const [showSavePrompt, setShowSavePrompt] = useState(false)
   const { toggleRestDay, removeExerciseFromDay, saveAsTemplate } = useTrainStore()
   
   const hasExercises = exercises.length > 0
@@ -257,10 +260,7 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse, onStartWorkout }
             </button>
             <div className="flex gap-2">
               <button 
-                onClick={() => {
-                  const name = prompt("Enter a name for this workout template (e.g., Push Day):")
-                  if (name) saveAsTemplate(name, dayIndex)
-                }}
+                onClick={() => setShowSavePrompt(true)}
                 className="px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all flex items-center gap-1.5 active:scale-95"
               >
                 <Save size={14} /> Save template
@@ -278,6 +278,19 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse, onStartWorkout }
           <p className="text-xs text-blue-400/70 mt-1 max-w-[200px]">Focus on hydration, mobility, and high protein intake today.</p>
         </div>
       )}
+
+      <PromptModal
+        isOpen={showSavePrompt}
+        title="Save as Template"
+        message="Enter a name for this workout template (e.g., Push Day):"
+        placeholder="Template Name"
+        confirmText="Save Template"
+        onCancel={() => setShowSavePrompt(false)}
+        onSubmit={(name) => {
+          saveAsTemplate(name, dayIndex)
+          setShowSavePrompt(false)
+        }}
+      />
     </div>
   )
 }
@@ -294,6 +307,8 @@ export function TrainDashboard() {
   }, [user, loadAll])
   const [browsingDay, setBrowsingDay] = useState<number | null>(null)
   const [activeWorkoutDay, setActiveWorkoutDay] = useState<WorkoutDay | null>(null)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [loadTemplateId, setLoadTemplateId] = useState<string | null>(null)
   const cnsStatus = getCurrentStatus()
 
   return (
@@ -312,11 +327,7 @@ export function TrainDashboard() {
           <div className="flex gap-3">
             {currentPlan.some((d: any) => d.exercises.length > 0) && (
               <button 
-                onClick={() => {
-                  if(confirm("Are you sure you want to clear your entire weekly plan? This will remove all planned exercises.")) {
-                    clearPlan()
-                  }
-                }}
+                onClick={() => setShowClearConfirm(true)}
                 className="px-4 py-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 active:scale-95"
               >
                 <Trash2 size={16} /> Clear Plan
@@ -355,12 +366,7 @@ export function TrainDashboard() {
               {templates.map(t => (
                 <button
                   key={t.id}
-                  onClick={() => {
-                    const day = prompt("Which day to load this into? (0=Sun, 1=Mon... 6=Sat)")
-                    if (day && parseInt(day) >= 0 && parseInt(day) <= 6) {
-                      loadTemplate(t.id, parseInt(day))
-                    }
-                  }}
+                  onClick={() => setLoadTemplateId(t.id)}
                   className="px-4 py-2 bg-white/5 text-white border border-white/10 hover:bg-white/10 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap"
                 >
                   <Download size={16} /> {t.name}

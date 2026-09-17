@@ -5,6 +5,7 @@ import { clsx } from 'clsx'
 import { v4 as uuidv4 } from 'uuid'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
+import { useToastStore } from '@/store/toastStore'
 import type { LoggedFoodItem, NutritionInfo } from '@/types'
 
 import { INDIAN_FOODS } from '@/lib/data/indianFoods'
@@ -21,6 +22,7 @@ const MOCK_INGREDIENTS = INDIAN_FOODS.map(f => ({
 export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
   const { user } = useAuthStore()
   const { addFoodEntry } = useFoodLogStore()
+  const toast = useToastStore()
   
   const [recipeName, setRecipeName] = useState('')
   const [ingredients, setIngredients] = useState<any[]>([])
@@ -62,13 +64,13 @@ export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
 
   const handleLogPortion = async () => {
     if (!user || user.uid === 'demo') {
-      alert('Cannot save in demo mode')
+      toast.error('Cannot save in demo mode')
       onClose()
       return
     }
     
     if (!recipeName.trim()) {
-      alert('Please enter a recipe name')
+      toast.error('Please enter a recipe name')
       return
     }
 
@@ -90,7 +92,7 @@ export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
     }
 
     await addFoodEntry(user.uid, 'lunch', [logItem]) // Defaulting to lunch
-    alert('Logged successfully to Lunch!')
+    toast.success('Logged successfully to Lunch!')
     onClose()
   }
 
