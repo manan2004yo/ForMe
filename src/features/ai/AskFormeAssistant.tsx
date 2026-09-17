@@ -159,11 +159,11 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
         confidence: response.confidence,
         actions: response.suggestedActions
       }])
-    } catch (err) {
+    } catch (err: any) {
       setMessages(prev => [...prev, {
         id: uuidv4(),
         role: 'assistant',
-        content: "Sorry, I'm having trouble connecting right now."
+        content: `Error: ${err.message || "I'm having trouble connecting right now."}`
       }])
     } finally {
       setIsTyping(false)
