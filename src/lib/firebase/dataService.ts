@@ -576,3 +576,36 @@ function getLocalWorkoutTemplates(uid: string): WorkoutTemplate[] {
   const raw = localStorage.getItem(`forme_workout_templates_${uid}`)
   return raw ? JSON.parse(raw) : []
 }
+
+// ─── Achievements ───────────────────────────────────────────────
+
+export async function saveAchievements(uid: string, achievements: any[]): Promise<void> {
+  const ref = doc(db, 'users', uid, 'achievements', 'current')
+  localStorage.setItem(`forme_achievements_${uid}`, JSON.stringify(achievements))
+  if (!navigator.onLine) return
+  try {
+    await setDoc(ref, { achievements: sanitizeForFirestore(achievements) })
+  } catch (error) {
+    console.warn('Firestore write error:', error)
+  }
+}
+
+export async function getAchievements(uid: string): Promise<any[]> {
+  try {
+    const ref = doc(db, 'users', uid, 'achievements', 'current')
+    const snap = await getDoc(ref)
+    if (snap.exists()) {
+      const data = snap.data().achievements as any[]
+      localStorage.setItem(`forme_achievements_${uid}`, JSON.stringify(data))
+      return data
+    }
+    return getLocalAchievements(uid)
+  } catch {
+    return getLocalAchievements(uid)
+  }
+}
+
+function getLocalAchievements(uid: string): any[] {
+  const raw = localStorage.getItem(`forme_achievements_${uid}`)
+  return raw ? JSON.parse(raw) : []
+}

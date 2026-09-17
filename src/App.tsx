@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
 import { useSpotifyStore } from '@/store/spotifyStore'
 import { useAchievementEngine } from '@/lib/engines/useAchievementEngine'
+import { useAchievementStore } from '@/store/achievementStore'
 
 // Feature imports
 import { LandingPage } from '@/features/auth/LandingPage'
@@ -75,6 +76,7 @@ function AuthenticatedApp() {
   useEffect(() => {
     if (user) {
       loadProfile(user.uid)
+      useAchievementStore.getState().loadAchievements(user.uid)
     }
   }, [user, loadProfile])
 

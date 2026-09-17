@@ -90,18 +90,40 @@ async function callMockProvider(query: string, context: AIContext): Promise<AIRe
 
 // ─── Router ───────────────────────────────────────────────────
 
-export async function askForme(query: string, context: AIContext, provider: AIProvider = 'mock'): Promise<AIResponse> {
+export async function askForme(query: string, context: AIContext, provider: AIProvider = 'openai'): Promise<AIResponse> {
   console.log(`[AI Router] Routing query to ${provider}`)
   
   switch (provider) {
     case 'openai':
-      // TODO: Implement OpenAI provider when API key is available
-      throw new Error('OpenAI provider not configured')
+      try {
+        const res = await fetch('/api/ai-coach', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: query }]
+          })
+        })
+
+        if (!res.ok) {
+          throw new Error('API failed')
+        }
+        
+        const data = await res.json()
+        const message = data.choices[0].message.content
+
+        return {
+          message,
+          confidence: 'high'
+        }
+      } catch (err) {
+        console.error('AI Error:', err)
+        return callMockProvider(query, context) // Fallback to mock if API fails/missing
+      }
     case 'gemini':
-      // TODO: Implement Gemini provider when API key is available
       throw new Error('Gemini provider not configured')
     case 'claude':
-      // TODO: Implement Claude provider when API key is available
       throw new Error('Claude provider not configured')
     case 'mock':
     default:

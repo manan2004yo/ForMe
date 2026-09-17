@@ -30,18 +30,29 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
     if (!imagePreview) return
     setIsScanning(true)
     
-    // Simulate API call to Cloudflare Edge function (Demo Mode)
-    // In production, we would POST to `/api/vision`
-    setTimeout(() => {
-      setResult({
-        foodName: "Grilled Chicken Salad (Est.)",
-        calories: 420,
-        protein: 45,
-        carbs: 12,
-        fat: 22
+    try {
+      const res = await fetch('/api/snap-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imagePreview })
       })
+
+      if (!res.ok) throw new Error('Vision API failed')
+      
+      const data = await res.json()
+      setResult({
+        foodName: data.foodName || "Unknown Food",
+        calories: data.calories || 0,
+        protein: data.protein || 0,
+        carbs: data.carbs || 0,
+        fat: data.fat || 0
+      })
+    } catch (err) {
+      console.error(err)
+      alert("Failed to analyze image. Ensure your OpenAI API Key is configured in Cloudflare.")
+    } finally {
       setIsScanning(false)
-    }, 2500)
+    }
   }
 
   return (

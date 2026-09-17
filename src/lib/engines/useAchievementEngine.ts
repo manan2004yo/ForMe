@@ -3,6 +3,7 @@ import { useFoodLogStore } from '@/store/foodLogStore'
 import { useProgressStore } from '@/store/progressStore'
 import { useUserStore } from '@/store/userStore'
 import { useAchievementStore } from '@/store/achievementStore'
+import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 import { ACHIEVEMENTS, type EvaluationContext } from './achievementEngine'
 
@@ -10,6 +11,7 @@ export function useAchievementEngine() {
   const { entries: foodLogs } = useFoodLogStore()
   const { workoutLogs } = useProgressStore()
   const { profile, metrics } = useUserStore()
+  const { user } = useAuthStore()
   const { unlockAchievement, unlockedAchievements } = useAchievementStore()
   const addToast = useToastStore(s => s.addToast)
 
@@ -17,7 +19,7 @@ export function useAchievementEngine() {
   const isEvaluating = useRef(false)
 
   useEffect(() => {
-    if (!profile || !metrics) return
+    if (!profile || !metrics || !user) return
     if (isEvaluating.current) return
 
     const evaluate = async () => {
@@ -38,7 +40,7 @@ export function useAchievementEngine() {
 
         try {
           if (badge.evaluate(context)) {
-            const newlyUnlocked = unlockAchievement(badge.id)
+            const newlyUnlocked = unlockAchievement(user.uid, badge.id)
             if (newlyUnlocked) {
               addToast(`Achievement Unlocked: ${badge.title} ${badge.icon}`, 'success')
             }
@@ -54,5 +56,5 @@ export function useAchievementEngine() {
     // Debounce slightly to allow stores to settle
     const timeout = setTimeout(evaluate, 1000)
     return () => clearTimeout(timeout)
-  }, [foodLogs, workoutLogs, profile, metrics, unlockedAchievements, unlockAchievement, addToast])
+  }, [foodLogs, workoutLogs, profile, metrics, unlockedAchievements, unlockAchievement, addToast, user])
 }

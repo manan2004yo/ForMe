@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { saveAchievements, getAchievements } from '@/lib/firebase/dataService'
 
 export interface UnlockedAchievement {
   id: string
@@ -8,30 +8,33 @@ export interface UnlockedAchievement {
 
 interface AchievementState {
   unlockedAchievements: UnlockedAchievement[]
-  unlockAchievement: (id: string) => boolean // returns true if newly unlocked
+  unlockAchievement: (uid: string | undefined, id: string) => boolean // returns true if newly unlocked
+  loadAchievements: (uid: string) => Promise<void>
 }
 
-export const useAchievementStore = create<AchievementState>()(
-  persist(
-    (set, get) => ({
-      unlockedAchievements: [],
+export const useAchievementStore = create<AchievementState>()((set, get) => ({
+  unlockedAchievements: [],
 
-      unlockAchievement: (id) => {
-        const { unlockedAchievements } = get()
-        
-        if (unlockedAchievements.some(a => a.id === id)) {
-          return false // already unlocked
-        }
+  loadAchievements: async (uid: string) => {
+    if (!uid || uid === 'demo') return
+    const data = await getAchievements(uid)
+    set({ unlockedAchievements: data })
+  },
 
-        set({
-          unlockedAchievements: [...unlockedAchievements, { id, unlockedAt: new Date().toISOString() }]
-        })
-        
-        return true
-      }
-    }),
-    {
-      name: 'forme-achievements',
+  unlockAchievement: (uid, id) => {
+    const { unlockedAchievements } = get()
+    
+    if (unlockedAchievements.some(a => a.id === id)) {
+      return false // already unlocked
     }
-  )
-)
+
+    const newAchievements = [...unlockedAchievements, { id, unlockedAt: new Date().toISOString() }]
+    set({ unlockedAchievements: newAchievements })
+    
+    if (uid && uid !== 'demo') {
+      saveAchievements(uid, newAchievements)
+    }
+    
+    return true
+  }
+}))

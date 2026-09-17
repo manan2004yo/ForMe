@@ -112,44 +112,6 @@ export function AppSettingsModal({ onClose }: { onClose: () => void }) {
           <h3 className="text-xs font-medium text-white/50 uppercase tracking-wider mb-4">Integrations</h3>
           <div className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden space-y-1 p-2">
             
-            <button 
-              onClick={() => handleTogglePlatform('apple_health')}
-              className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
-                  <Activity size={16} />
-                </div>
-                <span className="font-medium text-white">Apple Health</span>
-              </div>
-              <span className={clsx(
-                "text-xs font-semibold px-2 py-1 rounded-lg transition-colors flex items-center gap-1",
-                connectedPlatforms.includes('apple_health') ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-white/50"
-              )}>
-                {connecting === 'apple_health' && <Loader2 size={12} className="animate-spin" />}
-                {connectedPlatforms.includes('apple_health') ? 'Connected' : 'Connect'}
-              </span>
-            </button>
-
-            <button 
-              onClick={() => handleTogglePlatform('google_fit')}
-              className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center">
-                  <Smartphone size={16} />
-                </div>
-                <span className="font-medium text-white">Google Fit</span>
-              </div>
-              <span className={clsx(
-                "text-xs font-semibold px-2 py-1 rounded-lg transition-colors flex items-center gap-1",
-                connectedPlatforms.includes('google_fit') ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-white/50"
-              )}>
-                {connecting === 'google_fit' && <Loader2 size={12} className="animate-spin" />}
-                {connectedPlatforms.includes('google_fit') ? 'Connected' : 'Connect'}
-              </span>
-            </button>
-
 
             <button 
               onClick={() => isSpotifyConnected ? disconnectSpotify() : connectSpotify()}

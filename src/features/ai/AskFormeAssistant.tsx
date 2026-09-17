@@ -150,7 +150,7 @@ export function AskFormeAssistant({ isOpen, onClose }: { isOpen: boolean; onClos
       // Append current page to context dynamically
       const enhancedQuery = `[Context: User is currently on the ${location.pathname} page] ${userQuery}`
 
-      const response = await askForme(enhancedQuery, context, 'mock')
+      const response = await askForme(enhancedQuery, context)
       
       setMessages(prev => [...prev, {
         id: uuidv4(),
