@@ -13,11 +13,11 @@ import { useAuthStore } from '@/store/authStore'
 import { useProgressStore } from '@/store/progressStore'
 import { TrainExerciseSearch } from './TrainExerciseSearch'
 import { MuscleHeatmap } from './MuscleHeatmap'
-import { WorkoutLogger } from './WorkoutLogger'
 import type { PlannedExercise } from '@/types'
 import { useCnsStore } from '@/store/cnsStore'
 import { v4 as uuidv4 } from 'uuid'
 import type { WorkoutDay } from '@/types'
+import { useWorkoutSessionStore } from '@/store/workoutSessionStore'
 import { PageTransition } from '@/components/layout/PageTransition'
 import { clsx } from 'clsx'
 import { AlertTriangle } from 'lucide-react'
@@ -383,7 +383,9 @@ export function TrainDashboard() {
               isRestDay={day.isRestDay}
               exercises={day.exercises}
               onBrowse={setBrowsingDay}
-              onStartWorkout={() => setActiveWorkoutDay(day)}
+              onStartWorkout={() => {
+                useWorkoutSessionStore.getState().startSession(DAY_NAMES[day.dayIndex])
+              }}
             />
           ))}
         </div>
@@ -396,23 +398,6 @@ export function TrainDashboard() {
           <div className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto">
             <TrainExerciseSearch dayIndex={browsingDay} onClose={() => setBrowsingDay(null)} />
           </div>
-        )}
-
-        {activeWorkoutDay !== null && (
-          <WorkoutLogger 
-            day={{
-              id: activeWorkoutDay.id,
-              dayIndex: activeWorkoutDay.dayIndex,
-              isRestDay: activeWorkoutDay.isRestDay,
-              dayLabel: DAY_NAMES[activeWorkoutDay.dayIndex],
-              dayOfWeek: activeWorkoutDay.dayIndex,
-              muscleGroups: [],
-              exercises: activeWorkoutDay.exercises,
-              estimatedDurationMin: 60
-            }} 
-            onClose={() => setActiveWorkoutDay(null)}
-            onComplete={() => setActiveWorkoutDay(null)}
-          />
         )}
       </div>
     </PageTransition>
