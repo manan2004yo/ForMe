@@ -24,9 +24,9 @@ export default defineConfig({
         }
       },
       '/api/food-search': {
-        target: 'https://world.openfoodfacts.org/cgi/search.pl',
+        target: 'https://world.openfoodfacts.org/api/v2/search',
         changeOrigin: true,
-        rewrite: (path) => `${path.replace(/^\/api\/food-search/, '')}&search_simple=1&action=process&json=1&page_size=20&fields=code,product_name,brands,nutriments,serving_size,serving_quantity,image_url`,
+        rewrite: (path) => `${path.replace(/^\/api\/food-search/, '')}&fields=code,product_name,brands,nutriments,serving_size,serving_quantity,image_url&page_size=20`,
         headers: {
           'User-Agent': 'FORME-FitnessApp/1.0 (contact@forme.app)'
         }

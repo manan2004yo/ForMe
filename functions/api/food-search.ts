@@ -13,11 +13,11 @@ export const onRequest = async (context: any) => {
     return new Response(JSON.stringify({ status: 'network_error', message: 'Missing search query' }), { status: 400 })
   }
 
-  const OPEN_FOOD_FACTS_SEARCH_API = 'https://world.openfoodfacts.org/cgi/search.pl'
+  const OPEN_FOOD_FACTS_SEARCH_API = 'https://world.openfoodfacts.org/api/v2/search'
   
   try {
     const response = await fetch(
-      `${OPEN_FOOD_FACTS_SEARCH_API}?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20&fields=code,product_name,brands,nutriments,serving_size,serving_quantity,image_url`,
+      `${OPEN_FOOD_FACTS_SEARCH_API}?categories_tags_en=${encodeURIComponent(query)}&search_terms=${encodeURIComponent(query)}&fields=code,product_name,brands,nutriments,serving_size,serving_quantity,image_url&page_size=20`,
       {
         headers: {
           'User-Agent': 'FORME-FitnessApp/1.0 (contact@forme.app)',
