@@ -227,9 +227,17 @@ export function BarcodeScannerOverlay({
   useEffect(() => {
     if (isOpen) {
       setLastBarcode(null)
-      startCamera()
+      // Use requestAnimationFrame so <video ref={videoRef}> is fully mounted in DOM before accessing srcObject
+      const raf = requestAnimationFrame(() => {
+        startCamera()
+      })
+      return () => {
+        cancelAnimationFrame(raf)
+        stopCamera()
+      }
+    } else {
+      stopCamera()
     }
-    return () => { stopCamera() }
   }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClose = () => { stopCamera(); onClose() }
@@ -343,16 +351,32 @@ export function BarcodeScannerOverlay({
                     </div>
                     
                     <h3 className="text-xl text-white font-bold mb-2 tracking-tight">Camera Unavailable</h3>
-                    <p className="text-white/50 text-center text-sm mb-8 px-2 leading-relaxed">
-                      We couldn't connect to your live camera. You can snap a photo instead or enter the barcode manually.
+                    <p className="text-white/50 text-center text-sm mb-4 px-2 leading-relaxed">
+                      {scannerState === 'permission_denied' 
+                        ? 'Camera access was blocked by your browser settings. Please enable camera permission for this site.'
+                        : 'We couldn\'t connect to your live camera. You can retry permission, snap a photo, or enter barcode manually.'}
                     </p>
+                    {errorDetail && (
+                      <p className="text-xs text-red-400/80 bg-red-500/10 px-3 py-1.5 rounded-lg mb-6 text-center font-mono">
+                        {errorDetail}
+                      </p>
+                    )}
 
-                    <div className="w-full space-y-4">
+                    <div className="w-full space-y-3">
+                      {/* Retry Button */}
+                      <button
+                        onClick={() => startCamera()}
+                        className="w-full py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                      >
+                        <Zap size={18} className="text-accent" />
+                        <span>Retry Camera Access</span>
+                      </button>
+
                       {/* Take Photo Button - Premium */}
-                      <label className="group relative w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-accent text-white font-semibold cursor-pointer overflow-hidden transition-all active:scale-[0.98]">
+                      <label className="group relative w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-accent text-white font-semibold cursor-pointer overflow-hidden transition-all active:scale-[0.98]">
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                        <Camera size={20} className="relative z-10" />
-                        <span className="relative z-10">Take Photo</span>
+                        <Camera size={18} className="relative z-10" />
+                        <span className="relative z-10">Snap Photo Instead</span>
                         <input 
                           type="file" 
                           accept="image/*" 
