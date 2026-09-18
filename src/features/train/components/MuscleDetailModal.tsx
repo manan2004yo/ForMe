@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Clock, Zap, CheckCircle, XCircle } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
@@ -52,7 +53,7 @@ export function MuscleDetailModal({ muscle, onClose }: MuscleDetailModalProps) {
   const { avoid, ok } = muscle ? getExerciseRecommendations(muscle) : { avoid: [], ok: [] }
   const color = data ? RECOVERY_COLORS[data.status] : '#374151'
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {muscle && data && (
         <>
@@ -70,7 +71,7 @@ export function MuscleDetailModal({ muscle, onClose }: MuscleDetailModalProps) {
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             className="fixed bottom-0 left-0 right-0 z-[90] bg-[#0f0f0f] border-t border-white/10 rounded-t-3xl"
-            style={{ maxHeight: '80vh' }}
+            style={{ maxHeight: '80vh', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
           >
             <div className="flex flex-col" style={{ maxHeight: '80vh' }}>
               {/* Handle */}
@@ -222,6 +223,7 @@ export function MuscleDetailModal({ muscle, onClose }: MuscleDetailModalProps) {
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }

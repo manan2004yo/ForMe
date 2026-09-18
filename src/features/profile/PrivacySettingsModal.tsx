@@ -12,6 +12,7 @@ export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
   const { deleteAccount } = useAuthStore()
   const { isIncognito, toggleIncognito } = useUserStore()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const toast = useToastStore()
 
   const handleExport = () => {
@@ -140,14 +141,24 @@ export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
         isOpen={showDeleteConfirm}
         title="Delete Account"
         message="Are you sure you want to permanently delete your account and all data? This cannot be undone."
-        confirmText="Delete Permanently"
+        confirmText={isDeleting ? 'Deleting...' : 'Delete Permanently'}
         isDestructive={true}
         onCancel={() => setShowDeleteConfirm(false)}
         onConfirm={async () => {
-          setShowDeleteConfirm(false)
+          setIsDeleting(true)
           try {
             await deleteAccount()
-          } catch {}
+          } catch (err: any) {
+            setShowDeleteConfirm(false)
+            setIsDeleting(false)
+            if (err?.code === 'auth/requires-recent-login') {
+              toast.error('Please sign out and sign back in first, then try again.')
+            } else {
+              toast.error('Failed to delete account. Please try again.')
+            }
+          } finally {
+            setIsDeleting(false)
+          }
         }}
       />
     </motion.div>
