@@ -279,24 +279,52 @@ export function BarcodeScannerOverlay({
               scannerState === 'not_supported' ||
               scannerState === 'error') && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                <div className="flex flex-col items-center gap-4 px-8 text-center">
-                  <AlertCircle size={44} className="text-red-400" />
-                  <div>
-                    <p className="text-white font-bold text-lg mb-2">
-                      {scannerState === 'permission_denied' && 'Camera Access Required'}
-                      {scannerState === 'not_supported'     && 'No Camera Found'}
-                      {scannerState === 'error'             && 'Scanner Error'}
-                    </p>
-                    <p className="text-white/50 text-sm leading-relaxed">
-                      {scannerState === 'permission_denied' &&
-                        'Allow camera access in your browser settings and try again.'}
-                      {scannerState === 'not_supported' &&
-                        'No camera was detected on this device.'}
-                      {scannerState === 'error' &&
-                        'Something went wrong. Close and try again.'}
-                    </p>
+                {scannerState === 'permission_denied' ? (
+                  <div className="flex flex-col items-center gap-4 px-8 text-center">
+                    <AlertCircle size={40} className="text-red-400" />
+                    <div>
+                      <p className="text-white font-semibold mb-2">Camera Access Required</p>
+                      <p className="text-white/50 text-sm leading-relaxed mb-6">
+                        Camera permission was denied. To enable it:
+                      </p>
+                      <div className="text-left bg-white/5 rounded-2xl px-4 py-3 mb-6 space-y-2">
+                        <p className="text-white/60 text-sm">
+                          <span className="text-white font-medium">Chrome Android: </span>
+                          Tap the lock icon in the address bar → Permissions → Camera → Allow
+                        </p>
+                        <p className="text-white/60 text-sm">
+                          <span className="text-white font-medium">Safari iOS: </span>
+                          Settings → Safari → Camera → Allow
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          stopCamera()
+                          onClose()
+                        }}
+                        className="w-full py-3 rounded-2xl bg-white/10 text-white font-semibold text-sm active:scale-95 transition-all"
+                      >
+                        Close and Fix in Settings
+                      </button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-4 px-8 text-center">
+                    <AlertCircle size={44} className="text-red-400" />
+                    <div>
+                      <p className="text-white font-bold text-lg mb-2">
+                        {scannerState === 'not_supported'     && 'No Camera Found'}
+                        {scannerState === 'error'             && 'Scanner Error'}
+                      </p>
+                      <p className="text-white/50 text-sm leading-relaxed">
+                        {scannerState === 'not_supported' &&
+                          'No camera was detected on this device.'}
+                        {scannerState === 'error' &&
+                          'Something went wrong. Close and try again.'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
