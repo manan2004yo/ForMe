@@ -315,70 +315,62 @@ export function BarcodeScannerOverlay({
               scannerState === 'error') && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                 {scannerState === 'permission_denied' ? (
-                  <div className="flex flex-col items-center gap-4 px-8 text-center">
-                    <AlertCircle size={40} className="text-red-400" />
-                    <div>
-                      <p className="text-white font-semibold mb-2">Camera Access Required</p>
-                      <p className="text-white/50 text-sm leading-relaxed mb-6">
-                        Camera permission was denied. To enable it:
-                      </p>
-                      <div className="bg-white/5 p-4 rounded-xl text-left text-xs text-white/70 space-y-2 mb-6 w-full max-w-xs break-words">
-                        <p className="text-red-400 font-mono mb-2">Browser Error:<br/>{errorDetail}</p>
-                        <p><strong>Chrome Android:</strong> Tap the lock icon in the address bar → Permissions → Camera → Allow</p>
-                        <p><strong>Safari iOS:</strong> Settings → Safari → Camera → Allow</p>
-                      </div>
-                      
-                      <button 
-                        onClick={startCamera} 
-                        className="btn bg-white hover:bg-gray-200 text-black w-full max-w-xs mb-4 font-bold"
-                      >
-                        Retry Camera Access
-                      </button>
+                  <div className="w-full max-w-sm mx-4 bg-[#111111]/90 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 flex flex-col items-center shadow-2xl relative overflow-hidden">
+                    {/* Subtle top glow */}
+                    <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
+                    
+                    <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
+                      <Camera size={32} className="text-red-400" />
+                    </div>
+                    
+                    <h3 className="text-xl text-white font-bold mb-2 tracking-tight">Camera Unavailable</h3>
+                    <p className="text-white/50 text-center text-sm mb-8 px-2 leading-relaxed">
+                      We couldn't connect to your live camera. You can snap a photo instead or enter the barcode manually.
+                    </p>
 
-                      <div className="w-full max-w-xs mb-4">
-                        <p className="text-xs text-white/50 mb-2">Or take a photo natively (bypasses browser block):</p>
-                        <label className="btn bg-accent hover:bg-accent/80 text-white w-full cursor-pointer flex items-center justify-center gap-2 py-3 rounded-xl">
-                          <Camera size={18} />
-                          Take Photo of Barcode
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            capture="environment"
-                            className="hidden" 
-                            onChange={handleFileUpload} 
-                          />
-                        </label>
-                      </div>
+                    <div className="w-full space-y-4">
+                      {/* Take Photo Button - Premium */}
+                      <label className="group relative w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-accent text-white font-semibold cursor-pointer overflow-hidden transition-all active:scale-[0.98]">
+                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                        <Camera size={20} className="relative z-10" />
+                        <span className="relative z-10">Take Photo</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          capture="environment"
+                          className="hidden" 
+                          onChange={handleFileUpload} 
+                        />
+                      </label>
 
-                      <div className="w-full max-w-xs mb-6 text-left">
-                        <p className="text-xs text-white/50 mb-2">Or enter barcode manually (fallback):</p>
-                        <div className="flex gap-2">
-                          <input 
-                            id="manual-barcode-input"
-                            type="text" 
-                            placeholder="e.g. 8901058863610" 
-                            className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-accent"
-                          />
-                          <button 
-                            onClick={() => {
-                              const val = (document.getElementById('manual-barcode-input') as HTMLInputElement).value
-                              if (val) handleBarcode(val)
-                            }}
-                            className="btn btn-accent px-4 py-2"
-                          >
-                            Search
-                          </button>
-                        </div>
+                      {/* Manual Entry */}
+                      <div className="relative">
+                        <input 
+                          id="manual-barcode-input"
+                          type="text" 
+                          placeholder="Enter barcode manually" 
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all pr-24"
+                        />
+                        <button 
+                          onClick={() => {
+                            const val = (document.getElementById('manual-barcode-input') as HTMLInputElement).value
+                            if (val) handleBarcode(val)
+                          }}
+                          className="absolute right-2 top-2 bottom-2 px-4 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all"
+                        >
+                          Search
+                        </button>
                       </div>
 
+                      {/* Subtle Close */}
                       <button
                         onClick={() => {
                           stopCamera()
                           onClose()
                         }}
-                        className="w-full py-3 rounded-2xl bg-white/10 text-white font-semibold text-sm active:scale-95 transition-all"
+                        className="w-full py-4 text-white/40 hover:text-white text-sm font-medium transition-colors"
                       >
-                        Close and Fix in Settings
+                        Cancel
                       </button>
                     </div>
                   </div>
