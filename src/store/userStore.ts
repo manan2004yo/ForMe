@@ -66,6 +66,8 @@ interface UserState {
   recalculateMetrics: () => void
   setContext: (context: ActiveContext) => void
   toggleIncognito: () => void
+  weightUnit: 'kg' | 'lb'
+  toggleWeightUnit: () => void
 }
 
 import { persist } from 'zustand/middleware'
@@ -80,6 +82,9 @@ export const useUserStore = create<UserState>()(
       error: null,
       activeContext: 'normal',
       isIncognito: false,
+      weightUnit: 'kg',
+
+  toggleWeightUnit: () => set(s => ({ weightUnit: s.weightUnit === 'kg' ? 'lb' : 'kg' })),
 
   toggleIncognito: () => set(state => ({ isIncognito: !state.isIncognito })),
 
@@ -188,3 +193,11 @@ export const useUserStore = create<UserState>()(
     }
   },
 }), { name: 'forme-user-storage' }))
+
+export function toDisplayWeight(weightKg: number, unit: 'kg' | 'lb'): number {
+  return unit === 'lb' ? Math.round(weightKg * 2.2046 * 4) / 4 : weightKg
+}
+
+export function toStorageWeight(displayWeight: number, unit: 'kg' | 'lb'): number {
+  return unit === 'lb' ? displayWeight / 2.2046 : displayWeight
+}

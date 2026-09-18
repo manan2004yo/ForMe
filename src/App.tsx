@@ -10,6 +10,7 @@ import { useUserStore } from '@/store/userStore'
 import { AnimatePresence } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { ActiveWorkoutOverlay } from '@/features/train/ActiveWorkoutOverlay'
 
 // Feature imports
 import { AppShell } from '@/components/layout/AppShell'
@@ -196,9 +197,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-      <ToastContainer />
-    </BrowserRouter>
+    <>
+      <BrowserRouter>
+        <AppRoutes />
+        <ToastContainer />
+      </BrowserRouter>
+      <ActiveWorkoutOverlay />
+    </>
   )
 }
