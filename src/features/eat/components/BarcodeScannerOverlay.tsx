@@ -147,7 +147,11 @@ export function BarcodeScannerOverlay({
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        await videoRef.current.play()
+        videoRef.current.play().catch(err => {
+          // Play can throw NotAllowedError due to autoplay policies.
+          // Do not let this crash the camera setup.
+          console.warn('Video play prevented by browser:', err)
+        })
       }
 
       setScannerState('scanning')
