@@ -297,17 +297,24 @@ export function BarcodeScannerOverlay({
                           Settings → Safari → Camera → Allow
                         </p>
                       </div>
-                      <button
-                        onClick={() => {
-                          stopCamera()
-                          onClose()
-                        }}
-                        className="w-full py-3 rounded-2xl bg-white/10 text-white font-semibold text-sm active:scale-95 transition-all"
-                      >
-                        Close and Fix in Settings
-                      </button>
+                        <button
+                          onClick={() => {
+                            stopCamera()
+                            onClose()
+                          }}
+                          className="w-full py-3 rounded-2xl bg-white/10 text-white font-semibold text-sm active:scale-95 transition-all mb-3"
+                        >
+                          Close and Fix in Settings
+                        </button>
+                        
+                        <button
+                          onClick={() => handleBarcode('8901030783142')} // Real barcode (Maggi 2-Minute Noodles)
+                          className="w-full py-3 rounded-2xl bg-accent/20 text-accent font-semibold text-sm active:scale-95 transition-all"
+                        >
+                          [Dev Bypass] Simulate Maggi Scan
+                        </button>
+                      </div>
                     </div>
-                  </div>
                 ) : (
                   <div className="flex flex-col items-center gap-4 px-8 text-center">
                     <AlertCircle size={44} className="text-red-400" />
@@ -316,12 +323,19 @@ export function BarcodeScannerOverlay({
                         {scannerState === 'not_supported'     && 'No Camera Found'}
                         {scannerState === 'error'             && 'Scanner Error'}
                       </p>
-                      <p className="text-white/50 text-sm leading-relaxed">
+                      <p className="text-white/50 text-sm leading-relaxed mb-6">
                         {scannerState === 'not_supported' &&
                           'No camera was detected on this device.'}
                         {scannerState === 'error' &&
                           'Something went wrong. Close and try again.'}
                       </p>
+                      
+                      <button
+                        onClick={() => handleBarcode('8901030783142')} // Real barcode (Maggi 2-Minute Noodles) to hit real OFF API
+                        className="w-full py-3 rounded-2xl bg-accent/20 text-accent font-semibold text-sm active:scale-95 transition-all"
+                      >
+                        [Dev Bypass] Simulate Maggi Scan
+                      </button>
                     </div>
                   </div>
                 )}
