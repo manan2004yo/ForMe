@@ -159,21 +159,21 @@ export function BarcodeScannerOverlay({
         await startZXingScanner(stream)
       }
     } catch (err: unknown) {
-      // User explicitly requested no error UI and to just "do its work" on failure (auto-simulate scan)
-      scanningRef.current = true
+      // If camera fails (like on a desktop PC without a webcam), 
+      // let the user manually type a barcode to test any product in the world.
+      const userBarcode = window.prompt(
+        'Camera not found or blocked.\n\nFor desktop testing, manually enter a barcode number:',
+        '8901030783142' // Default to Maggi
+      )
       
-      // Provide a random real barcode so desktop testing isn't just Maggi every time
-      const fallbackBarcodes = [
-        '8901030783142', // Maggi Noodles
-        '3017620422003', // Nutella
-        '7622210449283', // Oreo
-        '5000159461122', // Snickers
-        '5000112637922', // Coca-Cola
-      ]
-      const randomBarcode = fallbackBarcodes[Math.floor(Math.random() * fallbackBarcodes.length)]
-      handleBarcode(randomBarcode)
+      if (userBarcode && userBarcode.trim().length > 0) {
+        scanningRef.current = true
+        handleBarcode(userBarcode.trim())
+      } else {
+        onClose()
+      }
     }
-  }, [startNativeScanner, startZXingScanner, handleBarcode])
+  }, [startNativeScanner, startZXingScanner, handleBarcode, onClose])
 
   useEffect(() => {
     if (isOpen) {
