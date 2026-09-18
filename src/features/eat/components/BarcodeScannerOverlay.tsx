@@ -56,10 +56,12 @@ export function BarcodeScannerOverlay({
   }, [])
 
   const handleBarcode = useCallback(async (barcode: string) => {
+    // Only process if we haven't just scanned this one, AND we are currently in scanning state
     if (barcode === lastBarcode || !scanningRef.current) return
 
     setLastBarcode(barcode)
     setScannerState('fetching')
+    scanningRef.current = false
     stopCamera()
 
     if (navigator.vibrate) navigator.vibrate(60)
@@ -185,6 +187,7 @@ export function BarcodeScannerOverlay({
     if (!file) return
 
     setScannerState('scanning')
+    scanningRef.current = true
     try {
       const { BrowserMultiFormatReader } = await import('@zxing/browser')
       const reader = new BrowserMultiFormatReader()
