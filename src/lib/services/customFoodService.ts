@@ -1,6 +1,6 @@
 // ============================================================
 // FORME — Custom Food Service
-// Allows users to create & save custom food items to localStorage
+// Allows users to create, save & delete custom food items in localStorage
 // ============================================================
 
 import type { ScannedProduct } from './barcodeProductService'
@@ -28,4 +28,10 @@ export function saveCustomFood(food: Omit<ScannedProduct, 'barcode' | 'dataSourc
   const updated = [newFood, ...existing]
   localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(updated))
   return newFood
+}
+
+export function deleteCustomFood(barcode: string): void {
+  const existing = getCustomFoods()
+  const updated = existing.filter(f => f.barcode !== barcode)
+  localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(updated))
 }

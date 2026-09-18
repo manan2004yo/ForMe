@@ -4,14 +4,16 @@
 // ============================================================
 
 import { searchFoods } from '@/lib/services/foodSearchService'
+import { deleteCustomFood } from '@/lib/services/customFoodService'
 import type { ScannedProduct } from '@/lib/services/barcodeProductService'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import type { LoggedFoodItem, MealSlot } from '@/types'
-import { Plus, Search, X, PlusCircle } from 'lucide-react'
+import { Plus, Search, X, PlusCircle, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { CreateCustomFoodModal } from './CreateCustomFoodModal'
+
 
 interface FoodSearchProps {
   slot: MealSlot
@@ -215,13 +217,28 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => setQuickAdd({ foodId: product.barcode, quantity: 100, unit: 'gram' })}
-                            className="w-8 h-8 rounded-xl bg-bg-surface2 flex items-center justify-center flex-shrink-0 hover:bg-bg-surface3"
-                          >
-                            <Plus size={16} className="text-text-secondary" />
-                          </button>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {isCustom && (
+                              <button
+                                onClick={() => {
+                                  deleteCustomFood(product.barcode)
+                                  loadFoods(query)
+                                }}
+                                title="Delete custom food"
+                                className="w-8 h-8 rounded-xl bg-error/10 text-error flex items-center justify-center hover:bg-error/20 transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setQuickAdd({ foodId: product.barcode, quantity: 100, unit: 'gram' })}
+                              className="w-8 h-8 rounded-xl bg-bg-surface2 flex items-center justify-center hover:bg-bg-surface3"
+                            >
+                              <Plus size={16} className="text-text-secondary" />
+                            </button>
+                          </div>
                         )}
+
                       </div>
                     </div>
                   )
