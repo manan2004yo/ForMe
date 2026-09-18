@@ -186,18 +186,27 @@ export function BarcodeScannerOverlay({
       const reader = new BrowserMultiFormatReader()
       const imgURL = URL.createObjectURL(file)
       
-      try {
-        const result = await reader.decodeFromImageUrl(imgURL)
-        if (result) {
-          handleBarcode(result.getText())
+      const img = new Image()
+      img.onload = async () => {
+        try {
+          const result = await reader.decodeFromImageElement(img)
+          if (result) {
+            handleBarcode(result.getText())
+          }
+        } catch (err) {
+          console.error(err)
+          setErrorDetail('Could not find a clear barcode in that photo. Please try a closer/clearer shot.')
+          setScannerState('error')
+        } finally {
+          URL.revokeObjectURL(imgURL)
         }
-      } catch (err) {
-        console.error(err)
-        setErrorDetail('Could not find a clear barcode in that photo. Please try a closer/clearer shot.')
+      }
+      img.onerror = () => {
+        setErrorDetail('Failed to load the image.')
         setScannerState('error')
-      } finally {
         URL.revokeObjectURL(imgURL)
       }
+      img.src = imgURL
     } catch (err) {
       console.error(err)
       setErrorDetail('Failed to load barcode decoder.')
