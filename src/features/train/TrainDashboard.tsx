@@ -323,6 +323,12 @@ export function TrainDashboard() {
           </div>
           
           <div className="flex gap-3">
+            <button 
+              onClick={() => useWorkoutSessionStore.getState().startSession('Freestyle Session')}
+              className="px-4 py-2 bg-accent text-black hover:bg-accent/90 rounded-lg text-sm font-bold transition-all flex items-center gap-2 active:scale-95"
+            >
+              <Plus size={16} /> Start Session
+            </button>
             {currentPlan.some((d: any) => d.exercises.length > 0) && (
               <button 
                 onClick={() => setShowClearConfirm(true)}
