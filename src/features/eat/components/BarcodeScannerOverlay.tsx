@@ -138,9 +138,7 @@ export function BarcodeScannerOverlay({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          facingMode: { ideal: 'environment' }
         },
       })
 
@@ -300,6 +298,13 @@ export function BarcodeScannerOverlay({
                         <p><strong>Chrome Android:</strong> Tap the lock icon in the address bar → Permissions → Camera → Allow</p>
                         <p><strong>Safari iOS:</strong> Settings → Safari → Camera → Allow</p>
                       </div>
+                      
+                      <button 
+                        onClick={startCamera} 
+                        className="btn bg-white hover:bg-gray-200 text-black w-full max-w-xs mb-6 font-bold"
+                      >
+                        Retry Camera Access
+                      </button>
 
                       <div className="w-full max-w-xs mb-6 text-left">
                         <p className="text-xs text-white/50 mb-2">Or enter barcode manually (fallback):</p>
