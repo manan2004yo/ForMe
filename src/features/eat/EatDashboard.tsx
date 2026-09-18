@@ -11,13 +11,17 @@ import { useUserStore } from '@/store/userStore'
 import type { FoodLogEntry, MealSlot, NutritionInfo } from '@/types'
 import { clsx } from 'clsx'
 import { format } from 'date-fns'
-import { ChevronDown, ChevronUp, Coffee, Moon, Plus, Search, Sun, Sunset } from 'lucide-react'
+import { Barcode, ChevronDown, ChevronUp, Coffee, Moon, Plus, Search, Sun, Sunset } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { EditFoodModal } from './EditFoodModal'
 import { FamilyRecipeSplitter } from './FamilyRecipeSplitter'
 import { FoodSearch } from './FoodSearch'
 import { SnapAndLogModal } from './SnapAndLogModal'
+import { BarcodeScannerOverlay } from './components/BarcodeScannerOverlay'
+import { BarcodeResultSheet } from './components/BarcodeResultSheet'
+import type { ScannedProduct } from '@/lib/services/barcodeProductService'
+import { calculateNutritionForGrams } from '@/lib/services/barcodeProductService'
 
 const MEAL_CONFIG: { slot: MealSlot; label: string; icon: any; time: string }[] = [
   { slot: 'breakfast', label: 'Breakfast', icon: Sun, time: 'Morning' },
@@ -40,12 +44,13 @@ function NutritionChip({ label, value, unit, colorClass }: { label: string; valu
   )
 }
 
-function MealSection({ config, entries, onDelete, onBrowse, onSnap, onEdit }: {
+function MealSection({ config, entries, onDelete, onBrowse, onSnap, onScan, onEdit }: {
   config: typeof MEAL_CONFIG[0]
   entries: FoodLogEntry[]
   onDelete: (entryId: string) => void
   onBrowse: (slot: MealSlot) => void
   onSnap: (slot: MealSlot) => void
+  onScan: (slot: MealSlot) => void
   onEdit: (entry: FoodLogEntry) => void
 }) {
   const [expanded, setExpanded] = useState(true)
@@ -98,6 +103,12 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap, onEdit }: {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-black hover:bg-accent/90 transition-all text-xs font-bold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 shadow-[0_0_10px_rgba(45,212,191,0.2)]"
           >
             <Sun size={14} /> Snap
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onScan(config.slot); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
+          >
+            <Barcode size={14} /> Scan
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onBrowse(config.slot); }}
@@ -193,6 +204,8 @@ export function EatDashboard() {
   const { getCurrentStatus } = useCnsStore()
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
   const [snappingSlot, setSnappingSlot] = useState<MealSlot | null>(null)
+  const [scanningSlot, setScanningSlot] = useState<MealSlot | null>(null)
+  const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null)
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null)
 
   const cnsStatus = getCurrentStatus()
@@ -306,17 +319,18 @@ export function EatDashboard() {
           </div>
         </button>
 
-        {MEAL_CONFIG.map(config => (
-            <MealSection
-              key={config.slot}
-              config={config}
-              entries={todayEntries.filter(e => e.meal === config.slot)}
-              onDelete={(id) => removeEntry(user?.uid || "demo", id)}
-              onBrowse={setBrowsingSlot}
-              onSnap={setSnappingSlot}
-              onEdit={(entry) => setEditingEntry(entry)}
-            />
-          ))}
+          {MEAL_CONFIG.map(config => (
+              <MealSection
+                key={config.slot}
+                config={config}
+                entries={todayEntries.filter(e => e.meal === config.slot)}
+                onDelete={(id) => removeEntry(user?.uid || "demo", id)}
+                onBrowse={setBrowsingSlot}
+                onSnap={setSnappingSlot}
+                onScan={(slot) => setScanningSlot(slot)}
+                onEdit={(entry) => setEditingEntry(entry)}
+              />
+            ))}
         </div>
 
         {editingEntry && (
@@ -380,6 +394,42 @@ export function EatDashboard() {
       </div>
       </PageTransition>
       {showRecipeSplitter && <FamilyRecipeSplitter onClose={() => setShowRecipeSplitter(false)} />}
+
+      {/* Phase 5: Barcode Scanner */}
+      <BarcodeScannerOverlay
+        isOpen={!!scanningSlot}
+        onClose={() => setScanningSlot(null)}
+        onProductFound={(product) => {
+          setScannedProduct(product)
+          setScanningSlot(null)
+        }}
+      />
+
+      <BarcodeResultSheet
+        product={scannedProduct}
+        onLog={(product, grams) => {
+          const nutrition = calculateNutritionForGrams(product, grams)
+          addFoodEntry(
+            user?.uid || 'demo',
+            scanningSlot || 'snack',
+            [{
+              id: uuidv4(),
+              foodItemId: `barcode-${product.barcode}`,
+              foodName: product.brand ? `${product.name} (${product.brand})` : product.name,
+              quantity: grams,
+              unit: 'gram',
+              gramsConsumed: grams,
+              confidence: 'high',
+              nutrition,
+            }],
+            `barcode-${product.barcode}`,
+            'gram',
+            grams
+          )
+          setScannedProduct(null)
+        }}
+        onClose={() => setScannedProduct(null)}
+      />
     </>
   )
 }

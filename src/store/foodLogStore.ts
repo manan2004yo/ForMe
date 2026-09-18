@@ -4,6 +4,9 @@
 
 import { deleteFoodLog, getFoodLogsByDate, getRecentFoodLogs, saveFoodLog } from '@/lib/firebase/dataService'
 import { useToastStore } from '@/store/toastStore'
+import { useAuthStore } from '@/store/authStore'
+import { recordPortionUsage } from '@/lib/services/portionMemoryService'
+import type { ScannedProduct } from '@/lib/services/barcodeProductService'
 import type { FoodLogEntry, LoggedFoodItem, MealSlot, NutritionInfo } from '@/types'
 import { format } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
@@ -35,10 +38,14 @@ interface FoodLogState {
   entriesForDate: (date: string) => FoodLogEntry[]
   entriesForMeal: (date: string, meal: MealSlot) => FoodLogEntry[]
 
+  // Barcode scan cache — holds the last scanned product until logged or dismissed
+  lastScannedProduct: ScannedProduct | null
+  setScannedProduct: (product: ScannedProduct | null) => void
+
   // Actions
   loadLogs: (uid: string, date?: string) => Promise<void>
   loadRecentLogs: (uid: string, days?: number) => Promise<void>
-  addFoodEntry: (uid: string, meal: MealSlot, items: LoggedFoodItem[]) => Promise<void>
+  addFoodEntry: (uid: string, meal: MealSlot, items: LoggedFoodItem[], foodId?: string, unit?: string, quantity?: number) => Promise<void>
   updateEntry: (uid: string, entryId: string, updatedEntry: FoodLogEntry) => Promise<void>
   removeEntry: (uid: string, entryId: string) => Promise<void>
   setDate: (date: string) => void
@@ -48,6 +55,9 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
   entries: [],
   selectedDate: today(),
   isLoading: false,
+  lastScannedProduct: null,
+
+  setScannedProduct: (product) => set({ lastScannedProduct: product }),
 
   todayTotals: () => {
     const { entries, selectedDate } = get()
@@ -103,7 +113,7 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
     }
   },
 
-  addFoodEntry: async (uid: string, meal: MealSlot, items: LoggedFoodItem[]) => {
+  addFoodEntry: async (uid: string, meal: MealSlot, items: LoggedFoodItem[], foodId?: string, unit?: string, quantity?: number) => {
     const { selectedDate } = get()
     const entry: FoodLogEntry = {
       id: uuidv4(),
@@ -117,6 +127,13 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
     }
 
     set(state => ({ entries: [...state.entries, entry] }))
+
+    // Record portion memory so user's preferred unit is remembered
+    const authUid = useAuthStore.getState().user?.uid
+    if (authUid && foodId && unit && quantity) {
+      recordPortionUsage(authUid, foodId, unit, quantity)
+    }
+
     try {
       await saveFoodLog(uid, entry)
     } catch {
