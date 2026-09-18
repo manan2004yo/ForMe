@@ -136,11 +136,15 @@ export function BarcodeScannerOverlay({
     setScannerState('requesting_permission')
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: 'environment' }
-        },
-      })
+      let stream: MediaStream
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } }
+        })
+      } catch (cameraErr: any) {
+        // Fallback for laptops or strict browsers that reject facingMode requests
+        stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      }
 
       streamRef.current = stream
 
