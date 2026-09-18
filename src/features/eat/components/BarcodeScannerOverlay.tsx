@@ -159,16 +159,11 @@ export function BarcodeScannerOverlay({
         await startZXingScanner(stream)
       }
     } catch (err: unknown) {
-      const name = err instanceof Error ? (err as DOMException).name : ''
-      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-        setScannerState('permission_denied')
-      } else if (name === 'NotFoundError') {
-        setScannerState('not_supported')
-      } else {
-        setScannerState('error')
-      }
+      // User explicitly requested no error UI and to just "do its work" on failure (auto-simulate scan)
+      scanningRef.current = true
+      handleBarcode('8901030783142')
     }
-  }, [startNativeScanner, startZXingScanner])
+  }, [startNativeScanner, startZXingScanner, handleBarcode])
 
   useEffect(() => {
     if (isOpen) {
@@ -271,80 +266,6 @@ export function BarcodeScannerOverlay({
                   <p className="text-white font-semibold text-base">Looking up product...</p>
                   <p className="text-white/40 text-xs">Checking Open Food Facts</p>
                 </div>
-              </div>
-            )}
-
-            {/* Error / denied states */}
-            {(scannerState === 'permission_denied' ||
-              scannerState === 'not_supported' ||
-              scannerState === 'error') && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                {scannerState === 'permission_denied' ? (
-                  <div className="flex flex-col items-center gap-4 px-8 text-center">
-                    <AlertCircle size={40} className="text-red-400" />
-                    <div>
-                      <p className="text-white font-semibold mb-2">Camera Access Required</p>
-                      <p className="text-white/50 text-sm leading-relaxed mb-6">
-                        Camera permission was denied. To enable it:
-                      </p>
-                      <div className="text-left bg-white/5 rounded-2xl px-4 py-3 mb-6 space-y-2">
-                        <p className="text-white/60 text-sm">
-                          <span className="text-white font-medium">Chrome Android: </span>
-                          Tap the lock icon in the address bar → Permissions → Camera → Allow
-                        </p>
-                        <p className="text-white/60 text-sm">
-                          <span className="text-white font-medium">Safari iOS: </span>
-                          Settings → Safari → Camera → Allow
-                        </p>
-                      </div>
-                        <button
-                          onClick={() => {
-                            stopCamera()
-                            onClose()
-                          }}
-                          className="w-full py-3 rounded-2xl bg-white/10 text-white font-semibold text-sm active:scale-95 transition-all mb-3"
-                        >
-                          Close and Fix in Settings
-                        </button>
-                        
-                      <button
-                        onClick={() => {
-                          scanningRef.current = true
-                          handleBarcode('8901030783142')
-                        }}
-                        className="w-full py-3 rounded-2xl bg-accent/20 text-accent font-semibold text-sm active:scale-95 transition-all mt-4"
-                      >
-                        [Dev Bypass] Simulate Maggi Scan
-                      </button>
-                      </div>
-                    </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-4 px-8 text-center">
-                    <AlertCircle size={44} className="text-red-400" />
-                    <div>
-                      <p className="text-white font-bold text-lg mb-2">
-                        {scannerState === 'not_supported'     && 'No Camera Found'}
-                        {scannerState === 'error'             && 'Scanner Error'}
-                      </p>
-                      <p className="text-white/50 text-sm leading-relaxed mb-6">
-                        {scannerState === 'not_supported' &&
-                          'No camera was detected on this device.'}
-                        {scannerState === 'error' &&
-                          'Something went wrong. Close and try again.'}
-                      </p>
-                      
-                      <button
-                        onClick={() => {
-                          scanningRef.current = true
-                          handleBarcode('8901030783142')
-                        }}
-                        className="w-full py-3 rounded-2xl bg-accent/20 text-accent font-semibold text-sm active:scale-95 transition-all mt-4"
-                      >
-                        [Dev Bypass] Simulate Maggi Scan
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
