@@ -14,6 +14,16 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
+    proxy: {
+      '/api/barcode': {
+        target: 'https://world.openfoodfacts.org/api/v2/product',
+        changeOrigin: true,
+        rewrite: (path) => `${path.replace(/^\/api\/barcode\//, '')}.json?fields=product_name,brands,nutriments,serving_size,serving_quantity,image_url`,
+        headers: {
+          'User-Agent': 'FORME-FitnessApp/1.0 (contact@forme.app)'
+        }
+      }
+    }
   },
   test: {
     environment: 'jsdom',

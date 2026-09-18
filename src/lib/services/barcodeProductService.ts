@@ -29,18 +29,9 @@ export type BarcodeProductResult =
   | { status: 'not_found' }
   | { status: 'network_error'; message: string }
 
-const OPEN_FOOD_FACTS_API = 'https://world.openfoodfacts.org/api/v2/product'
-
 export async function fetchProductByBarcode(barcode: string): Promise<BarcodeProductResult> {
   try {
-    const response = await fetch(
-      `${OPEN_FOOD_FACTS_API}/${barcode}.json?fields=product_name,brands,nutriments,serving_size,serving_quantity,image_url`,
-      {
-        headers: {
-          'User-Agent': 'FORME-FitnessApp/1.0 (contact@forme.app)',
-        },
-      }
-    )
+    const response = await fetch(`/api/barcode/${barcode}`)
 
     if (!response.ok) {
       return { status: 'network_error', message: `HTTP ${response.status}` }
