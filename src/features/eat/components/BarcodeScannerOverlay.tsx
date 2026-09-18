@@ -71,8 +71,11 @@ export function BarcodeScannerOverlay({
     if (result.status === 'found') {
       onProductFound(result.product)
       onClose()
+    } else if (result.status === 'missing_nutrition') {
+      toast.warning(`Found "${result.name}" but it has no nutrition data. Please enter it manually.`)
+      onClose()
     } else if (result.status === 'not_found') {
-      toast.warning('Product not found. You can enter nutrition manually.')
+      toast.warning('Product not found in database. You can enter nutrition manually.')
       onClose()
     } else {
       toast.error(`Scan error: ${result.message}`)
@@ -401,8 +404,7 @@ export function BarcodeScannerOverlay({
                       <p className="text-white/50 text-sm leading-relaxed">
                         {scannerState === 'not_supported' &&
                           'No camera was detected on this device.'}
-                        {scannerState === 'error' &&
-                          'Something went wrong. Close and try again.'}
+                        {scannerState === 'error' && errorDetail ? errorDetail : (scannerState === 'error' && 'Something went wrong. Close and try again.')}
                       </p>
                     </div>
                   </div>

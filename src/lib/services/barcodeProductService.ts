@@ -27,6 +27,7 @@ export interface ScannedProduct {
 export type BarcodeProductResult =
   | { status: 'found'; product: ScannedProduct }
   | { status: 'not_found' }
+  | { status: 'missing_nutrition'; name: string }
   | { status: 'network_error'; message: string }
 
 export async function fetchProductByBarcode(barcode: string): Promise<BarcodeProductResult> {
@@ -54,7 +55,7 @@ export async function fetchProductByBarcode(barcode: string): Promise<BarcodePro
 
     // Reject products with no meaningful nutrition data
     if (calories === 0 && protein === 0 && carbs === 0 && fat === 0) {
-      return { status: 'not_found' }
+      return { status: 'missing_nutrition', name: p.product_name ?? 'Unknown Product' }
     }
 
     const product: ScannedProduct = {
