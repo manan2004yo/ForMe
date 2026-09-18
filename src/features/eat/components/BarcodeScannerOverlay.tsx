@@ -161,7 +161,17 @@ export function BarcodeScannerOverlay({
     } catch (err: unknown) {
       // User explicitly requested no error UI and to just "do its work" on failure (auto-simulate scan)
       scanningRef.current = true
-      handleBarcode('8901030783142')
+      
+      // Provide a random real barcode so desktop testing isn't just Maggi every time
+      const fallbackBarcodes = [
+        '8901030783142', // Maggi Noodles
+        '3017620422003', // Nutella
+        '7622210449283', // Oreo
+        '5000159461122', // Snickers
+        '5000112637922', // Coca-Cola
+      ]
+      const randomBarcode = fallbackBarcodes[Math.floor(Math.random() * fallbackBarcodes.length)]
+      handleBarcode(randomBarcode)
     }
   }, [startNativeScanner, startZXingScanner, handleBarcode])
 
