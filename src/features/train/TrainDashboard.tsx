@@ -12,7 +12,7 @@ import { useTrainStore } from '@/store/trainStore'
 import { useAuthStore } from '@/store/authStore'
 import { useProgressStore } from '@/store/progressStore'
 import { TrainExerciseSearch } from './TrainExerciseSearch'
-import { MuscleHeatmap } from './MuscleHeatmap'
+import { MuscleMapSection } from './MuscleMapSection'
 import type { PlannedExercise } from '@/types'
 import { useCnsStore } from '@/store/cnsStore'
 import { v4 as uuidv4 } from 'uuid'
@@ -358,7 +358,7 @@ export function TrainDashboard() {
         )}
 
         <div className="mb-8">
-          <MuscleHeatmap />
+          <MuscleMapSection />
         </div>
 
         {templates.length > 0 && (

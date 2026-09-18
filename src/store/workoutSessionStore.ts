@@ -20,6 +20,7 @@ import { persist } from 'zustand/middleware'
 import { saveWorkoutLog } from '@/lib/firebase/dataService'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
+import { useMuscleRecoveryStore } from '@/store/muscleRecoveryStore'
 import type { MuscleGroup, LoggedSet, WorkoutLogEntry } from '@/types'
 import type { ExerciseEntry } from '@/lib/data/exerciseDatabase'
 
@@ -255,15 +256,13 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
           createdAt: new Date().toISOString(),
         }
 
-        // ── Phase 4 hook ──────────────────────────────────────
-        // When cnsStore exists, fire muscle fatigue updates here.
-        // Example (uncomment in Phase 4):
-        //
-        // const trainedMuscles = get().getTrainedMuscles()
-        // const { recordMuscleTraining } = useCnsStore.getState()
-        // trainedMuscles.forEach(({ muscle, isPrimary }) => {
-        //   recordMuscleTraining(muscle, isPrimary, Date.now())
-        // })
+        // ── Phase 4: Record muscle recovery data ────────────────────────
+        const trainedMuscles = get().getTrainedMuscles()
+        const totalVolume = get().getTotalVolume()
+        if (trainedMuscles.length > 0) {
+          const { recordSession } = useMuscleRecoveryStore.getState()
+          recordSession(trainedMuscles, totalVolume, Date.now())
+        }
 
         // Persist to Firestore
         const uid = useAuthStore.getState().user?.uid
