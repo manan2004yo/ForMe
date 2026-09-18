@@ -39,6 +39,7 @@ export function BarcodeScannerOverlay({
   const animFrameRef = useRef<number | null>(null)
 
   const [scannerState, setScannerState] = useState<ScannerState>('requesting_permission')
+  const [errorDetail, setErrorDetail]   = useState<string>('')
   const [lastBarcode,  setLastBarcode]  = useState<string | null>(null)
   const toast = useToastStore()
 
@@ -164,6 +165,9 @@ export function BarcodeScannerOverlay({
       }
     } catch (err: unknown) {
       const name = err instanceof Error ? (err as DOMException).name : ''
+      const msg = err instanceof Error ? err.message : String(err)
+      setErrorDetail(`${name}: ${msg}`)
+      
       if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
         setScannerState('permission_denied')
       } else if (name === 'NotFoundError') {
@@ -291,16 +295,33 @@ export function BarcodeScannerOverlay({
                       <p className="text-white/50 text-sm leading-relaxed mb-6">
                         Camera permission was denied. To enable it:
                       </p>
-                      <div className="text-left bg-white/5 rounded-2xl px-4 py-3 mb-6 space-y-2">
-                        <p className="text-white/60 text-sm">
-                          <span className="text-white font-medium">Chrome Android: </span>
-                          Tap the lock icon in the address bar → Permissions → Camera → Allow
-                        </p>
-                        <p className="text-white/60 text-sm">
-                          <span className="text-white font-medium">Safari iOS: </span>
-                          Settings → Safari → Camera → Allow
-                        </p>
+                      <div className="bg-white/5 p-4 rounded-xl text-left text-xs text-white/70 space-y-2 mb-6 w-full max-w-xs break-words">
+                        <p className="text-red-400 font-mono mb-2">Browser Error:<br/>{errorDetail}</p>
+                        <p><strong>Chrome Android:</strong> Tap the lock icon in the address bar → Permissions → Camera → Allow</p>
+                        <p><strong>Safari iOS:</strong> Settings → Safari → Camera → Allow</p>
                       </div>
+
+                      <div className="w-full max-w-xs mb-6 text-left">
+                        <p className="text-xs text-white/50 mb-2">Or enter barcode manually (fallback):</p>
+                        <div className="flex gap-2">
+                          <input 
+                            id="manual-barcode-input"
+                            type="text" 
+                            placeholder="e.g. 8901058863610" 
+                            className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-accent"
+                          />
+                          <button 
+                            onClick={() => {
+                              const val = (document.getElementById('manual-barcode-input') as HTMLInputElement).value
+                              if (val) handleBarcode(val)
+                            }}
+                            className="btn btn-accent px-4 py-2"
+                          >
+                            Search
+                          </button>
+                        </div>
+                      </div>
+
                       <button
                         onClick={() => {
                           stopCamera()
