@@ -4,6 +4,7 @@
 
 import { PageTransition } from '@/components/layout/PageTransition'
 import { AnimatedNumber, ProgressBar } from '@/components/shared'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { useAuthStore } from '@/store/authStore'
 import { usePlanStore } from '@/store/planStore'
 import { useUserStore } from '@/store/userStore'
@@ -137,6 +138,7 @@ function MealSection({ slot, label, foods, onBrowse }: {
 
 export function PlanDashboard() {
   const [showGroceryEngine, setShowGroceryEngine] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
   const { currentPlan, templates, saveAsTemplate, loadTemplate, clearPlan, loadAll, isLoading } = usePlanStore()
   const { metrics } = useUserStore()
   const { user } = useAuthStore()
@@ -193,10 +195,10 @@ export function PlanDashboard() {
               <Save size={16} /> Save Plan
             </button>
             <button 
-              onClick={clearPlan}
+              onClick={() => setShowClearConfirm(true)}
               className="px-4 py-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
             >
-              <Trash2 size={16} /> Clear
+              <Trash2 size={16} /> Clear Plan
             </button>
           </div>
         </header>
@@ -292,6 +294,15 @@ export function PlanDashboard() {
         </div>
       </PageTransition>
       {showGroceryEngine && <SmartGroceryEngine onClose={() => setShowGroceryEngine(false)} />}
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        title="Clear Plan"
+        message="This will remove all foods from your plan. Your saved templates will not be affected."
+        confirmText="Yes, Clear Plan"
+        isDestructive={true}
+        onCancel={() => setShowClearConfirm(false)}
+        onConfirm={() => { clearPlan(); setShowClearConfirm(false) }}
+      />
     </>
   )
 }

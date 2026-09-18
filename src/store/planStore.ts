@@ -77,8 +77,7 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     set({ currentPlan: newPlan })
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
-      try { await saveManualDietPlan(uid, newPlan) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      await saveManualDietPlan(uid, newPlan)
     }
   },
 
@@ -89,8 +88,7 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     set({ currentPlan: newPlan })
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
-      try { await saveManualDietPlan(uid, newPlan) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      await saveManualDietPlan(uid, newPlan)
     }
   },
 
@@ -100,9 +98,9 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     set({ templates: newTemplates })
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
-      try { await saveDietTemplates(uid, newTemplates) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      await saveDietTemplates(uid, newTemplates)
     }
+    useToastStore.getState().success(`Plan saved as "${name}"`)
   },
 
   loadTemplate: async (templateId) => {
@@ -111,9 +109,9 @@ export const usePlanStore = create<PlanState>((set, get) => ({
       set({ currentPlan: template.meals })
       const uid = useAuthStore.getState().user?.uid
       if (uid) {
-      try { await saveManualDietPlan(uid, template.meals) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
-    }
+        await saveManualDietPlan(uid, template.meals)
+      }
+      useToastStore.getState().success(`Loaded "${template.name}"`)
     }
   },
 
@@ -122,8 +120,8 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     set({ currentPlan: newPlan })
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
-      try { await saveManualDietPlan(uid, newPlan) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      await saveManualDietPlan(uid, newPlan)
     }
+    useToastStore.getState().success('Plan cleared.')
   }
 }))

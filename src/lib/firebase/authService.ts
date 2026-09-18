@@ -8,7 +8,9 @@ import {
   browserSessionPersistence,
   createUserWithEmailAndPassword,
   deleteUser,
+  EmailAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   sendEmailVerification,
   sendPasswordResetEmail,
   setPersistence,
@@ -132,4 +134,13 @@ async function createUserDocument(
 
 export function getCurrentUser(): User | null {
   return auth.currentUser
+}
+
+// ─── Re-authenticate (required before sensitive ops) ──────────
+
+export async function reauthenticateWithPassword(password: string): Promise<void> {
+  const user = auth.currentUser
+  if (!user || !user.email) throw new Error('No authenticated user')
+  const credential = EmailAuthProvider.credential(user.email, password)
+  await reauthenticateWithCredential(user, credential)
 }
