@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Zap, AlertCircle } from 'lucide-react'
+import { X, Zap, AlertCircle, Camera } from 'lucide-react'
 import type { ScannedProduct } from '@/lib/services/barcodeProductService'
 import { fetchProductByBarcode } from '@/lib/services/barcodeProductService'
 import { useToastStore } from '@/store/toastStore'
@@ -176,6 +176,35 @@ export function BarcodeScannerOverlay({
     }
   }, [startNativeScanner, startZXingScanner])
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setScannerState('scanning')
+    try {
+      const { BrowserMultiFormatReader } = await import('@zxing/browser')
+      const reader = new BrowserMultiFormatReader()
+      const imgURL = URL.createObjectURL(file)
+      
+      try {
+        const result = await reader.decodeFromImageUrl(imgURL)
+        if (result) {
+          handleBarcode(result.getText())
+        }
+      } catch (err) {
+        console.error(err)
+        setErrorDetail('Could not find a clear barcode in that photo. Please try a closer/clearer shot.')
+        setScannerState('error')
+      } finally {
+        URL.revokeObjectURL(imgURL)
+      }
+    } catch (err) {
+      console.error(err)
+      setErrorDetail('Failed to load barcode decoder.')
+      setScannerState('error')
+    }
+  }
+
   useEffect(() => {
     if (isOpen) {
       setLastBarcode(null)
@@ -301,10 +330,25 @@ export function BarcodeScannerOverlay({
                       
                       <button 
                         onClick={startCamera} 
-                        className="btn bg-white hover:bg-gray-200 text-black w-full max-w-xs mb-6 font-bold"
+                        className="btn bg-white hover:bg-gray-200 text-black w-full max-w-xs mb-4 font-bold"
                       >
                         Retry Camera Access
                       </button>
+
+                      <div className="w-full max-w-xs mb-4">
+                        <p className="text-xs text-white/50 mb-2">Or take a photo natively (bypasses browser block):</p>
+                        <label className="btn bg-accent hover:bg-accent/80 text-white w-full cursor-pointer flex items-center justify-center gap-2 py-3 rounded-xl">
+                          <Camera size={18} />
+                          Take Photo of Barcode
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            capture="environment"
+                            className="hidden" 
+                            onChange={handleFileUpload} 
+                          />
+                        </label>
+                      </div>
 
                       <div className="w-full max-w-xs mb-6 text-left">
                         <p className="text-xs text-white/50 mb-2">Or enter barcode manually (fallback):</p>
