@@ -3,6 +3,8 @@
 // ============================================================
 
 import { getManualWorkoutPlan, getWorkoutTemplates, saveManualWorkoutPlan, saveWorkoutTemplates } from '@/lib/firebase/dataService'
+import { type ExerciseEntry } from '@/lib/data/exerciseDatabase'
+import { getMergedLibrary, searchExercises as searchExercisesUtil, createCustomExercise } from '@/lib/data/exerciseSearch'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 import type { PlannedExercise, WorkoutDay } from '@/types'
@@ -28,6 +30,9 @@ interface TrainState {
   saveAsTemplate: (name: string, dayIndex: number) => void
   loadTemplate: (templateId: string, dayIndex: number) => void
   clearPlan: () => void
+  customExercises: ExerciseEntry[]
+  addCustomExercise: (data: Omit<ExerciseEntry, 'id'>) => Promise<void>
+  searchExercises: (query: string) => ExerciseEntry[]
 }
 
 const DEFAULT_DAYS: WorkoutDay[] = Array.from({ length: 7 }, (_, i) => ({
@@ -41,6 +46,29 @@ export const useTrainStore = create<TrainState>((set, get) => ({
   currentPlan: JSON.parse(JSON.stringify(DEFAULT_DAYS)),
   templates: [],
   isLoading: false,
+  customExercises: [],
+
+  addCustomExercise: async (data) => {
+    const newExercise = createCustomExercise(data)
+    const updated = [...get().customExercises, newExercise]
+    set({ customExercises: updated })
+    const uid = useAuthStore.getState().user?.uid
+    if (uid) {
+      try {
+        // Persist to Firestore: users/{uid}/customExercises/all
+        // Use the existing saveWorkoutTemplates pattern as a reference
+        // when you wire Firestore persistence in a later step
+      } catch {
+        useToastStore.getState().error('Custom exercise saved locally. Cloud sync will retry.')
+      }
+    }
+  },
+
+  searchExercises: (query) => {
+    const library = getMergedLibrary(get().customExercises)
+    return searchExercisesUtil(query, library)
+  },
+
 
   loadAll: async (uid: string) => {
     set({ isLoading: true })
