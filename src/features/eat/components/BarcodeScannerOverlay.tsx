@@ -307,12 +307,15 @@ export function BarcodeScannerOverlay({
                           Close and Fix in Settings
                         </button>
                         
-                        <button
-                          onClick={() => handleBarcode('8901030783142')} // Real barcode (Maggi 2-Minute Noodles)
-                          className="w-full py-3 rounded-2xl bg-accent/20 text-accent font-semibold text-sm active:scale-95 transition-all"
-                        >
-                          [Dev Bypass] Simulate Maggi Scan
-                        </button>
+                      <button
+                        onClick={() => {
+                          scanningRef.current = true
+                          handleBarcode('8901030783142')
+                        }}
+                        className="w-full py-3 rounded-2xl bg-accent/20 text-accent font-semibold text-sm active:scale-95 transition-all mt-4"
+                      >
+                        [Dev Bypass] Simulate Maggi Scan
+                      </button>
                       </div>
                     </div>
                 ) : (
@@ -331,8 +334,11 @@ export function BarcodeScannerOverlay({
                       </p>
                       
                       <button
-                        onClick={() => handleBarcode('8901030783142')} // Real barcode (Maggi 2-Minute Noodles) to hit real OFF API
-                        className="w-full py-3 rounded-2xl bg-accent/20 text-accent font-semibold text-sm active:scale-95 transition-all"
+                        onClick={() => {
+                          scanningRef.current = true
+                          handleBarcode('8901030783142')
+                        }}
+                        className="w-full py-3 rounded-2xl bg-accent/20 text-accent font-semibold text-sm active:scale-95 transition-all mt-4"
                       >
                         [Dev Bypass] Simulate Maggi Scan
                       </button>
