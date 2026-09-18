@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, X, TrendingUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, X, TrendingUp, History } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWorkoutSessionStore, type ActiveExercise } from '@/store/workoutSessionStore'
 import { useUserStore, toDisplayWeight } from '@/store/userStore'
 import { usePreviousPerformance } from '../hooks/usePreviousPerformance'
 import { SetTable } from './SetTable'
+import { ExerciseHistorySheet } from './ExerciseHistorySheet'
 import clsx from 'clsx'
 
 interface ExerciseCardProps {
@@ -17,6 +18,7 @@ export function ExerciseCard({ exercise, index }: ExerciseCardProps) {
   const { weightUnit } = useUserStore()
   const previousPerformance = usePreviousPerformance(exercise.exerciseId)
   const [expanded, setExpanded] = useState(true)
+  const [showHistory, setShowHistory] = useState(false)
 
   const volume = getExerciseVolume(exercise.instanceId)
   const completedSets = exercise.sets.filter(s => s.isComplete).length
@@ -27,6 +29,7 @@ export function ExerciseCard({ exercise, index }: ExerciseCardProps) {
   const showPRIndicator = volume > 0 && prevVolume > 0 && volumeDelta > 0
 
   return (
+    <>
     <motion.div
       layout
       initial={{ opacity: 0, y: 20 }}
@@ -63,6 +66,13 @@ export function ExerciseCard({ exercise, index }: ExerciseCardProps) {
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => setShowHistory(true)}
+            className="p-2 rounded-lg text-white/20 hover:text-white/60 hover:bg-white/5 transition-all"
+            title="View exercise history"
+          >
+            <History size={15} />
+          </button>
           <button
             onClick={() => setExpanded(e => !e)}
             className="p-2 rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-all"
@@ -121,5 +131,13 @@ export function ExerciseCard({ exercise, index }: ExerciseCardProps) {
         )}
       </AnimatePresence>
     </motion.div>
+
+    <ExerciseHistorySheet
+      isOpen={showHistory}
+      onClose={() => setShowHistory(false)}
+      exerciseId={exercise.exerciseId}
+      exerciseName={exercise.exerciseName}
+    />
+  </>
   )
 }

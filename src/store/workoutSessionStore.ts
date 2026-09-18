@@ -41,6 +41,8 @@ export interface ActiveExercise {
   /** Sets logged so far. Appended to as the user completes sets. */
   sets: ActiveSet[]
   notes?: string
+  /** Default rest duration for this exercise in seconds. User-overridable per session. */
+  restSeconds: number
 }
 
 /**
@@ -113,6 +115,18 @@ interface WorkoutSessionState {
   completeSet: (instanceId: string, setId: string) => void
   deleteSet: (instanceId: string, setId: string) => void
 
+  // ── Rest timer ──
+  restTimer: {
+    isActive: boolean
+    remainingSeconds: number
+    totalSeconds: number
+    exerciseInstanceId: string | null
+  } | null
+  startRestTimer: (instanceId: string, seconds?: number) => void
+  tickRestTimer: () => void
+  skipRestTimer: () => void
+  setExerciseRestDuration: (instanceId: string, seconds: number) => void
+
   // ── Derived getters ──
   /** Returns elapsed seconds, accounting for pauses. */
   getElapsedSeconds: () => number
@@ -169,6 +183,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
     (set, get) => ({
       session: null,
       isActive: false,
+      restTimer: null,
 
       // ── Session lifecycle ────────────────────────────────────
 
@@ -286,6 +301,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
           secondaryMuscles: exercise.secondaryMuscles,
           sets: [],
           notes: undefined,
+          restSeconds: exercise.defaultRestSeconds ?? 90,
         }
 
         set({
@@ -387,6 +403,60 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
             ),
           }
         })
+        // Auto-start rest timer after completing a set
+        get().startRestTimer(instanceId)
+      },
+
+      startRestTimer: (instanceId, seconds) => {
+        const { session } = get()
+        if (!session) return
+        const exercise = session.exercises.find(e => e.instanceId === instanceId)
+        const duration = seconds ?? exercise?.restSeconds ?? 90
+        set({
+          restTimer: {
+            isActive: true,
+            remainingSeconds: duration,
+            totalSeconds: duration,
+            exerciseInstanceId: instanceId,
+          }
+        })
+        if (navigator.vibrate) navigator.vibrate(50)
+      },
+
+      tickRestTimer: () => {
+        const { restTimer } = get()
+        if (!restTimer || !restTimer.isActive) return
+        if (restTimer.remainingSeconds <= 1) {
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100])
+          set({ restTimer: null })
+          return
+        }
+        set({
+          restTimer: {
+            ...restTimer,
+            remainingSeconds: restTimer.remainingSeconds - 1,
+          }
+        })
+      },
+
+      skipRestTimer: () => {
+        if (navigator.vibrate) navigator.vibrate(30)
+        set({ restTimer: null })
+      },
+
+      setExerciseRestDuration: (instanceId, seconds) => {
+        const { session } = get()
+        if (!session) return
+        set({
+          session: {
+            ...session,
+            exercises: session.exercises.map(e =>
+              e.instanceId === instanceId
+                ? { ...e, restSeconds: seconds }
+                : e
+            ),
+          }
+        })
       },
 
       deleteSet: (instanceId, setId) => {
@@ -463,6 +533,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
       name: 'forme-workout-session',
       // Only persist the session data and isActive flag.
       // Wake lock state is module-level and not serialisable.
+      // restTimer intentionally excluded — stale timers must not resume.
       partialize: (state) => ({
         session: state.session,
         isActive: state.isActive,

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Pause, Play, ChevronDown } from 'lucide-react'
+import { Plus, Pause, Play } from 'lucide-react'
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore'
 import { useUserStore, toDisplayWeight } from '@/store/userStore'
 import { ExerciseCard } from './components/ExerciseCard'
 import { AddExerciseSheet } from './components/AddExerciseSheet'
 import { EndWorkoutSheet } from './components/EndWorkoutSheet'
+import { RestTimer } from './components/RestTimer'
 import clsx from 'clsx'
 
 function useElapsedTimer(isActive: boolean, isPaused: boolean) {
@@ -95,7 +96,7 @@ export function ActiveWorkoutOverlay() {
           </div>
 
           {/* Exercise list */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative">
             <AnimatePresence initial={false}>
               {session.exercises.map((exercise, index) => (
                 <ExerciseCard
@@ -113,6 +114,9 @@ export function ActiveWorkoutOverlay() {
               </div>
             )}
           </div>
+
+          {/* Rest timer floating pill */}
+          <RestTimer />
 
           {/* Footer */}
           <div className="px-4 py-3 border-t border-white/5">

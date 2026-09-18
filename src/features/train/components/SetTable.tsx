@@ -4,6 +4,7 @@ import { useWorkoutSessionStore, type ActiveExercise } from '@/store/workoutSess
 import { useUserStore } from '@/store/userStore'
 import { SetRow } from './SetRow'
 import type { PreviousPerformance } from '../hooks/usePreviousPerformance'
+import clsx from 'clsx'
 
 interface SetTableProps {
   exercise: ActiveExercise
@@ -11,7 +12,7 @@ interface SetTableProps {
 }
 
 export function SetTable({ exercise, previousPerformance }: SetTableProps) {
-  const { addSet, updateSet } = useWorkoutSessionStore()
+  const { addSet, updateSet, setExerciseRestDuration } = useWorkoutSessionStore()
   const { weightUnit } = useUserStore()
 
   function handleCopyPrevious() {
@@ -48,6 +49,29 @@ export function SetTable({ exercise, previousPerformance }: SetTableProps) {
         <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider text-center">REPS</span>
         <span />
         <span />
+      </div>
+
+      {/* Rest duration config */}
+      <div className="flex items-center justify-between px-2 py-2 mb-1">
+        <span className="text-[10px] text-white/30 font-medium uppercase tracking-wider">
+          Rest
+        </span>
+        <div className="flex items-center gap-1">
+          {[30, 60, 90, 120, 180].map(secs => (
+            <button
+              key={secs}
+              onClick={() => setExerciseRestDuration(exercise.instanceId, secs)}
+              className={clsx(
+                'text-[10px] font-bold px-2 py-1 rounded-lg transition-all',
+                exercise.restSeconds === secs
+                  ? 'bg-accent text-black'
+                  : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
+              )}
+            >
+              {secs >= 60 ? `${secs / 60}m` : `${secs}s`}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Set rows */}

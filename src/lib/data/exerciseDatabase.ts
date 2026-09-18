@@ -10,6 +10,7 @@ export interface ExerciseEntry {
   equipment: Equipment[]
   difficulty: Difficulty
   isCompound: boolean
+  defaultRestSeconds: number
   instructions?: string[]
   tips?: string[]
 }
@@ -28,6 +29,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell", "bench"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'incline_barbell_bench_press',
@@ -39,6 +41,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell", "bench"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'dumbbell_bench_press',
@@ -50,6 +53,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'incline_dumbbell_press',
@@ -61,6 +65,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'decline_bench_press',
@@ -72,6 +77,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell", "bench"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'dumbbell_fly',
@@ -83,6 +89,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'incline_dumbbell_fly',
@@ -94,6 +101,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'cable_crossover',
@@ -105,6 +113,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'pec_deck_machine',
@@ -116,6 +125,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'machine_chest_press',
@@ -127,6 +137,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'push_up',
@@ -138,6 +149,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'deficit_push_up',
@@ -149,6 +161,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 
 // ─── BACK ───────────────────────────────────────────────────
@@ -163,6 +176,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'dumbbell_row',
@@ -174,6 +188,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 't_bar_row',
@@ -185,6 +200,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'seated_cable_row',
@@ -196,6 +212,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'machine_row',
@@ -207,6 +224,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'pendlay_row',
@@ -218,6 +236,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'meadows_row',
@@ -229,6 +248,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'inverted_row',
@@ -240,6 +260,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight", "pull_up_bar"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'single_arm_cable_row',
@@ -251,6 +272,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'chest_supported_db_row',
@@ -262,6 +284,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 
 // ─── LATS ───────────────────────────────────────────────────
@@ -276,6 +299,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["pull_up_bar", "bodyweight"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'lat_pulldown',
@@ -287,6 +311,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'chin_up',
@@ -298,6 +323,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["pull_up_bar", "bodyweight"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'straight_arm_pulldown',
@@ -309,6 +335,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'dumbbell_pullover',
@@ -320,6 +347,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'close_grip_pulldown',
@@ -331,6 +359,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'single_arm_lat_pulldown',
@@ -342,6 +371,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'machine_pulldown',
@@ -353,6 +383,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'assisted_pull_up',
@@ -364,6 +395,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 
 // ─── SHOULDERS ───────────────────────────────────────────────────
@@ -378,6 +410,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'dumbbell_shoulder_press',
@@ -389,6 +422,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'arnold_press',
@@ -400,6 +434,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'machine_shoulder_press',
@@ -411,6 +446,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'lateral_raise',
@@ -422,6 +458,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'cable_lateral_raise',
@@ -433,6 +470,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'machine_lateral_raise',
@@ -444,6 +482,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'front_raise',
@@ -455,6 +494,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'cable_front_raise',
@@ -466,6 +506,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'barbell_front_raise',
@@ -477,6 +518,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
 
 // ─── REAR_DELTS ───────────────────────────────────────────────────
@@ -491,6 +533,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'reverse_pec_deck',
@@ -502,6 +545,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'dumbbell_reverse_fly',
@@ -513,6 +557,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'cable_reverse_fly',
@@ -524,6 +569,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'incline_reverse_fly',
@@ -535,6 +581,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'band_pull_apart',
@@ -546,6 +593,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["resistance_band"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'lying_rear_delt_row',
@@ -557,6 +605,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'meadows_rear_delt_row',
@@ -568,6 +617,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 
 // ─── TRAPS ───────────────────────────────────────────────────
@@ -582,6 +632,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'dumbbell_shrug',
@@ -593,6 +644,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'smith_machine_shrug',
@@ -604,6 +656,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'cable_shrug',
@@ -615,6 +668,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'trap_bar_shrug',
@@ -626,6 +680,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'upright_row',
@@ -637,6 +692,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'cable_upright_row',
@@ -648,6 +704,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'farmers_walk',
@@ -659,6 +716,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 
 // ─── BICEPS ───────────────────────────────────────────────────
@@ -673,6 +731,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'dumbbell_curl',
@@ -684,6 +743,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'hammer_curl',
@@ -695,6 +755,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'preacher_curl',
@@ -706,6 +767,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell", "bench"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'machine_preacher_curl',
@@ -717,6 +779,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'cable_curl',
@@ -728,6 +791,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'rope_hammer_curl',
@@ -739,6 +803,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'incline_dumbbell_curl',
@@ -750,6 +815,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'concentration_curl',
@@ -761,6 +827,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'spider_curl',
@@ -772,6 +839,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'reverse_barbell_curl',
@@ -783,6 +851,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 
 // ─── TRICEPS ───────────────────────────────────────────────────
@@ -797,6 +866,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'overhead_tricep_extension',
@@ -808,6 +878,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'skull_crusher',
@@ -819,6 +890,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell", "bench"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'close_grip_bench_press',
@@ -830,6 +902,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell", "bench"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'dips',
@@ -841,6 +914,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'machine_dips',
@@ -852,6 +926,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'cable_overhead_extension',
@@ -863,6 +938,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'dumbbell_kickback',
@@ -874,6 +950,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'cable_kickback',
@@ -885,6 +962,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'diamond_push_up',
@@ -896,6 +974,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'tate_press',
@@ -907,6 +986,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'advanced',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
 
 // ─── FOREARMS ───────────────────────────────────────────────────
@@ -921,6 +1001,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell", "bench"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'reverse_wrist_curl',
@@ -932,6 +1013,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell", "bench"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'dumbbell_wrist_curl',
@@ -943,6 +1025,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'dead_hang',
@@ -954,6 +1037,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight", "pull_up_bar"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'zottman_curl',
@@ -965,6 +1049,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'wrist_roller',
@@ -976,6 +1061,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'towel_pull_up',
@@ -987,6 +1073,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight", "pull_up_bar"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'plate_pinch',
@@ -998,6 +1085,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
 
 // ─── QUADS ───────────────────────────────────────────────────
@@ -1012,6 +1100,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'barbell_back_squat',
@@ -1023,6 +1112,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'front_squat',
@@ -1034,6 +1124,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'goblet_squat',
@@ -1045,6 +1136,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'leg_press',
@@ -1056,6 +1148,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'leg_extension',
@@ -1067,6 +1160,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'bulgarian_split_squat',
@@ -1078,6 +1172,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'walking_lunge',
@@ -1089,6 +1184,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'reverse_lunge',
@@ -1100,6 +1196,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'smith_machine_squat',
@@ -1111,6 +1208,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'sissy_squat',
@@ -1122,6 +1220,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'advanced',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'pistol_squat',
@@ -1133,6 +1232,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 
 // ─── HAMSTRINGS ───────────────────────────────────────────────────
@@ -1147,6 +1247,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'dumbbell_rdl',
@@ -1158,6 +1259,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'seated_leg_curl',
@@ -1169,6 +1271,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'lying_leg_curl',
@@ -1180,6 +1283,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'nordic_hamstring_curl',
@@ -1191,6 +1295,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'good_morning',
@@ -1202,6 +1307,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'glute_ham_raise',
@@ -1213,6 +1319,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine", "bodyweight"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'cable_pull_through',
@@ -1224,6 +1331,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'single_leg_rdl',
@@ -1235,6 +1343,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 
 // ─── GLUTES ───────────────────────────────────────────────────
@@ -1249,6 +1358,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell", "bench"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'machine_hip_thrust',
@@ -1260,6 +1370,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'glute_bridge',
@@ -1271,6 +1382,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'cable_kickback_glute',
@@ -1282,6 +1394,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'machine_glute_kickback',
@@ -1293,6 +1406,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'hip_abduction_machine',
@@ -1304,6 +1418,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'cable_hip_abduction',
@@ -1315,6 +1430,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'step_up',
@@ -1326,6 +1442,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'curtsy_lunge',
@@ -1337,6 +1454,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'frog_pump',
@@ -1348,6 +1466,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'cable_pull_through_glutes',
@@ -1359,6 +1478,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'banded_glute_bridge',
@@ -1370,6 +1490,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["resistance_band"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'weighted_step_up',
@@ -1381,6 +1502,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell", "bench"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'deficit_reverse_lunge',
@@ -1392,6 +1514,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bench"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'glute_focused_leg_press',
@@ -1403,6 +1526,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'side_lunge',
@@ -1414,6 +1538,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 
 // ─── CALVES ───────────────────────────────────────────────────
@@ -1428,6 +1553,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'seated_calf_raise',
@@ -1439,6 +1565,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'leg_press_calf_raise',
@@ -1450,6 +1577,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'donkey_calf_raise',
@@ -1461,6 +1589,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'single_leg_calf_raise',
@@ -1472,6 +1601,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell", "bodyweight"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'smith_machine_calf_raise',
@@ -1483,6 +1613,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["machine"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'tibialis_raise',
@@ -1494,6 +1625,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'farmers_walk_on_toes',
@@ -1505,6 +1637,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 
 // ─── CORE ───────────────────────────────────────────────────
@@ -1519,6 +1652,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'plank',
@@ -1530,6 +1664,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'hanging_leg_raise',
@@ -1541,6 +1676,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight", "pull_up_bar"],
     difficulty: 'advanced',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'hanging_knee_raise',
@@ -1552,6 +1688,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight", "pull_up_bar"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'cable_crunch',
@@ -1563,6 +1700,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["cable"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'ab_wheel_rollout',
@@ -1574,6 +1712,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'advanced',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'russian_twist',
@@ -1585,6 +1724,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'decline_sit_up',
@@ -1596,6 +1736,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight", "bench"],
     difficulty: 'intermediate',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'bicycle_crunch',
@@ -1607,6 +1748,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'leg_raise',
@@ -1618,6 +1760,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
   {
     id: 'side_plank',
@@ -1629,6 +1772,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: false,
+    defaultRestSeconds: 60,
   },
 
 // ─── FULL_BODY ───────────────────────────────────────────────────
@@ -1643,6 +1787,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'sumo_deadlift',
@@ -1654,6 +1799,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'trap_bar_deadlift',
@@ -1665,6 +1811,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'power_clean',
@@ -1676,6 +1823,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["barbell"],
     difficulty: 'advanced',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'kettlebell_swing',
@@ -1687,6 +1835,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'burpee',
@@ -1698,6 +1847,7 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["bodyweight"],
     difficulty: 'beginner',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
   {
     id: 'thruster',
@@ -1709,5 +1859,6 @@ export const EXERCISE_DATABASE: ExerciseEntry[] = [
     equipment: ["dumbbell"],
     difficulty: 'intermediate',
     isCompound: true,
+    defaultRestSeconds: 180,
   },
 ]

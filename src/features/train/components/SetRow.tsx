@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Check, Trash2 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useWorkoutSessionStore, type ActiveSet } from '@/store/workoutSessionStore'
 import { useUserStore, toDisplayWeight, toStorageWeight } from '@/store/userStore'
 import clsx from 'clsx'
@@ -34,6 +34,28 @@ export function SetRow({ instanceId, set, previousSet }: SetRowProps) {
       weightRef.current?.focus()
     }
   }, [set.setId])
+
+  const prevWeight = previousSet?.weight
+    ? toDisplayWeight(previousSet.weight, weightUnit)
+    : null
+  const prevReps = previousSet?.reps ?? null
+
+  const currentWeight = set.weightKg ? toDisplayWeight(set.weightKg, weightUnit) : null
+  const currentReps = set.reps ?? null
+
+  const weightDelta = currentWeight !== null && prevWeight !== null ? currentWeight - prevWeight : null
+  const repsDelta = currentReps !== null && prevReps !== null ? currentReps - prevReps : null
+
+  const showOverloadBadge =
+    set.isComplete &&
+    (weightDelta !== null || repsDelta !== null) &&
+    ((weightDelta !== null && weightDelta > 0) || (repsDelta !== null && repsDelta > 0))
+
+  const showRegressBadge =
+    set.isComplete &&
+    (weightDelta !== null || repsDelta !== null) &&
+    ((weightDelta !== null && weightDelta < 0) || (repsDelta !== null && repsDelta < 0)) &&
+    !showOverloadBadge
 
   function handleComplete() {
     const w = parseFloat(weightInput)
@@ -148,6 +170,34 @@ export function SetRow({ instanceId, set, previousSet }: SetRowProps) {
       >
         <Trash2 size={14} />
       </button>
+
+      {/* Progressive overload badge */}
+      <AnimatePresence>
+        {(showOverloadBadge || showRegressBadge) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="col-span-5 px-1 pb-1"
+          >
+            <span className={clsx(
+              'inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full',
+              showOverloadBadge
+                ? 'bg-green-500/15 text-green-400'
+                : 'bg-red-500/15 text-red-400'
+            )}>
+              {showOverloadBadge ? '↑' : '↓'}
+              {weightDelta !== null && weightDelta !== 0 && (
+                <span>{weightDelta > 0 ? '+' : ''}{weightDelta.toFixed(1)}{weightUnit}</span>
+              )}
+              {repsDelta !== null && repsDelta !== 0 && (
+                <span>{repsDelta > 0 ? '+' : ''}{repsDelta} reps</span>
+              )}
+              {showOverloadBadge ? 'PR pace' : 'Below previous'}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
