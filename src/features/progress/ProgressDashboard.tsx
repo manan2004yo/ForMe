@@ -65,11 +65,14 @@ export function ProgressDashboard() {
   const handleLogMeasurement = async () => {
     const w = parseFloat(logWaist)
     if (isNaN(w) || w <= 20 || w >= 300) return
-    setIsLogging(true)
-    if (user && user.uid !== 'demo') {
-      await addWaistEntry(user.uid, w)
+    if (!user || user.uid === 'demo') {
+      toast.info('Sign up to save your measurements and track progress over time.')
+      return
     }
+    setIsLogging(true)
+    await addWaistEntry(user.uid, w)
     setLogWaist('')
+    toast.success('Measurement logged!')
     setIsLogging(false)
   }
 

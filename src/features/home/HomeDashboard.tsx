@@ -9,7 +9,7 @@ import { useFoodLogStore } from '@/store/foodLogStore'
 import { useUserStore } from '@/store/userStore'
 import { useWaterStreakStore } from '@/store/waterStreakStore'
 import { clsx } from 'clsx'
-import { Activity, ArrowRight, Droplet, Flame, Plus, Search, TrendingUp, User } from 'lucide-react'
+import { Activity, ArrowRight, Droplet, Flame, Plus, TrendingUp, User } from 'lucide-react'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -102,7 +102,22 @@ export function HomeDashboard() {
     }
   }, [user, loadProfile, loadLogs])
 
-  if (!profile || !metrics) return null
+  if (!profile || !metrics) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-3 w-20 bg-white/10 rounded-full mb-2" />
+            <div className="h-8 w-40 bg-white/10 rounded-xl" />
+          </div>
+          <div className="w-10 h-10 bg-white/10 rounded-full" />
+        </div>
+        <div className="h-56 bg-white/5 rounded-3xl w-full" />
+        <div className="h-48 bg-white/5 rounded-2xl w-full" />
+        <div className="h-40 bg-white/5 rounded-2xl w-full" />
+      </div>
+    )
+  }
 
   const totals = todayTotals()
   const calPercent = Math.min(100, Math.round((totals.calories / metrics.caloricTarget) * 100))
@@ -125,7 +140,7 @@ export function HomeDashboard() {
             className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent hover:bg-white/10 active:scale-95"
             title="Log Food"
           >
-            <Search size={18} />
+            <Plus size={18} />
           </button>
         </header>
 

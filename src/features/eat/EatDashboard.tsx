@@ -205,6 +205,8 @@ export function EatDashboard() {
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
   const [snappingSlot, setSnappingSlot] = useState<MealSlot | null>(null)
   const [scanningSlot, setScanningSlot] = useState<MealSlot | null>(null)
+  // Keep slot alive after scanner closes so BarcodeResultSheet can log to correct meal
+  const [pendingScanSlot, setPendingScanSlot] = useState<MealSlot>('snack')
   const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null)
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null)
 
@@ -400,6 +402,8 @@ export function EatDashboard() {
         isOpen={!!scanningSlot}
         onClose={() => setScanningSlot(null)}
         onProductFound={(product) => {
+          // Persist the slot BEFORE clearing scanningSlot
+          if (scanningSlot) setPendingScanSlot(scanningSlot)
           setScannedProduct(product)
           setScanningSlot(null)
         }}
@@ -411,7 +415,7 @@ export function EatDashboard() {
           const nutrition = calculateNutritionForGrams(product, grams)
           addFoodEntry(
             user?.uid || 'demo',
-            scanningSlot || 'snack',
+            pendingScanSlot,
             [{
               id: uuidv4(),
               foodItemId: `barcode-${product.barcode}`,

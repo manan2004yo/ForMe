@@ -49,9 +49,8 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
         carbs: data.carbs || 0,
         fat: data.fat || 0
       })
-    } catch (err: any) {
-      console.error(err)
-      toast.error(err.message || "Failed to analyze image. Ensure your Gemini API Key is configured in Cloudflare.")
+    } catch {
+      toast.error('AI Vision is unavailable right now. Please use the Search option to log this meal manually.')
     } finally {
       setIsScanning(false)
     }
@@ -175,7 +174,7 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
                   }}
                   className="flex-1 py-3 rounded-xl bg-accent text-black font-bold hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
                 >
-                  Log to {slot}
+                  Log to {slot.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
                 </button>
               </div>
             </motion.div>

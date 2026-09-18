@@ -291,7 +291,7 @@ function StepTraining({ data, onChange }: StepBodyProps) {
     onChange({ trainingDays: updated.sort() })
   }
 
-  const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+  const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
   return (
     <div className="flex flex-col gap-5">
@@ -529,12 +529,29 @@ export function OnboardingFlow() {
     name: user?.displayName || '',
   })
   const [isSaving, setIsSaving] = useState(false)
+  const [validationError, setValidationError] = useState('')
 
   const handleChange = (updates: Partial<UserProfile>) => {
     setData(prev => ({ ...prev, ...updates }))
   }
 
   const handleNext = async () => {
+    setValidationError('')
+    // Validate step 0 — Body metrics are required for calorie/macro calculation
+    if (step === 0) {
+      if (!data.age || data.age < 13 || data.age > 80) {
+        setValidationError('Please enter a valid age (13–80).')
+        return
+      }
+      if (!data.heightCm || data.heightCm < 100 || data.heightCm > 250) {
+        setValidationError('Please enter a valid height in cm.')
+        return
+      }
+      if (!data.weightKg || data.weightKg < 20 || data.weightKg > 300) {
+        setValidationError('Please enter a valid weight in kg.')
+        return
+      }
+    }
     if (step < STEPS.length - 1) {
       setStep(s => s + 1)
     } else {
@@ -610,7 +627,13 @@ export function OnboardingFlow() {
       </div>
 
       {/* Navigation */}
-      <div className="px-6 py-6 flex gap-3">
+      <div className="px-6 py-6 flex flex-col gap-3">
+        {validationError && (
+          <div className="bg-error/10 border border-error/20 text-error text-sm px-4 py-2.5 rounded-xl text-center animate-fade-in">
+            {validationError}
+          </div>
+        )}
+        <div className="flex gap-3">
         {step > 0 && (
           <button
             onClick={handleBack}
@@ -619,6 +642,7 @@ export function OnboardingFlow() {
             <ArrowLeft size={16} />
           </button>
         )}
+
         <button
           onClick={handleNext}
           disabled={isSaving}
@@ -641,6 +665,7 @@ export function OnboardingFlow() {
             </>
           )}
         </button>
+        </div>
       </div>
     </div>
   )

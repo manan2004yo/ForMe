@@ -30,6 +30,7 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<ScannedProduct[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   
   const [quickAdd, setQuickAdd] = useState<QuickAddState | null>(null)
@@ -45,6 +46,7 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
     const results = await searchFoods(q)
     setSearchResults(results)
     setIsSearching(false)
+    setIsInitialLoad(false)
   }
 
   useEffect(() => {
@@ -139,9 +141,10 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
 
           {/* Food List */}
           <div className="overflow-y-auto" style={{ maxHeight: '55vh' }}>
-            {isSearching ? (
+            {isSearching || isInitialLoad ? (
                <div className="flex flex-col items-center justify-center py-12 text-center">
-                 <div className="text-sm text-text-tertiary">Searching food database...</div>
+                 <div className="w-6 h-6 border-2 border-accent/40 border-t-accent rounded-full animate-spin mx-auto mb-3" />
+                 <div className="text-sm text-text-tertiary">Loading foods...</div>
                </div>
             ) : searchResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">

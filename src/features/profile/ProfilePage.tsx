@@ -1,12 +1,9 @@
-// ============================================================
-// FORME - Premium Profile Page
-// ============================================================
-
 import { PageTransition } from '@/components/layout/PageTransition'
 import { useAchievementStore } from '@/store/achievementStore'
 import { useAuthStore } from '@/store/authStore'
 import { useTrainStore } from '@/store/trainStore'
 import { useUserStore } from '@/store/userStore'
+import { useToastStore } from '@/store/toastStore'
 import type { UserProfile } from '@/types'
 import { Activity, Crown, Edit3, Lock, LogOut, Save, Settings, Shield, Target, Trophy, User } from 'lucide-react'
 import { useState } from 'react'
@@ -26,6 +23,7 @@ export function ProfilePage() {
   const [editForm, setEditForm] = useState<Partial<UserProfile> | null>(null)
   const [showAppSettings, setShowAppSettings] = useState(false)
   const [showPrivacySettings, setShowPrivacySettings] = useState(false)
+  const toast = useToastStore()
 
   if (!profile) return null
 
@@ -41,7 +39,12 @@ export function ProfilePage() {
 
   const handleSave = async () => {
     if (editForm) {
-      await saveProfile(editForm)
+      try {
+        await saveProfile(editForm)
+        toast.success('Profile saved successfully!')
+      } catch {
+        toast.error('Failed to save profile. Please try again.')
+      }
     }
     setIsEditing(false)
   }
@@ -212,11 +215,14 @@ export function ProfilePage() {
               <div className="text-xl font-bold text-white">{unlockedAchievements.length}</div>
               <div className="text-xs text-white/50 group-hover:text-white/70 transition-colors">Achievements</div>
             </button>
-            <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center">
-              <Activity size={24} className="text-accent mb-2" />
+            <button 
+              onClick={() => navigate('/train')}
+              className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent group"
+            >
+              <Activity size={24} className="text-accent mb-2 group-hover:scale-110 transition-transform" />
               <div className="text-xl font-bold text-white">{trainTemplates.length}</div>
-              <div className="text-xs text-white/50">Workouts</div>
-            </div>
+              <div className="text-xs text-white/50 group-hover:text-white/70 transition-colors">Workouts</div>
+            </button>
           </div>
         </div>
 

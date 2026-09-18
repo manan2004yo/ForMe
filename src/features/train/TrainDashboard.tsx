@@ -284,7 +284,7 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse, onStartWorkout }
         placeholder="Template Name"
         confirmText="Save Template"
         onCancel={() => setShowSavePrompt(false)}
-        onSubmit={(name) => {
+        onSubmit={(name: string) => {
           saveAsTemplate(name, dayIndex)
           setShowSavePrompt(false)
         }}
@@ -310,6 +310,7 @@ export function TrainDashboard() {
   const cnsStatus = getCurrentStatus()
 
   return (
+    <>
     <PageTransition>
       <div className="page relative">
         <header className="page-header mb-8 flex items-end justify-between">
@@ -407,5 +408,28 @@ export function TrainDashboard() {
         )}
       </div>
     </PageTransition>
+
+    <ConfirmModal
+      isOpen={showClearConfirm}
+      title="Clear Workout Plan"
+      message="This will remove all exercises from your plan. Your saved templates will not be affected."
+      confirmText="Yes, Clear Plan"
+      isDestructive={true}
+      onCancel={() => setShowClearConfirm(false)}
+      onConfirm={() => { clearPlan(); setShowClearConfirm(false) }}
+    />
+    <ConfirmModal
+      isOpen={loadTemplateId !== null}
+      title="Load Template"
+      message={`This will load the "${templates.find(t => t.id === loadTemplateId)?.name}" template into Monday. You can drag exercises to other days after loading.`}
+      confirmText="Load Template"
+      isDestructive={false}
+      onCancel={() => setLoadTemplateId(null)}
+      onConfirm={() => { 
+        if (loadTemplateId) loadTemplate(loadTemplateId, 0)
+        setLoadTemplateId(null)
+      }}
+    />
+  </>
   )
 }

@@ -1,10 +1,7 @@
-// ============================================================
-// FORME - Premium Diet Plan Dashboard
-// ============================================================
-
 import { PageTransition } from '@/components/layout/PageTransition'
 import { AnimatedNumber, ProgressBar } from '@/components/shared'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { PromptModal } from '@/components/ui/PromptModal'
 import { useAuthStore } from '@/store/authStore'
 import { usePlanStore } from '@/store/planStore'
 import { useUserStore } from '@/store/userStore'
@@ -139,6 +136,7 @@ function MealSection({ slot, label, foods, onBrowse }: {
 export function PlanDashboard() {
   const [showGroceryEngine, setShowGroceryEngine] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [showSavePrompt, setShowSavePrompt] = useState(false)
   const { currentPlan, templates, saveAsTemplate, loadTemplate, clearPlan, loadAll, isLoading } = usePlanStore()
   const { metrics } = useUserStore()
   const { user } = useAuthStore()
@@ -160,9 +158,10 @@ export function PlanDashboard() {
     return acc
   }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
 
+  const hasFoods = currentPlan.some(slot => slot.foods.length > 0)
+
   const handleSaveTemplate = () => {
-    const name = prompt("Enter a name for this diet plan template (e.g., Hostel Breakfast):")
-    if (name) saveAsTemplate(name)
+    setShowSavePrompt(true)
   }
 
   return (
@@ -190,16 +189,19 @@ export function PlanDashboard() {
           <div className="flex gap-3">
             <button 
               onClick={handleSaveTemplate}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              disabled={!hasFoods}
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Save size={16} /> Save Plan
             </button>
-            <button 
-              onClick={() => setShowClearConfirm(true)}
-              className="px-4 py-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-            >
-              <Trash2 size={16} /> Clear Plan
-            </button>
+            {hasFoods && (
+              <button 
+                onClick={() => setShowClearConfirm(true)}
+                className="px-4 py-2 border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              >
+                <Trash2 size={16} /> Clear Plan
+              </button>
+            )}
           </div>
         </header>
 
@@ -302,6 +304,18 @@ export function PlanDashboard() {
         isDestructive={true}
         onCancel={() => setShowClearConfirm(false)}
         onConfirm={() => { clearPlan(); setShowClearConfirm(false) }}
+      />
+      <PromptModal
+        isOpen={showSavePrompt}
+        title="Save as Template"
+        message="Enter a name for this diet plan template (e.g., Hostel Breakfast):"
+        placeholder="Template Name"
+        confirmText="Save Template"
+        onCancel={() => setShowSavePrompt(false)}
+        onSubmit={(name) => {
+          saveAsTemplate(name)
+          setShowSavePrompt(false)
+        }}
       />
     </>
   )
