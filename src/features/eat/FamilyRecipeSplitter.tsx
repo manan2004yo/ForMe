@@ -7,17 +7,9 @@ import { ArrowLeft, Calculator, Check, Plus, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
-import { INDIAN_FOODS } from '@/lib/data/indianFoods'
-
-const MOCK_INGREDIENTS = INDIAN_FOODS.map(f => ({
-  id: f.id,
-  name: f.name,
-  calories: f.nutrition.calories,
-  protein: f.nutrition.protein,
-  carbs: f.nutrition.carbs,
-  fat: f.nutrition.fat,
-  fiber: f.nutrition.fiber
-}))
+import { searchFoods } from '@/lib/services/foodSearchService'
+import type { ScannedProduct } from '@/lib/services/barcodeProductService'
+import { useEffect } from 'react'
 export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
   const { user } = useAuthStore()
   const { addFoodEntry } = useFoodLogStore()
@@ -26,10 +18,27 @@ export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
   const [recipeName, setRecipeName] = useState('')
   const [ingredients, setIngredients] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<ScannedProduct[]>([])
+  const [isSearching, setIsSearching] = useState(false)
   const [totalServings, setTotalServings] = useState(4)
   const [myServings, setMyServings] = useState(1)
 
-  const filteredIngredients = MOCK_INGREDIENTS.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+    
+    setIsSearching(true)
+    const timeout = setTimeout(async () => {
+      const results = await searchFoods(searchQuery)
+      setSearchResults(results)
+      setIsSearching(false)
+    }, 500)
+    
+    return () => clearTimeout(timeout)
+  }, [searchQuery])
 
   const totalMacros = useMemo(() => {
     return ingredients.reduce((acc, item) => ({
@@ -50,9 +59,19 @@ export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
     }
   }, [totalMacros, myServings, totalServings])
 
-  const handleAddIngredient = (ing: any) => {
-    setIngredients([...ingredients, { ...ing, grams: 100 }])
+  const handleAddIngredient = (product: ScannedProduct) => {
+    setIngredients([...ingredients, { 
+      id: product.barcode, 
+      name: product.name, 
+      calories: product.per100g.calories,
+      protein: product.per100g.protein,
+      carbs: product.per100g.carbs,
+      fat: product.per100g.fat,
+      fiber: product.per100g.fiber,
+      grams: 100 
+    }])
     setSearchQuery('')
+    setSearchResults([])
   }
 
   const updateGrams = (index: number, grams: number) => {
@@ -142,16 +161,25 @@ export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
             
             {searchQuery && (
               <div className="mt-2 bg-[#1a1a1a] border border-white/5 rounded-xl overflow-hidden">
-                {filteredIngredients.map(ing => (
-                  <button 
-                    key={ing.id}
-                    onClick={() => handleAddIngredient(ing)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-white/5 border-b border-white/5 last:border-0 transition-colors text-left"
-                  >
-                    <span className="text-sm text-white/80">{ing.name}</span>
-                    <Plus size={16} className="text-accent" />
-                  </button>
-                ))}
+                {isSearching ? (
+                  <div className="p-4 text-center text-sm text-white/40">Searching global database...</div>
+                ) : searchResults.length > 0 ? (
+                  searchResults.map(product => (
+                    <button 
+                      key={product.barcode}
+                      onClick={() => handleAddIngredient(product)}
+                      className="w-full flex items-center justify-between p-3 hover:bg-white/5 border-b border-white/5 last:border-0 transition-colors text-left"
+                    >
+                      <div className="flex-1 pr-4">
+                        <p className="text-sm text-white font-medium truncate">{product.name}</p>
+                        <p className="text-[10px] text-white/50">{product.brand ? `${product.brand} · ` : ''}{product.per100g.calories} kcal / 100g</p>
+                      </div>
+                      <Plus size={16} className="text-white/30" />
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-sm text-white/40">No ingredients found</div>
+                )}
               </div>
             )}
           </div>

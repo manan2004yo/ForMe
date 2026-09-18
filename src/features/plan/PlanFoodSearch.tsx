@@ -2,13 +2,12 @@
 // FORME - Plan Food Search Component
 // ============================================================
 
-import { INDIAN_FOODS, getNutritionForGrams } from '@/lib/data/indianFoods'
+import { searchFoods } from '@/lib/services/foodSearchService'
+import type { ScannedProduct } from '@/lib/services/barcodeProductService'
 import { usePlanStore } from '@/store/planStore'
 import type { MealSlot } from '@/types'
 import { Plus, Search, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-
-const CATEGORIES = ['All', 'Breads', 'Rice', 'Dal & Legumes', 'Vegetables', 'Dairy', 'Proteins', 'Snacks', 'Fruits', 'Beverages']
+import { useEffect, useRef, useState } from 'react'
 
 interface PlanFoodSearchProps {
   slot: MealSlot
@@ -17,49 +16,59 @@ interface PlanFoodSearchProps {
 
 export function PlanFoodSearch({ slot, onClose }: PlanFoodSearchProps) {
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState('All')
+  const [searchResults, setSearchResults] = useState<ScannedProduct[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [quickAdd, setQuickAdd] = useState<{product: ScannedProduct, quantity: number} | null>(null)
+  
   const inputRef = useRef<HTMLInputElement>(null)
   const { addFoodToSlot } = usePlanStore()
-  const [quickAdd, setQuickAdd] = useState<{foodId: string, quantity: number, unit: string} | null>(null)
 
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
 
-  const filteredFoods = useMemo(() => {
-    return INDIAN_FOODS.filter(food => {
-      const matchesSearch = food.name.toLowerCase().includes(query.toLowerCase()) || 
-                            food.aliases?.some(n => n.toLowerCase().includes(query.toLowerCase()))
-      const matchesCategory = category === 'All' || food.category === category
-      return matchesSearch && matchesCategory
-    })
-  }, [query, category])
+  useEffect(() => {
+    if (!query.trim()) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+    
+    setIsSearching(true)
+    const timeout = setTimeout(async () => {
+      const results = await searchFoods(query)
+      setSearchResults(results)
+      setIsSearching(false)
+    }, 500)
+    
+    return () => clearTimeout(timeout)
+  }, [query])
 
-  const handleAdd = (foodId: string) => {
-    const food = INDIAN_FOODS.find(f => f.id === foodId)
-    if (!food) return
-
+  const handleAdd = (product: ScannedProduct) => {
     setQuickAdd({
-      foodId,
-      quantity: 1,
-      unit: food.portionUnits[0]
+      product,
+      quantity: 100
     })
   }
 
   const confirmAdd = () => {
     if (!quickAdd) return
-    const food = INDIAN_FOODS.find(f => f.id === quickAdd.foodId)
-    if (!food) return
+    const product = quickAdd.product
+    const multiplier = quickAdd.quantity / 100
 
-    const gramsPerUnit = food.gramsPerUnit[quickAdd.unit] || 100
-    const grams = gramsPerUnit * quickAdd.quantity
-    const nutrition = getNutritionForGrams(food, grams)
+    const nutrition = {
+      calories: product.per100g.calories * multiplier,
+      protein: product.per100g.protein * multiplier,
+      carbs: product.per100g.carbs * multiplier,
+      fat: product.per100g.fat * multiplier,
+      fiber: product.per100g.fiber * multiplier
+    }
 
     addFoodToSlot(slot, {
-      foodId: food.id,
-      name: food.name,
+      foodId: product.barcode,
+      name: product.name,
       quantity: quickAdd.quantity,
-      unit: quickAdd.unit,
+      unit: 'gram',
       nutrition
     })
 
@@ -91,58 +100,67 @@ export function PlanFoodSearch({ slot, onClose }: PlanFoodSearchProps) {
         </button>
       </header>
 
-      <div className="overflow-x-auto hide-scrollbar border-b border-white/5">
-        <div className="flex gap-2 p-4 w-max">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCategory(cat)}
-              className={"px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors " + (category === cat ? 'bg-white text-black' : 'bg-white/5 text-white/70 hover:bg-white/10')}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-32">
-        {filteredFoods.map(food => (
-          <div key={food.id} className="bg-[#121212] border border-white/5 p-4 rounded-xl flex items-center justify-between">
-            <div>
-              <h3 className="text-white font-medium">{food.name}</h3>
-              <p className="text-xs text-white/50">{food.nutrition.calories} kcal per 100g</p>
-            </div>
-            
-            {quickAdd?.foodId === food.id ? (
-              <div className="flex items-center gap-2">
-                <input 
-                  type="number" 
-                  value={quickAdd.quantity} 
-                  onChange={e => setQuickAdd({...quickAdd, quantity: Number(e.target.value) || 1})}
-                  className="w-16 bg-white/10 rounded px-2 py-1 text-white text-sm outline-none focus:ring-1 focus:ring-accent"
-                  min="1"
-                />
-                <select 
-                  value={quickAdd.unit}
-                  onChange={e => setQuickAdd({...quickAdd, unit: e.target.value})}
-                  className="bg-white/10 rounded px-2 py-1 text-white text-sm outline-none border-none focus:ring-1 focus:ring-accent"
-                >
-                  {food.portionUnits.map(p => (
-                    <option key={p} value={p} className="bg-bg">{p}</option>
-                  ))}
-                  
-                </select>
-                <button onClick={confirmAdd} className="bg-accent text-white p-1.5 rounded hover:bg-accent/90">
-                  <Plus size={16} />
-                </button>
-              </div>
-            ) : (
-              <button onClick={() => handleAdd(food.id)} className="p-2 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 rounded-lg">
-                <Plus size={18} />
-              </button>
-            )}
+      <div className="flex-1 overflow-y-auto">
+        {isSearching ? (
+          <div className="p-12 flex flex-col items-center justify-center text-white/50">
+            <p>Searching global database...</p>
           </div>
-        ))}
+        ) : searchResults.length === 0 ? (
+          <div className="p-12 flex flex-col items-center justify-center text-white/50">
+            <Search size={48} className="mb-4 text-white/20" />
+            <p>Search for any food to add to {slot.replace('_', ' ')}</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-white/5">
+            {searchResults.map(product => (
+              <div key={product.barcode} className="p-4 flex items-center justify-between hover:bg-white/5">
+                <div className="flex-1 min-w-0 pr-4">
+                  <h3 className="font-medium text-white truncate">{product.name}</h3>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-white/50">
+                    <span>{Math.round(product.per100g.calories)} kcal</span>
+                    <span>•</span>
+                    <span>P: {Math.round(product.per100g.protein)}g</span>
+                    <span>•</span>
+                    <span>C: {Math.round(product.per100g.carbs)}g</span>
+                    <span>•</span>
+                    <span>F: {Math.round(product.per100g.fat)}g</span>
+                    <span>(per 100g)</span>
+                  </div>
+                </div>
+                
+                {quickAdd?.product.barcode === product.barcode ? (
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center bg-white/10 rounded-lg">
+                      <button 
+                        onClick={() => setQuickAdd(q => q ? {...q, quantity: Math.max(10, q.quantity - 10)} : null)}
+                        className="px-3 py-1.5 text-white/70 hover:text-white"
+                      >-</button>
+                      <span className="text-sm font-medium w-12 text-center">{quickAdd.quantity}</span>
+                      <button 
+                        onClick={() => setQuickAdd(q => q ? {...q, quantity: q.quantity + 10} : null)}
+                        className="px-3 py-1.5 text-white/70 hover:text-white"
+                      >+</button>
+                    </div>
+                    <span className="text-xs text-white/50">g</span>
+                    <button 
+                      onClick={confirmAdd}
+                      className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-black"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => handleAdd(product)}
+                    className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:bg-white/20 hover:text-white transition-colors"
+                  >
+                    <Plus size={16} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
