@@ -19,8 +19,8 @@ export interface ScannedProduct {
     fiber: number
   }
   servingSizeG: number | null
-  /** 'manufacturer' = real barcode DB data, 'estimated' = fallback */
-  dataSource: 'manufacturer' | 'estimated'
+  /** 'manufacturer' = real barcode DB data, 'estimated' = fallback, 'local' = prebuilt DB, 'custom' = user added */
+  dataSource: 'manufacturer' | 'estimated' | 'local' | 'custom'
   imageUrl: string | null
 }
 
