@@ -213,6 +213,7 @@ export default function App() {
         <ToastContainer />
       </BrowserRouter>
       <ActiveWorkoutOverlay />
+      <VYBEOverlay />
     </>
   )
 }

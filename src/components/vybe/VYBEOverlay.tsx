@@ -62,7 +62,7 @@ export function VYBEOverlay() {
     };
     const onEnd = () => {
       // If we already have a result, keep overlay open; otherwise stop listening.
-      if (!result) reset();
+      if (!useVybeStore.getState().result) reset();
     };
     const onError = (e: any) => {
       setError(e.error || 'Speech recognition error');
@@ -176,7 +176,7 @@ export function VYBEOverlay() {
             {result && (
               <>
                 {result.intent === 'LOG_FOOD' && !context?.mealSlot && (
-                  <div className="space-y-2">
+                  <div className="space-y-2 mb-4">
                     <label className="text-white">Select Meal Slot:</label>
                     <select
                       className="w-full p-2 bg-white/5 text-white rounded"
@@ -195,36 +195,35 @@ export function VYBEOverlay() {
                   </div>
                 )}
 
-
-              <div className="space-y-3">
-                <p className="text-white">Detected intent: <span className="font-medium">{result.intent}</span></p>
-                {result.intent === 'LOG_FOOD' && (
-                  <div className="space-y-2">
-                    <p className="text-white">Food: {result.foodName}</p>
-                    <p className="text-white">Quantity: {result.quantity} {result.unit}</p>
+                <div className="space-y-3">
+                  <p className="text-white">Detected intent: <span className="font-medium">{result.intent}</span></p>
+                  {result.intent === 'LOG_FOOD' && (
+                    <div className="space-y-2">
+                      <p className="text-white">Food: {result.foodName}</p>
+                      <p className="text-white">Quantity: {result.quantity} {result.unit}</p>
+                    </div>
+                  )}
+                  {result.intent === 'LOG_WORKOUT' && (
+                    <div className="space-y-2">
+                      <p className="text-white">Exercise: {result.exerciseName}</p>
+                      <p className="text-white">Sets: {result.sets}, Reps: {result.reps}, Weight: {result.weight} {result.weightUnit}</p>
+                    </div>
+                  )}
+                  <div className="flex gap-4 mt-4 justify-end">
+                    <button
+                      onClick={reset}
+                      className="px-4 py-2 bg-white/5 text-white rounded hover:bg-white/10 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirm}
+                      className="px-4 py-2 bg-accent text-black rounded hover:bg-accent/90 transition"
+                    >
+                      <Check size={16} className="inline mr-1" /> Confirm
+                    </button>
                   </div>
-                )}
-                {result.intent === 'LOG_WORKOUT' && (
-                  <div className="space-y-2">
-                    <p className="text-white">Exercise: {result.exerciseName}</p>
-                    <p className="text-white">Sets: {result.sets}, Reps: {result.reps}, Weight: {result.weight} {result.weightUnit}</p>
-                  </div>
-                )}
-                <div className="flex gap-4 mt-4 justify-end">
-                  <button
-                    onClick={reset}
-                    className="px-4 py-2 bg-white/5 text-white rounded hover:bg-white/10 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleConfirm}
-                    className="px-4 py-2 bg-accent text-black rounded hover:bg-accent/90 transition"
-                  >
-                    <Check size={16} className="inline mr-1" /> Confirm
-                  </button>
                 </div>
-              </div>
               </>
             )}
           </div>

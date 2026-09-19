@@ -22,13 +22,12 @@ export function VYBEMicButton({ context }: { context?: VybeContext }) {
     <button
       onClick={handleClick}
       className={clsx(
-        'fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300',
-        listening ? 'bg-red-500 hover:bg-red-600' : 'bg-accent hover:bg-accent/90',
-        'text-white'
+        'flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs font-bold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 shadow-[0_0_10px_rgba(239,68,68,0.2)]',
+        listening ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'
       )}
       aria-label="Voice input"
     >
-      {listening ? <X size={28} /> : <Mic size={28} />}
+      {listening ? <><X size={14} /> Listening</> : <><Mic size={14} /> VYBE</>}
     </button>
   );
 }
