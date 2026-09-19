@@ -63,7 +63,7 @@ export const useVybeStore = create<VybeState>((set) => ({
   result: null,
   error: null,
   context: null,
-  startListening: (ctx) => set({ listening: true, error: null, context: ctx ?? null }),
+  startListening: (ctx) => set({ listening: true, error: null, result: null, context: ctx ?? null }),
   stopListening: () => set({ listening: false, context: null }),
   setProcessing: (processing) => set({ processing }),
   setResult: (result) => set({ result, processing: false, listening: false }),
