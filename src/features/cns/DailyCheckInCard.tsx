@@ -3,7 +3,7 @@ import { useCnsStore } from '@/store/cnsStore'
 import clsx from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Activity, Battery, Check, ChevronRight, Moon } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export function DailyCheckInCard() {
   const { user } = useAuthStore()
@@ -11,17 +11,36 @@ export function DailyCheckInCard() {
   
   const todayLog = getTodayLog()
   const [isExpanded, setIsExpanded] = useState(!todayLog)
-  const [step, setStep] = useState(1)
+  const [currentStep, setCurrentStep] = useState(0)
+
+  const [answers, setAnswers] = useState<{
+    sleepHours?: number
+    fatigueLevel?: number
+    sorenessLevel?: number
+  }>({})
 
   const [sleep, setSleep] = useState(7)
   const [fatigue, setFatigue] = useState(5)
   const [soreness, setSoreness] = useState(5)
 
+  useEffect(() => {
+    if (currentStep === 0 && answers.sleepHours !== undefined) setSleep(answers.sleepHours)
+    if (currentStep === 1 && answers.fatigueLevel !== undefined) setFatigue(answers.fatigueLevel)
+    if (currentStep === 2 && answers.sorenessLevel !== undefined) setSoreness(answers.sorenessLevel)
+  }, [currentStep, answers])
+
   if (todayLog && !isExpanded) return null
 
   const handleNext = () => {
-    if (step < 3) setStep(step + 1)
-    else handleComplete()
+    if (currentStep === 0) {
+      setAnswers(prev => ({ ...prev, sleepHours: sleep }))
+      setCurrentStep(1)
+    } else if (currentStep === 1) {
+      setAnswers(prev => ({ ...prev, fatigueLevel: fatigue }))
+      setCurrentStep(2)
+    } else {
+      handleComplete()
+    }
   }
 
   const handleComplete = async () => {
@@ -29,8 +48,8 @@ export function DailyCheckInCard() {
     const today = new Date().toISOString().split('T')[0]
     await addLog(user.uid || (user as any).id || 'demo', today, {
       date: today,
-      sleepHours: sleep,
-      fatigueLevel: fatigue,
+      sleepHours: answers.sleepHours ?? sleep,
+      fatigueLevel: answers.fatigueLevel ?? fatigue,
       sorenessLevel: soreness
     })
     setIsExpanded(false)
@@ -59,7 +78,16 @@ export function DailyCheckInCard() {
           </div>
 
           <div className="min-h-[140px] flex flex-col justify-center">
-            {step === 1 && (
+            {currentStep > 0 && (
+              <button
+                onClick={() => setCurrentStep(s => s - 1)}
+                className="flex items-center gap-1.5 text-white/40 hover:text-white text-sm font-medium transition-all active:scale-95 mb-4"
+              >
+                ← Back
+              </button>
+            )}
+
+            {currentStep === 0 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -77,7 +105,7 @@ export function DailyCheckInCard() {
               </motion.div>
             )}
 
-            {step === 2 && (
+            {currentStep === 1 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -99,7 +127,7 @@ export function DailyCheckInCard() {
               </motion.div>
             )}
 
-            {step === 3 && (
+            {currentStep === 2 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -124,16 +152,16 @@ export function DailyCheckInCard() {
 
           <div className="flex justify-between items-center mt-4">
             <div className="flex gap-1.5">
-              {[1, 2, 3].map(i => (
-                <div key={i} className={clsx("h-1.5 rounded-full transition-all", step === i ? "w-6 bg-accent" : "w-1.5 bg-white/20")} />
+              {[0, 1, 2].map(i => (
+                <div key={i} className={clsx("h-1.5 rounded-full transition-all", currentStep === i ? "w-6 bg-accent" : "w-1.5 bg-white/20")} />
               ))}
             </div>
             <button 
               onClick={handleNext}
               className="flex items-center gap-1 bg-white text-black px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors"
             >
-              {step === 3 ? 'Save' : 'Next'} 
-              {step === 3 ? <Check size={16} /> : <ChevronRight size={16} />}
+              {currentStep === 2 ? 'Save' : 'Next'} 
+              {currentStep === 2 ? <Check size={16} /> : <ChevronRight size={16} />}
             </button>
           </div>
         </motion.div>

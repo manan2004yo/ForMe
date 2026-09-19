@@ -32,7 +32,14 @@ export type BarcodeProductResult =
 
 export async function fetchProductByBarcode(barcode: string): Promise<BarcodeProductResult> {
   try {
-    const response = await fetch(`/api/barcode/${barcode}`)
+    const response = await fetch(
+      `/api/barcode/${barcode}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
 
     if (!response.ok) {
       return { status: 'network_error', message: `HTTP ${response.status}` }
@@ -55,7 +62,10 @@ export async function fetchProductByBarcode(barcode: string): Promise<BarcodePro
 
     // Reject products with no meaningful nutrition data
     if (calories === 0 && protein === 0 && carbs === 0 && fat === 0) {
-      return { status: 'missing_nutrition', name: p.product_name ?? 'Unknown Product' }
+      return { 
+        status: 'missing_nutrition', 
+        name: p.product_name ?? 'Unknown Product' 
+      }
     }
 
     const product: ScannedProduct = {

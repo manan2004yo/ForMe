@@ -4,6 +4,7 @@ import type { MuscleGroup } from '@/types'
 interface MuscleMapSVGProps {
   view: 'front' | 'back'
   onMuscleClick: (muscle: MuscleGroup) => void
+  selectedMuscle?: MuscleGroup | null
 }
 
 interface MusclePatch {
@@ -131,7 +132,7 @@ function BodySilhouette() {
 }
 
 // ─── Component ────────────────────────────────────────────────
-export function MuscleMapSVG({ view, onMuscleClick }: MuscleMapSVGProps) {
+export function MuscleMapSVG({ view, onMuscleClick, selectedMuscle }: MuscleMapSVGProps) {
   const { getMuscleStatus } = useMuscleRecoveryStore()
   const patches = view === 'front' ? FRONT_PATCHES : BACK_PATCHES
 
@@ -139,7 +140,7 @@ export function MuscleMapSVG({ view, onMuscleClick }: MuscleMapSVGProps) {
     <svg
       viewBox="0 0 200 480"
       xmlns="http://www.w3.org/2000/svg"
-      className="w-full max-w-[240px] mx-auto"
+      className="w-full max-w-full mx-auto"
       style={{ filter: 'drop-shadow(0 0 24px rgba(80,130,255,0.12))' }}
     >
       <defs>
@@ -185,15 +186,15 @@ export function MuscleMapSVG({ view, onMuscleClick }: MuscleMapSVGProps) {
           >
             {patch.parts.map((p, i) => (
               <ellipse
-                key={i}
+                key={`${patch.muscle}-${i}`}
                 cx={p.cx} cy={p.cy} rx={p.rx} ry={p.ry}
                 fill={color}
                 fillOpacity={active ? 0.82 : 0.10}
-                stroke={active ? color : 'rgba(255,255,255,0.04)'}
-                strokeWidth={active ? 1.5 : 0.5}
-                strokeOpacity={active ? 0.5 : 1}
+                stroke={patch.muscle === selectedMuscle ? '#ffffff' : (active ? color : 'rgba(255,255,255,0.04)')}
+                strokeWidth={patch.muscle === selectedMuscle ? 2 : (active ? 1.5 : 0.5)}
+                strokeOpacity={patch.muscle === selectedMuscle ? 0.8 : (active ? 0.5 : 1)}
                 filter={glowFilter}
-                style={{ transition: 'fill 0.6s ease, fill-opacity 0.6s ease' }}
+                style={{ transition: 'fill 0.5s ease, fill-opacity 0.5s ease, stroke 0.2s ease' }}
               />
             ))}
           </g>

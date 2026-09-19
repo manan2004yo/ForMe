@@ -11,7 +11,6 @@ import clsx from 'clsx'
 export function MuscleMapSection() {
   const { user } = useAuthStore()
   const { syncFromLogs, isLoading } = useMuscleRecoveryStore()
-  const [view, setView] = useState<'front' | 'back'>('front')
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | null>(null)
 
   useEffect(() => {
@@ -25,22 +24,6 @@ export function MuscleMapSection() {
       {/* Section header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-white">Recovery Map</h2>
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5">
-          {(['front', 'back'] as const).map(v => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={clsx(
-                'px-4 py-1.5 rounded-lg text-xs font-bold transition-all capitalize',
-                view === v
-                  ? 'bg-white text-black'
-                  : 'text-white/40 hover:text-white'
-              )}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Legend */}
@@ -61,21 +44,32 @@ export function MuscleMapSection() {
       </div>
 
       {/* SVG map */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={view}
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.97 }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        >
-          {isLoading ? (
-            <div className="h-[320px] rounded-2xl bg-white/5 animate-pulse max-w-[220px] mx-auto" />
-          ) : (
-            <MuscleMapSVG view={view} onMuscleClick={setSelectedMuscle} />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      {isLoading ? (
+        <div className="h-[320px] rounded-2xl bg-white/5 animate-pulse w-full mx-auto" />
+      ) : (
+        <div className="flex gap-3 items-start">
+          <div className="flex-1">
+            <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider text-center mb-2">
+              Front
+            </p>
+            <MuscleMapSVG
+              view="front"
+              onMuscleClick={setSelectedMuscle}
+              selectedMuscle={selectedMuscle}
+            />
+          </div>
+          <div className="flex-1">
+            <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider text-center mb-2">
+              Back
+            </p>
+            <MuscleMapSVG
+              view="back"
+              onMuscleClick={setSelectedMuscle}
+              selectedMuscle={selectedMuscle}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Recovery timeline */}
       <div>

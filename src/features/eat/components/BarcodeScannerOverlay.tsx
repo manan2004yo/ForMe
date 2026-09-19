@@ -27,6 +27,8 @@ type ScannerState =
   | 'permission_denied'
   | 'not_supported'
   | 'error'
+  | 'not_found'
+  | 'missing_nutrition'
 
 export function BarcodeScannerOverlay({
   isOpen,
@@ -41,6 +43,8 @@ export function BarcodeScannerOverlay({
   const [scannerState, setScannerState] = useState<ScannerState>('requesting_permission')
   const [errorDetail, setErrorDetail]   = useState<string>('')
   const [lastBarcode,  setLastBarcode]  = useState<string | null>(null)
+  const [notFoundBarcode, setNotFoundBarcode] = useState<string>('')
+  const [missingNutritionName, setMissingNutritionName] = useState<string>('')
   const toast = useToastStore()
 
   const stopCamera = useCallback(() => {
@@ -72,16 +76,16 @@ export function BarcodeScannerOverlay({
       onProductFound(result.product)
       onClose()
     } else if (result.status === 'missing_nutrition') {
-      toast.warning(`Found "${result.name}" but it has no nutrition data. Please enter it manually.`)
-      onClose()
+      setMissingNutritionName(result.name)
+      setScannerState('missing_nutrition')
     } else if (result.status === 'not_found') {
-      toast.warning('Product not found in database. You can enter nutrition manually.')
-      onClose()
+      setNotFoundBarcode(barcode)
+      setScannerState('not_found')
     } else {
       toast.error(`Scan error: ${result.message}`)
       setLastBarcode(null)
-      setScannerState('scanning')
-      scanningRef.current = true
+      // Must restart camera fully — stream was destroyed by stopCamera()
+      await startCamera()
     }
   }, [lastBarcode, stopCamera, onProductFound, onClose, toast])
 
@@ -332,6 +336,77 @@ export function BarcodeScannerOverlay({
                   </motion.div>
                   <p className="text-white font-semibold text-base">Looking up product...</p>
                   <p className="text-white/40 text-xs">Checking Open Food Facts</p>
+                </div>
+              </div>
+            )}
+
+            {scannerState === 'not_found' && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                <div className="w-full max-w-sm mx-4 bg-[#111111]/90 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 flex flex-col items-center shadow-2xl">
+                  <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mb-6">
+                    <AlertCircle size={32} className="text-amber-400" />
+                  </div>
+                  <h3 className="text-xl text-white font-bold mb-2">Product Not Found</h3>
+                  <p className="text-white/50 text-center text-sm mb-6 leading-relaxed">
+                    Barcode <span className="text-white/70 font-mono">{notFoundBarcode}</span> is not
+                    in our database yet.
+                  </p>
+                  <div className="w-full space-y-3">
+                    <button
+                      onClick={() => {
+                        setLastBarcode(null)
+                        startCamera()
+                      }}
+                      className="w-full py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-all active:scale-[0.98]"
+                    >
+                      Scan Different Barcode
+                    </button>
+                    <button
+                      onClick={() => { stopCamera(); onClose() }}
+                      className="w-full py-3.5 rounded-2xl bg-accent text-black font-semibold transition-all active:scale-[0.98]"
+                    >
+                      Search Manually Instead
+                    </button>
+                    <button
+                      onClick={() => { stopCamera(); onClose() }}
+                      className="w-full py-4 text-white/30 hover:text-white text-sm font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {scannerState === 'missing_nutrition' && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                <div className="w-full max-w-sm mx-4 bg-[#111111]/90 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 flex flex-col items-center shadow-2xl">
+                  <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-6">
+                    <Zap size={32} className="text-blue-400" />
+                  </div>
+                  <h3 className="text-xl text-white font-bold mb-2">Product Found</h3>
+                  <p className="text-white/70 text-center font-medium mb-2">{missingNutritionName}</p>
+                  <p className="text-white/40 text-center text-sm mb-6 leading-relaxed">
+                    This product exists but has no nutrition data in the database.
+                    You can enter the values from the packaging manually.
+                  </p>
+                  <div className="w-full space-y-3">
+                    <button
+                      onClick={() => { stopCamera(); onClose() }}
+                      className="w-full py-3.5 rounded-2xl bg-accent text-black font-semibold transition-all active:scale-[0.98]"
+                    >
+                      Enter Nutrition Manually
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLastBarcode(null)
+                        startCamera()
+                      }}
+                      className="w-full py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-all active:scale-[0.98]"
+                    >
+                      Scan Different Product
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
