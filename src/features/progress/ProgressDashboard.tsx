@@ -15,6 +15,8 @@ import { Activity, BookOpen, Dumbbell, Plus, Save, TrendingDown, TrendingUp } fr
 import { useEffect, useState } from 'react'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { CinematicProgressMorph } from './CinematicProgressMorph'
+import { GoalSwitcher } from './components/GoalSwitcher'
+import { ContextualInsightCard } from './components/ContextualInsightCard'
 
 export function ProgressDashboard() {
   const { user } = useAuthStore()
@@ -116,6 +118,13 @@ export function ProgressDashboard() {
             Track your body metrics over time
           </p>
         </header>
+
+        <div className="mb-6">
+          <h3 className="text-xs font-bold text-white/30 uppercase tracking-wider mb-3">
+            Your Goal
+          </h3>
+          <GoalSwitcher />
+        </div>
 
         {/* Current Stats */}
         <div className="grid grid-cols-2 gap-4 mb-8">
@@ -315,7 +324,9 @@ export function ProgressDashboard() {
           </div>
         </div>
 
-
+        <div className="mt-6">
+          <ContextualInsightCard />
+        </div>
 
       </div>
     </PageTransition>

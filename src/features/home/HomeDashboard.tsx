@@ -12,6 +12,8 @@ import { clsx } from 'clsx'
 import { Activity, ArrowRight, Droplet, Flame, Plus, TrendingUp, User } from 'lucide-react'
 import { getRecentFoodLogs } from '@/lib/firebase/dataService'
 import { MacroHistorySheet } from '@/features/eat/components/MacroHistorySheet'
+import { DailyCheckInCard } from '@/features/cns/DailyCheckInCard'
+import { useCnsStore } from '@/store/cnsStore'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -97,6 +99,7 @@ export function HomeDashboard() {
   const { user } = useAuthStore()
   const { profile, metrics, loadProfile } = useUserStore()
   const { todayTotals, loadLogs } = useFoodLogStore()
+  const { logs: cnsLogs, fetchLogs: loadCnsLogs } = useCnsStore()
   const [showMacroHistory, setShowMacroHistory] = useState(false)
   const [yesterdayCalories, setYesterdayCalories] = useState<number | null>(null)
 
@@ -104,6 +107,7 @@ export function HomeDashboard() {
     if (user) {
       loadProfile(user.uid)
       loadLogs(user.uid)
+      loadCnsLogs(user.uid)
       getRecentFoodLogs(user.uid, 2).then(logs => {
         const yesterday = new Date()
         yesterday.setDate(yesterday.getDate() - 1)
@@ -146,6 +150,9 @@ export function HomeDashboard() {
 
   const caloriesRemaining = metrics.caloricTarget - totals.calories
   const proteinRemaining = metrics.proteinTarget - totals.protein
+
+  const todayString = format(new Date(), 'yyyy-MM-dd')
+  const hasCheckedInToday = Object.values(cnsLogs).some(log => log.date === todayString)
 
   return (
     <PageTransition>
@@ -231,6 +238,16 @@ export function HomeDashboard() {
             <TrendingUp size={13} /> View History
           </button>
         </section>
+
+        {/* Daily Check-In */}
+        {!hasCheckedInToday ? (
+          <DailyCheckInCard />
+        ) : (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/3 border border-white/5 mb-6">
+            <div className="w-2 h-2 rounded-full bg-green-400" style={{ boxShadow: '0 0 6px #10B981' }} />
+            <p className="text-sm text-white/40 font-medium">Daily check-in complete</p>
+          </div>
+        )}
 
         {/* Quick Actions & Hydration */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
