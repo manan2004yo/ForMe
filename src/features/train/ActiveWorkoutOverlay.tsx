@@ -10,6 +10,7 @@ import { RestTimer } from './components/RestTimer'
 import { SetCountPicker } from './components/SetCountPicker'
 import { PostWorkoutSummary, type WorkoutSummaryData } from './components/PostWorkoutSummary'
 import type { ExerciseEntry } from '@/lib/data/exerciseDatabase'
+import { VYBEMicButton } from '@/components/vybe/VYBEMicButton'
 import clsx from 'clsx'
 
 function useElapsedTimer(isActive: boolean, isPaused: boolean) {
@@ -166,12 +167,17 @@ export function ActiveWorkoutOverlay() {
                 </button>
               </div>
             )}
-            <button
-              onClick={() => setShowAddExercise(true)}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-semibold transition-all active:scale-95"
-            >
-              <Plus size={18} /> Add Exercise
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowAddExercise(true)}
+                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-semibold transition-all active:scale-95"
+              >
+                <Plus size={18} /> Add Exercise
+              </button>
+              <div className="flex items-center justify-center p-2 rounded-2xl bg-white/5">
+                <VYBEMicButton context={{ workoutLabel: session.label }} />
+              </div>
+            </div>
           </div>
 
           {/* Sheets */}

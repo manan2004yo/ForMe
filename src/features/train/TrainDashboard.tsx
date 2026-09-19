@@ -7,7 +7,6 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Trash2, ChevronDown, ChevronUp, Save, Download, Coffee, CheckCircle2, Music, Loader2 } from 'lucide-react'
 import { useSpotifyStore } from '@/store/spotifyStore'
-import { VYBEMicButton } from '@/components/vybe/VYBEMicButton'
 import { useEffect } from 'react'
 import { useTrainStore } from '@/store/trainStore'
 import { useAuthStore } from '@/store/authStore'
@@ -225,16 +224,13 @@ function DaySection({ dayIndex, isRestDay, exercises, isToday, onBrowse, onStart
           )}
           
           {hasExercises && !isRestDay && (
-              <>
             <button
               onClick={(e) => { e.stopPropagation(); onBrowse(dayIndex); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95"
             >
               <Plus size={14} /> Add exercise manually
             </button>
-                <VYBEMicButton context={{ workoutLabel: `Day ${dayIndex}` }} />
-              </>
-            )}
+          )}
           
           <button
             onClick={(e) => { e.stopPropagation(); toggleRestDay(dayIndex); }}

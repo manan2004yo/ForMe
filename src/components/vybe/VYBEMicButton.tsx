@@ -1,20 +1,79 @@
 import { Mic, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useVybeStore, VybeContext } from '@/store/vybeStore';
+import { useVybeStore, VybeContext, initRecognition, globalRecognition } from '@/store/vybeStore';
 import { clsx } from 'clsx';
+import React from 'react';
 
 /**
  * Floating microphone button used on Eat and Train pages.
  * Clicking toggles listening state. Optional context can be passed for food logging.
  */
 export function VYBEMicButton({ context }: { context?: VybeContext }) {
-  const { listening, startListening, stopListening } = useVybeStore();
+  const { listening, startListening, stopListening, setProcessing, setResult, setError, reset } = useVybeStore();
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (listening) {
+      if (globalRecognition) {
+        globalRecognition.stop();
+      }
       stopListening();
     } else {
-      startListening(context);
+      const rec = initRecognition();
+      if (!rec) {
+        setError('Speech recognition not supported in this browser.');
+        return;
+      }
+
+      // Clean up previous listeners
+      rec.onresult = null;
+      rec.onerror = null;
+      rec.onend = null;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rec.onresult = async (event: any) => {
+        const transcript = event.results[0][0].transcript.trim();
+        if (!transcript) {
+          setError('No speech detected.');
+          return;
+        }
+        setProcessing(true);
+        try {
+          const response = await fetch('/api/parse-voice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript }),
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error ?? 'Parsing failed');
+          setResult(data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+          console.error(err);
+          setError(err.message ?? 'Unexpected error');
+        }
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rec.onerror = (event: any) => {
+        setError(event.error || 'Speech recognition error');
+      };
+
+      rec.onend = () => {
+        const state = useVybeStore.getState();
+        if (!state.result && !state.processing) {
+          reset();
+        }
+      };
+
+      try {
+        rec.start();
+        startListening(context);
+      } catch (err) {
+        console.error('Failed to start microphone', err);
+        setError('Failed to start microphone. Please ensure permissions are granted.');
+      }
     }
   };
 

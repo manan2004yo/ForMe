@@ -22,74 +22,8 @@ export function VYBEOverlay() {
     reset,
   } = useVybeStore();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null);
-
-  // Start or stop the Web Speech API when listening flag changes
-  useEffect(() => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      setError('Speech recognition not supported in this browser.');
-      return;
-    }
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognitionRef.current = recognition;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onResult = async (e: any) => {
-      const transcript = e.results[0][0].transcript.trim();
-      if (!transcript) {
-        setError('No speech detected.');
-        return;
-      }
-      setProcessing(true);
-      try {
-        const response = await fetch('/api/parse-voice', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ transcript }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error ?? 'Parsing failed');
-        setResult(data);
-      } catch (err: any) {
-        console.error(err);
-        setError(err.message ?? 'Unexpected error');
-      }
-    };
-    const onEnd = () => {
-      // If we already have a result, keep overlay open; otherwise stop listening.
-      if (!useVybeStore.getState().result) reset();
-    };
-    const onError = (e: any) => {
-      setError(e.error || 'Speech recognition error');
-      reset();
-    };
-
-    recognition.addEventListener('result', onResult);
-    recognition.addEventListener('end', onEnd);
-    recognition.addEventListener('error', onError);
-
-    if (listening) {
-      try {
-        recognition.start();
-      } catch (e) {
-        // Some browsers require user interaction; ignore start errors.
-      }
-    } else {
-      recognition.stop();
-    }
-
-    return () => {
-      recognition.removeEventListener('result', onResult);
-      recognition.removeEventListener('end', onEnd);
-      recognition.removeEventListener('error', onError);
-      recognition.stop();
-    };
-  }, [listening]);
+  // Speech API is now handled synchronously by the button's click handler
+  // to comply with mobile browser security requirements.
 
   // Handle Confirm actions based on intent
   const handleConfirm = async () => {
