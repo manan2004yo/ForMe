@@ -10,7 +10,10 @@ import { useUserStore } from '@/store/userStore'
 import { useWaterStreakStore } from '@/store/waterStreakStore'
 import { clsx } from 'clsx'
 import { Activity, ArrowRight, Droplet, Flame, Plus, TrendingUp, User } from 'lucide-react'
-import { useEffect } from 'react'
+import { getRecentFoodLogs } from '@/lib/firebase/dataService'
+import { MacroHistorySheet } from '@/features/eat/components/MacroHistorySheet'
+import { format } from 'date-fns'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 function MacroBar({ label, consumed, target, colorClass }: { label: string; consumed: number; target: number; colorClass: string }) {
@@ -94,11 +97,21 @@ export function HomeDashboard() {
   const { user } = useAuthStore()
   const { profile, metrics, loadProfile } = useUserStore()
   const { todayTotals, loadLogs } = useFoodLogStore()
+  const [showMacroHistory, setShowMacroHistory] = useState(false)
+  const [yesterdayCalories, setYesterdayCalories] = useState<number | null>(null)
 
   useEffect(() => {
     if (user) {
       loadProfile(user.uid)
       loadLogs(user.uid)
+      getRecentFoodLogs(user.uid, 2).then(logs => {
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yStr = format(yesterday, 'yyyy-MM-dd')
+        const yLogs = logs.filter(l => l.date === yStr)
+        const yCals = yLogs.reduce((acc, l) => acc + (l.totals?.calories || 0), 0)
+        setYesterdayCalories(yCals)
+      })
     }
   }, [user, loadProfile, loadLogs])
 
@@ -121,6 +134,18 @@ export function HomeDashboard() {
 
   const totals = todayTotals()
   const calPercent = Math.min(100, Math.round((totals.calories / metrics.caloricTarget) * 100))
+
+  const trendIcon = yesterdayCalories !== null
+    ? (totals.calories > yesterdayCalories + 100 ? '↑' : totals.calories < yesterdayCalories - 100 ? '↓' : '→')
+    : ''
+
+  const trendColor =
+    trendIcon === '↑' && metrics.caloricStrategy === 'deficit' ? 'var(--status-bad)' :
+    trendIcon === '↓' && metrics.caloricStrategy === 'surplus' ? 'var(--status-bad)' :
+    'var(--status-good)'
+
+  const caloriesRemaining = metrics.caloricTarget - totals.calories
+  const proteinRemaining = metrics.proteinTarget - totals.protein
 
   return (
     <PageTransition>
@@ -177,7 +202,10 @@ export function HomeDashboard() {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <AnimatedNumber value={totals.calories} className="text-3xl font-heading font-bold text-white tracking-tighter" />
-                <span className="text-xs text-white/40 uppercase tracking-widest mt-1">/ {metrics.caloricTarget} kcal</span>
+                <span className="text-xs text-white/40 uppercase tracking-widest mt-1 flex items-center gap-1">
+                  / {metrics.caloricTarget} kcal
+                  {trendIcon && <span style={{ color: trendColor }} className="font-bold">{trendIcon}</span>}
+                </span>
               </div>
             </div>
 
@@ -188,6 +216,20 @@ export function HomeDashboard() {
               <MacroBar label="Fats" consumed={totals.fat} target={metrics.fatTarget} colorClass="bg-purple-400" />
             </div>
           </div>
+
+          <p className="text-xs text-center text-white/30 mt-2">
+            {caloriesRemaining > 0
+              ? `${Math.round(caloriesRemaining)} kcal · ${Math.round(proteinRemaining)}g protein remaining`
+              : `Daily calorie target reached`
+            }
+          </p>
+
+          <button
+            onClick={() => setShowMacroHistory(true)}
+            className="flex items-center gap-1.5 mx-auto px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white text-xs font-semibold transition-all active:scale-95 mt-3"
+          >
+            <TrendingUp size={13} /> View History
+          </button>
         </section>
 
         {/* Quick Actions & Hydration */}
@@ -262,6 +304,10 @@ export function HomeDashboard() {
         </div>
 
       </div>
+      <MacroHistorySheet
+        isOpen={showMacroHistory}
+        onClose={() => setShowMacroHistory(false)}
+      />
     </PageTransition>
   )
 }

@@ -11,7 +11,7 @@ import { useUserStore } from '@/store/userStore'
 import type { FoodLogEntry, MealSlot, NutritionInfo } from '@/types'
 import { clsx } from 'clsx'
 import { format } from 'date-fns'
-import { Barcode, ChevronDown, ChevronUp, Coffee, Moon, Plus, Search, Sun, Sunset } from 'lucide-react'
+import { Barcode, ChevronDown, ChevronUp, Coffee, Leaf, Moon, Plus, Search, Sun, Sunset } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { EditFoodModal } from './EditFoodModal'
@@ -20,6 +20,7 @@ import { FoodSearch } from './FoodSearch'
 import { SnapAndLogModal } from './SnapAndLogModal'
 import { BarcodeScannerOverlay } from './components/BarcodeScannerOverlay'
 import { BarcodeResultSheet } from './components/BarcodeResultSheet'
+import { MicronutrientSheet } from './components/MicronutrientSheet'
 import type { ScannedProduct } from '@/lib/services/barcodeProductService'
 import { calculateNutritionForGrams } from '@/lib/services/barcodeProductService'
 
@@ -209,6 +210,7 @@ export function EatDashboard() {
   const [pendingScanSlot, setPendingScanSlot] = useState<MealSlot>('snack')
   const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null)
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null)
+  const [showMicronutrients, setShowMicronutrients] = useState(false)
 
   const cnsStatus = getCurrentStatus()
   const isFried = cnsStatus === 'Fried'
@@ -240,13 +242,21 @@ export function EatDashboard() {
     <>
       <PageTransition>
       <div className="page relative">
-        <header className="page-header mb-8">
-          <p className="text-sm text-white/50 font-medium tracking-wide mb-1 uppercase">
-            {format(new Date(), 'EEEE, d MMM')}
-          </p>
-          <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
-            Food Log
-          </h1>
+        <header className="page-header mb-8 flex justify-between items-start">
+          <div>
+            <p className="text-sm text-white/50 font-medium tracking-wide mb-1 uppercase">
+              {format(new Date(), 'EEEE, d MMM')}
+            </p>
+            <h1 className="text-3xl font-heading font-bold text-white tracking-tight">
+              Food Log
+            </h1>
+          </div>
+          <button
+            onClick={() => setShowMicronutrients(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-xs font-semibold transition-all active:scale-95"
+          >
+            <Leaf size={14} /> Nutrients
+          </button>
         </header>
 
         {isLoading ? (
@@ -433,6 +443,10 @@ export function EatDashboard() {
           setScannedProduct(null)
         }}
         onClose={() => setScannedProduct(null)}
+      />
+      <MicronutrientSheet
+        isOpen={showMicronutrients}
+        onClose={() => setShowMicronutrients(false)}
       />
     </>
   )
