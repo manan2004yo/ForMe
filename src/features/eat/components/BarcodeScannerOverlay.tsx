@@ -196,12 +196,38 @@ export function BarcodeScannerOverlay({
 
     setScannerState('analyzing_image')
     scanningRef.current = true
+
     try {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = async () => {
+      const imgURL = URL.createObjectURL(file)
+      const img = new Image()
+      
+      img.onload = async () => {
         try {
-          const base64Image = reader.result as string
+          // Resize image to max 1200px width/height to prevent Cloudflare payload limits
+          const canvas = document.createElement('canvas')
+          const MAX_DIM = 1200
+          let width = img.width
+          let height = img.height
+
+          if (width > height && width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width)
+            width = MAX_DIM
+          } else if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height)
+            height = MAX_DIM
+          }
+
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
+          
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height)
+          }
+
+          // Compress to JPEG 80% quality
+          const base64Image = canvas.toDataURL('image/jpeg', 0.8)
+          
           const response = await fetch('/api/read-barcode-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -215,22 +241,27 @@ export function BarcodeScannerOverlay({
           const data = await response.json()
           
           if (data.barcode && data.barcode !== 'NOT_FOUND') {
-            // Found a barcode, send it to the handler
             handleBarcode(data.barcode)
           } else {
-            setErrorDetail('Could not find a clear barcode in that photo. Please try a closer/clearer shot.')
+            setErrorDetail('AI could not confidently detect a barcode. Try a closer/clearer shot.')
             setScannerState('error')
           }
         } catch (err) {
           console.error(err)
           setErrorDetail('Failed to analyze image.')
           setScannerState('error')
+        } finally {
+          URL.revokeObjectURL(imgURL)
         }
       }
-      reader.onerror = () => {
+      
+      img.onerror = () => {
         setErrorDetail('Failed to load the image.')
         setScannerState('error')
+        URL.revokeObjectURL(imgURL)
       }
+      
+      img.src = imgURL
     } catch (err) {
       console.error(err)
       setErrorDetail('Failed to process image.')

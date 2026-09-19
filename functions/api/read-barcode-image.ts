@@ -54,7 +54,13 @@ export async function onRequestPost(context: any) {
     }
 
     const content = data.candidates[0]?.content?.parts[0]?.text || '';
-    const barcode = content.trim();
+    
+    // Strip everything except numerical digits (handles markdown or chatty AI responses)
+    const rawDigits = content.replace(/\D/g, '');
+    
+    // Standard barcodes are usually 8, 12, 13, or 14 digits. 
+    // If it's too short, it's not a valid barcode (e.g., if it replied 'NOT_FOUND')
+    const barcode = rawDigits.length >= 6 ? rawDigits : 'NOT_FOUND';
 
     return new Response(JSON.stringify({ barcode }), {
       headers: { 'Content-Type': 'application/json' }
