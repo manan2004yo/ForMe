@@ -93,20 +93,24 @@ export function VYBEMicButton({ context }: { context?: VybeContext }) {
         }
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       rec.onerror = (event: any) => {
         console.error('[VYBE DIAGNOSTICS] EVENT: onerror fired! Error code:', event.error, 'Message:', event.message);
-        setError(event.error || 'Speech recognition error');
+        if (event.error === 'not-allowed') {
+          setError('Microphone access is blocked! Please click the lock icon in your URL bar and allow microphone permissions.');
+        } else {
+          setError(`Speech recognition error: ${event.error}`);
+        }
       };
 
       rec.onend = () => {
         console.log('[VYBE DIAGNOSTICS] EVENT: onend fired');
         const state = useVybeStore.getState();
-        if (!state.result && !state.processing) {
-          console.log('[VYBE DIAGNOSTICS] onend -> resetting store because no result and not processing');
+        // Do NOT reset if there is an active error! Otherwise the error overlay flashes and disappears.
+        if (!state.result && !state.processing && !state.error) {
+          console.log('[VYBE DIAGNOSTICS] onend -> resetting store because no result, no processing, and no error');
           reset();
         } else {
-          console.log('[VYBE DIAGNOSTICS] onend -> keeping store state because processing or result exists');
+          console.log('[VYBE DIAGNOSTICS] onend -> keeping store state (error, processing, or result exists)');
         }
       };
 
