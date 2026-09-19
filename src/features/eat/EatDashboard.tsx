@@ -2,7 +2,9 @@
 // FORME - Premium Eat Dashboard
 // ============================================================
 
-import { PageTransition } from '@/components/layout/PageTransition'
+import { PageTransition } from '@/components/layout/PageTransition';
+import { VYBEMicButton } from '@/components/vybe/VYBEMicButton';
+
 import { AnimatedNumber, ProgressBar } from '@/components/shared'
 import { useAuthStore } from '@/store/authStore'
 import { useCnsStore } from '@/store/cnsStore'
@@ -101,22 +103,26 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap, onScan, onEd
         <div className="flex items-center gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); onSnap(config.slot); }}
+
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-black hover:bg-accent/90 transition-all text-xs font-bold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 shadow-[0_0_10px_rgba(45,212,191,0.2)]"
           >
             <Sun size={14} /> Snap
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onScan(config.slot); }}
+
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
           >
             <Barcode size={14} /> Scan
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onBrowse(config.slot); }}
+
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
           >
             <Search size={14} /> Search
           </button>
+            <VYBEMicButton context={{ mealSlot: config.slot }} />
           {hasFood && (
             <button 
               onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}

@@ -203,6 +203,8 @@ function AppRoutes() {
 }
 
 
+import { VYBEOverlay } from '@/components/vybe/VYBEOverlay';
+
 export default function App() {
   return (
     <>
