@@ -3,12 +3,15 @@ import { Trophy, Trash2, X } from 'lucide-react'
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore'
 import { useUserStore, toDisplayWeight } from '@/store/userStore'
 
+import type { WorkoutSummaryData } from './PostWorkoutSummary'
+
 interface EndWorkoutSheetProps {
   isOpen: boolean
   onClose: () => void
+  onFinish: (summary: WorkoutSummaryData) => void
 }
 
-export function EndWorkoutSheet({ isOpen, onClose }: EndWorkoutSheetProps) {
+export function EndWorkoutSheet({ isOpen, onClose, onFinish }: EndWorkoutSheetProps) {
   const { session, endSession, discardSession, getTotalVolume } = useWorkoutSessionStore()
   const { weightUnit } = useUserStore()
 
@@ -20,8 +23,20 @@ export function EndWorkoutSheet({ isOpen, onClose }: EndWorkoutSheetProps) {
   const totalVolume = getTotalVolume()
 
   async function handleFinish() {
+    if (!session) return
+    const state = useWorkoutSessionStore.getState()
+    const summaryData: WorkoutSummaryData = {
+      label: session.label,
+      durationMin: Math.round(state.getElapsedSeconds() / 60),
+      exerciseCount: session.exercises.length,
+      setCount: completedSets,
+      totalVolumeKg: state.getTotalVolume(),
+      topProgression: null,
+    }
+
     onClose()
     await endSession()
+    setTimeout(() => onFinish(summaryData), 300)
   }
 
   function handleDiscard() {

@@ -10,6 +10,7 @@ import { useToastStore } from '@/store/toastStore'
 import type { PlannedExercise, WorkoutDay } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 
 
@@ -33,6 +34,8 @@ interface TrainState {
   customExercises: ExerciseEntry[]
   addCustomExercise: (data: Omit<ExerciseEntry, 'id'>) => Promise<void>
   searchExercises: (query: string) => ExerciseEntry[]
+  recentExerciseIds: string[]
+  recordExerciseUsed: (exerciseId: string) => void
 }
 
 const DEFAULT_DAYS: WorkoutDay[] = Array.from({ length: 7 }, (_, i) => ({
@@ -42,11 +45,23 @@ const DEFAULT_DAYS: WorkoutDay[] = Array.from({ length: 7 }, (_, i) => ({
   exercises: [],
 }))
 
-export const useTrainStore = create<TrainState>((set, get) => ({
-  currentPlan: JSON.parse(JSON.stringify(DEFAULT_DAYS)),
-  templates: [],
-  isLoading: false,
-  customExercises: [],
+export const useTrainStore = create<TrainState>()(
+  persist(
+    (set, get) => ({
+      currentPlan: JSON.parse(JSON.stringify(DEFAULT_DAYS)),
+      templates: [],
+      isLoading: false,
+      customExercises: [],
+      recentExerciseIds: [],
+
+      recordExerciseUsed: (exerciseId) => {
+        const current = get().recentExerciseIds
+        const updated = [
+          exerciseId,
+          ...current.filter(id => id !== exerciseId)
+        ].slice(0, 10) // keep last 10
+        set({ recentExerciseIds: updated })
+      },
 
   addCustomExercise: async (data) => {
     const newExercise = createCustomExercise(data)
@@ -157,4 +172,13 @@ export const useTrainStore = create<TrainState>((set, get) => ({
       catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
     }
   }
-}))
+    }),
+    {
+      name: 'forme-train-store',
+      partialize: (state) => ({
+        recentExerciseIds: state.recentExerciseIds,
+        templates: state.templates,
+      }),
+    }
+  )
+)

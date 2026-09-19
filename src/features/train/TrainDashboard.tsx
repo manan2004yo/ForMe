@@ -165,10 +165,11 @@ function ExerciseRow({ exercise, onRemove }: { exercise: PlannedExercise, onRemo
   )
 }
 
-function DaySection({ dayIndex, isRestDay, exercises, onBrowse, onStartWorkout }: {
+function DaySection({ dayIndex, isRestDay, exercises, isToday, onBrowse, onStartWorkout }: {
   dayIndex: number
   isRestDay: boolean
   exercises: PlannedExercise[]
+  isToday?: boolean
   onBrowse: (dayIndex: number) => void
   onStartWorkout: () => void
 }) {
@@ -179,7 +180,12 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse, onStartWorkout }
   const hasExercises = exercises.length > 0
 
   return (
-    <div className="glass-panel overflow-hidden mb-4 transition-all duration-300 hover:shadow-card-hover">
+    <div className={clsx(
+      'glass-panel overflow-hidden mb-4 transition-all duration-300 hover:shadow-card-hover',
+      isToday
+        ? 'border-accent/30 bg-accent/5'
+        : 'border-white/5 bg-white/3'
+    )}>
       <div 
         className={clsx(
           "p-5 flex items-center justify-between cursor-pointer transition-colors",
@@ -189,7 +195,14 @@ function DaySection({ dayIndex, isRestDay, exercises, onBrowse, onStartWorkout }
       >
         <div className="flex items-center gap-4">
           <div>
-            <h3 className="text-white font-medium">{DAY_NAMES[dayIndex]}</h3>
+            <div className="flex items-center">
+              <h3 className="text-white font-medium">{DAY_NAMES[dayIndex]}</h3>
+              {isToday && (
+                <span className="text-[10px] font-bold text-accent bg-accent/15 px-2 py-0.5 rounded-full ml-2">
+                  TODAY
+                </span>
+              )}
+            </div>
             {isRestDay ? (
               <span className="text-xs text-blue-400 font-medium mt-1 block">Rest Day</span>
             ) : hasExercises ? (
@@ -308,6 +321,7 @@ export function TrainDashboard() {
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [loadTemplateId, setLoadTemplateId] = useState<string | null>(null)
   const cnsStatus = getCurrentStatus()
+  const todayIndex = new Date().getDay()
 
   return (
     <>
@@ -389,9 +403,14 @@ export function TrainDashboard() {
               dayIndex={day.dayIndex}
               isRestDay={day.isRestDay}
               exercises={day.exercises}
+              isToday={day.dayIndex === todayIndex}
               onBrowse={setBrowsingDay}
               onStartWorkout={() => {
-                useWorkoutSessionStore.getState().startSession(DAY_NAMES[day.dayIndex])
+                const { startSessionFromPlan } = useWorkoutSessionStore.getState()
+                startSessionFromPlan(
+                  DAY_NAMES[day.dayIndex],
+                  day.exercises
+                )
               }}
             />
           ))}

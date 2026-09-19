@@ -2,28 +2,31 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Search } from 'lucide-react'
 import { useTrainStore } from '@/store/trainStore'
-import { useWorkoutSessionStore } from '@/store/workoutSessionStore'
+import { getExerciseById } from '@/lib/data/exerciseSearch'
 import type { ExerciseEntry } from '@/lib/data/exerciseDatabase'
 
 interface AddExerciseSheetProps {
   isOpen: boolean
   onClose: () => void
+  onSelect: (exercise: ExerciseEntry) => void
 }
 
-export function AddExerciseSheet({ isOpen, onClose }: AddExerciseSheetProps) {
-  const { searchExercises } = useTrainStore()
-  const { addExercise } = useWorkoutSessionStore()
+export function AddExerciseSheet({ isOpen, onClose, onSelect }: AddExerciseSheetProps) {
+  const { searchExercises, recentExerciseIds, customExercises } = useTrainStore()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<ExerciseEntry[]>([])
+
+  const recentExercises = recentExerciseIds
+    .map(id => getExerciseById(id, customExercises))
+    .filter(Boolean) as ExerciseEntry[]
 
   useEffect(() => {
     setResults(searchExercises(query))
   }, [query])
 
   function handleSelect(exercise: ExerciseEntry) {
-    addExercise(exercise)
+    onSelect(exercise)
     setQuery('')
-    onClose()
   }
 
   return (
@@ -82,6 +85,33 @@ export function AddExerciseSheet({ isOpen, onClose }: AddExerciseSheetProps) {
 
               {/* Results */}
               <div className="flex-1 overflow-y-auto px-5 pb-8 space-y-1">
+                {query === '' && recentExercises.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-2 px-1">
+                      Recent
+                    </p>
+                    <div className="space-y-1">
+                      {recentExercises.slice(0, 5).map(exercise => (
+                        <button
+                          key={exercise.id}
+                          onClick={() => handleSelect(exercise)}
+                          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-accent/5 border border-accent/10 hover:bg-accent/10 active:bg-accent/15 transition-all text-left"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-white">{exercise.name}</p>
+                            <p className="text-xs text-white/40 capitalize mt-0.5">
+                              {exercise.primaryMuscle.replace('_', ' ')} · {exercise.type}
+                            </p>
+                          </div>
+                          <span className="text-[10px] text-accent/50 font-medium ml-2 shrink-0">
+                            Recent
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {results.slice(0, 40).map(exercise => (
                   <button
                     key={exercise.id}

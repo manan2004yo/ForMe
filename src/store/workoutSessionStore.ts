@@ -21,8 +21,10 @@ import { saveWorkoutLog } from '@/lib/firebase/dataService'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 import { useMuscleRecoveryStore } from '@/store/muscleRecoveryStore'
-import type { MuscleGroup, WorkoutLogEntry } from '@/types'
+import type { MuscleGroup, WorkoutLogEntry, PlannedExercise } from '@/types'
 import type { ExerciseEntry } from '@/lib/data/exerciseDatabase'
+import { useTrainStore } from '@/store/trainStore'
+import { getExerciseById, getMergedLibrary } from '@/lib/data/exerciseSearch'
 
 // ─── Session-level types ──────────────────────────────────────
 
@@ -91,6 +93,7 @@ interface WorkoutSessionState {
 
   // ── Session lifecycle ──
   startSession: (label?: string) => void
+  startSessionFromPlan: (label: string, plannedExercises: PlannedExercise[]) => void
   pauseSession: () => void
   resumeSession: () => void
   /**
@@ -109,6 +112,13 @@ interface WorkoutSessionState {
   addExercise: (exercise: ExerciseEntry) => void
   removeExercise: (instanceId: string) => void
   reorderExercises: (fromIndex: number, toIndex: number) => void
+  
+  currentExerciseIndex: number
+  setCurrentExerciseIndex: (index: number) => void
+  pendingSetCount: number | null
+  setPendingSetCount: (count: number | null) => void
+  pendingExercise: ExerciseEntry | null
+  setPendingExercise: (exercise: ExerciseEntry | null) => void
 
   // ── Set management ──
   addSet: (instanceId: string) => void
@@ -185,6 +195,13 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
       session: null,
       isActive: false,
       restTimer: null,
+      currentExerciseIndex: 0,
+      pendingSetCount: null,
+      pendingExercise: null,
+
+      setCurrentExerciseIndex: (index) => set({ currentExerciseIndex: index }),
+      setPendingSetCount: (count) => set({ pendingSetCount: count }),
+      setPendingExercise: (exercise) => set({ pendingExercise: exercise }),
 
       // ── Session lifecycle ────────────────────────────────────
 
@@ -197,8 +214,39 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
           label,
           exercises: [],
         }
-        set({ session, isActive: true })
+        set({ session, isActive: true, currentExerciseIndex: 0 })
         requestWakeLock()
+      },
+
+      startSessionFromPlan: (label, plannedExercises) => {
+        const session: WorkoutSession = {
+          sessionId: uuidv4(),
+          startedAt: Date.now(),
+          pausedDurationMs: 0,
+          pausedAt: null,
+          label,
+          exercises: [],
+        }
+        set({ session, isActive: true, currentExerciseIndex: 0 })
+        requestWakeLock()
+
+        // Add each planned exercise with its planned sets
+        plannedExercises.forEach(planned => {
+          const exercise = getExerciseById(planned.exerciseId) ??
+            getMergedLibrary(useTrainStore.getState().customExercises)
+              .find(e => e.id === planned.exerciseId)
+          if (!exercise) return
+
+          useWorkoutSessionStore.getState().addExercise(exercise)
+          const exercises = useWorkoutSessionStore.getState().session?.exercises
+          const instanceId = exercises ? exercises[exercises.length - 1]?.instanceId : undefined
+          if (!instanceId) return
+
+          const setCount = planned.sets ?? 3
+          for (let i = 0; i < setCount; i++) {
+            useWorkoutSessionStore.getState().addSet(instanceId)
+          }
+        })
       },
 
       pauseSession: () => {
@@ -303,12 +351,14 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
           restSeconds: exercise.defaultRestSeconds ?? 90,
         }
 
+        const newExercises = [...session.exercises, activeExercise]
         set({
-          session: {
-            ...session,
-            exercises: [...session.exercises, activeExercise],
-          }
+          session: { ...session, exercises: newExercises },
+          currentExerciseIndex: newExercises.length - 1,
         })
+        
+        // Record in recent exercises
+        useTrainStore.getState().recordExerciseUsed(exercise.id)
       },
 
       removeExercise: (instanceId) => {

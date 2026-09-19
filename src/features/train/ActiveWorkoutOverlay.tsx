@@ -7,6 +7,9 @@ import { ExerciseCard } from './components/ExerciseCard'
 import { AddExerciseSheet } from './components/AddExerciseSheet'
 import { EndWorkoutSheet } from './components/EndWorkoutSheet'
 import { RestTimer } from './components/RestTimer'
+import { SetCountPicker } from './components/SetCountPicker'
+import { PostWorkoutSummary, type WorkoutSummaryData } from './components/PostWorkoutSummary'
+import type { ExerciseEntry } from '@/lib/data/exerciseDatabase'
 import clsx from 'clsx'
 
 function useElapsedTimer(isActive: boolean, isPaused: boolean) {
@@ -30,17 +33,27 @@ export function ActiveWorkoutOverlay() {
     isActive,
     pauseSession,
     resumeSession,
+    currentExerciseIndex,
+    setCurrentExerciseIndex,
+    addExercise,
+    addSet,
   } = useWorkoutSessionStore()
 
   const { weightUnit, toggleWeightUnit } = useUserStore()
 
   const [showAddExercise, setShowAddExercise] = useState(false)
   const [showEndWorkout, setShowEndWorkout] = useState(false)
+  const [pendingExerciseForPicker, setPendingExerciseForPicker] = useState<ExerciseEntry | null>(null)
+  const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummaryData | null>(null)
 
   const isPaused = session?.pausedAt !== null && session?.pausedAt !== undefined
   const timer = useElapsedTimer(isActive, isPaused)
 
+  const hasPrevious = session ? currentExerciseIndex > 0 : false
+  const hasNext = session ? currentExerciseIndex < session.exercises.length - 1 : false
+
   return (
+    <>
     <AnimatePresence>
       {isActive && session && (
         <motion.div
@@ -70,12 +83,22 @@ export function ActiveWorkoutOverlay() {
 
             <div className="flex items-center gap-2">
               {/* KG / LB toggle */}
-              <button
-                onClick={toggleWeightUnit}
-                className="px-3 py-1.5 rounded-lg bg-white/5 text-white/50 hover:text-white text-xs font-bold tracking-wider transition-all"
-              >
-                {weightUnit.toUpperCase()}
-              </button>
+              <div className="flex items-center gap-1 p-1 rounded-xl bg-white/10">
+                {(['kg', 'lb'] as const).map(unit => (
+                  <button
+                    key={unit}
+                    onClick={() => unit !== weightUnit && toggleWeightUnit()}
+                    className={clsx(
+                      'px-3 py-1 rounded-lg text-xs font-bold transition-all',
+                      weightUnit === unit
+                        ? 'bg-white text-black'
+                        : 'text-white/40 hover:text-white'
+                    )}
+                  >
+                    {unit.toUpperCase()}
+                  </button>
+                ))}
+              </div>
 
               {/* Pause / Resume */}
               <button
@@ -103,6 +126,8 @@ export function ActiveWorkoutOverlay() {
                   key={exercise.instanceId}
                   exercise={exercise}
                   index={index}
+                  isActive={index === currentExerciseIndex}
+                  onClick={() => setCurrentExerciseIndex(index)}
                 />
               ))}
             </AnimatePresence>
@@ -120,6 +145,27 @@ export function ActiveWorkoutOverlay() {
 
           {/* Footer */}
           <div className="px-4 py-3 border-t border-white/5">
+            {session.exercises.length > 1 && (
+              <div className="flex items-center justify-between mb-3">
+                <button
+                  onClick={() => setCurrentExerciseIndex(currentExerciseIndex - 1)}
+                  disabled={!hasPrevious}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 text-white/50 hover:text-white disabled:opacity-20 transition-all text-sm font-semibold active:scale-95"
+                >
+                  ← Previous
+                </button>
+                <span className="text-xs text-white/30 font-medium">
+                  {currentExerciseIndex + 1} of {session.exercises.length}
+                </span>
+                <button
+                  onClick={() => setCurrentExerciseIndex(currentExerciseIndex + 1)}
+                  disabled={!hasNext}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 text-white/50 hover:text-white disabled:opacity-20 transition-all text-sm font-semibold active:scale-95"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
             <button
               onClick={() => setShowAddExercise(true)}
               className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-semibold transition-all active:scale-95"
@@ -132,13 +178,38 @@ export function ActiveWorkoutOverlay() {
           <AddExerciseSheet
             isOpen={showAddExercise}
             onClose={() => setShowAddExercise(false)}
+            onSelect={(exercise) => {
+              setShowAddExercise(false)
+              setPendingExerciseForPicker(exercise)
+            }}
+          />
+          <SetCountPicker
+            exercise={pendingExerciseForPicker}
+            onConfirm={(exercise, setCount) => {
+              addExercise(exercise)
+              const exercises = useWorkoutSessionStore.getState().session?.exercises
+              const instanceId = exercises ? exercises[exercises.length - 1]?.instanceId : undefined
+              if (instanceId) {
+                for (let i = 0; i < setCount; i++) {
+                  addSet(instanceId)
+                }
+              }
+              setPendingExerciseForPicker(null)
+            }}
+            onClose={() => setPendingExerciseForPicker(null)}
           />
           <EndWorkoutSheet
             isOpen={showEndWorkout}
             onClose={() => setShowEndWorkout(false)}
+            onFinish={(summary) => setWorkoutSummary(summary)}
           />
         </motion.div>
       )}
     </AnimatePresence>
+    <PostWorkoutSummary
+      summary={workoutSummary}
+      onClose={() => setWorkoutSummary(null)}
+    />
+    </>
   )
 }

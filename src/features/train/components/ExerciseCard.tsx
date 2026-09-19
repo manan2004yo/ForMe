@@ -6,14 +6,17 @@ import { useUserStore, toDisplayWeight } from '@/store/userStore'
 import { usePreviousPerformance } from '../hooks/usePreviousPerformance'
 import { SetTable } from './SetTable'
 import { ExerciseHistorySheet } from './ExerciseHistorySheet'
+import clsx from 'clsx'
 
 
 interface ExerciseCardProps {
   exercise: ActiveExercise
   index: number
+  isActive?: boolean
+  onClick?: () => void
 }
 
-export function ExerciseCard({ exercise, index }: ExerciseCardProps) {
+export function ExerciseCard({ exercise, index, isActive, onClick }: ExerciseCardProps) {
   const { removeExercise, getExerciseVolume } = useWorkoutSessionStore()
   const { weightUnit } = useUserStore()
   const previousPerformance = usePreviousPerformance(exercise.exerciseId)
@@ -35,7 +38,11 @@ export function ExerciseCard({ exercise, index }: ExerciseCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="card overflow-hidden"
+      className={clsx(
+        'card overflow-hidden transition-all cursor-pointer',
+        isActive && 'ring-1 ring-accent/40 bg-accent/5'
+      )}
+      onClick={onClick}
     >
       {/* Card header */}
       <div className="flex items-center justify-between p-4">
