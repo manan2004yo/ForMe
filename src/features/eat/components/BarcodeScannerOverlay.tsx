@@ -29,6 +29,7 @@ type ScannerState =
   | 'error'
   | 'not_found'
   | 'missing_nutrition'
+  | 'analyzing_image'
 
 export function BarcodeScannerOverlay({
   isOpen,
@@ -193,37 +194,46 @@ export function BarcodeScannerOverlay({
     const file = e.target.files?.[0]
     if (!file) return
 
-    setScannerState('scanning')
+    setScannerState('analyzing_image')
     scanningRef.current = true
     try {
-      const { BrowserMultiFormatReader } = await import('@zxing/browser')
-      const reader = new BrowserMultiFormatReader()
-      const imgURL = URL.createObjectURL(file)
-      
-      const img = new Image()
-      img.onload = async () => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = async () => {
         try {
-          const result = await reader.decodeFromImageElement(img)
-          if (result) {
-            handleBarcode(result.getText())
+          const base64Image = reader.result as string
+          const response = await fetch('/api/read-barcode-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64Image })
+          })
+
+          if (!response.ok) {
+            throw new Error('API Error')
+          }
+
+          const data = await response.json()
+          
+          if (data.barcode && data.barcode !== 'NOT_FOUND') {
+            // Found a barcode, send it to the handler
+            handleBarcode(data.barcode)
+          } else {
+            setErrorDetail('Could not find a clear barcode in that photo. Please try a closer/clearer shot.')
+            setScannerState('error')
           }
         } catch (err) {
           console.error(err)
-          setErrorDetail('Could not find a clear barcode in that photo. Please try a closer/clearer shot.')
+          setErrorDetail('Failed to analyze image.')
           setScannerState('error')
-        } finally {
-          URL.revokeObjectURL(imgURL)
         }
       }
-      img.onerror = () => {
+      reader.onerror = () => {
         setErrorDetail('Failed to load the image.')
         setScannerState('error')
-        URL.revokeObjectURL(imgURL)
       }
-      img.src = imgURL
     } catch (err) {
       console.error(err)
-      setErrorDetail('Failed to load barcode decoder.')
+      setErrorDetail('Failed to process image.')
       setScannerState('error')
     }
   }
@@ -340,6 +350,22 @@ export function BarcodeScannerOverlay({
               </div>
             )}
 
+            {/* Analyzing Image state */}
+            {scannerState === 'analyzing_image' && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                <div className="flex flex-col items-center gap-4">
+                  <motion.div
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                  >
+                    <Camera size={36} style={{ color: 'var(--accent, #2DD4BF)' }} />
+                  </motion.div>
+                  <p className="text-white font-semibold text-base">Analyzing Image...</p>
+                  <p className="text-white/40 text-xs">Extracting barcode with AI</p>
+                </div>
+              </div>
+            )}
+
             {scannerState === 'not_found' && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                 <div className="w-full max-w-sm mx-4 bg-[#111111]/90 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 flex flex-col items-center shadow-2xl">
@@ -438,15 +464,6 @@ export function BarcodeScannerOverlay({
                     )}
 
                     <div className="w-full space-y-3">
-                      {/* Retry Button */}
-                      <button
-                        onClick={() => startCamera()}
-                        className="w-full py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                      >
-                        <Zap size={18} className="text-accent" />
-                        <span>Retry Camera Access</span>
-                      </button>
-
                       {/* Take Photo Button - Premium */}
                       <label className="group relative w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-accent text-white font-semibold cursor-pointer overflow-hidden transition-all active:scale-[0.98]">
                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
@@ -472,7 +489,10 @@ export function BarcodeScannerOverlay({
                         <button 
                           onClick={() => {
                             const val = (document.getElementById('manual-barcode-input') as HTMLInputElement).value
-                            if (val) handleBarcode(val)
+                            if (val) {
+                              scanningRef.current = true;
+                              handleBarcode(val);
+                            }
                           }}
                           className="absolute right-2 top-2 bottom-2 px-4 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-xl transition-all"
                         >
