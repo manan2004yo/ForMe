@@ -66,7 +66,20 @@ export function VYBEMicButton({ context }: { context?: VybeContext }) {
             body: JSON.stringify({ transcript }),
           });
           console.log('[VYBE DIAGNOSTICS] 5. Fetch response status:', response.status);
-          const data = await response.json();
+          const text = await response.text();
+          if (!text) {
+            console.error('[VYBE DIAGNOSTICS] API returned an empty body. Status:', response.status);
+            throw new Error('API returned an empty response. Note: If testing locally with "npm run dev", the backend is disabled. Please test on Cloudflare.');
+          }
+          
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            console.error('[VYBE DIAGNOSTICS] Failed to parse API response as JSON:', text);
+            throw new Error('API returned invalid data format.');
+          }
+
           if (!response.ok) {
             console.error('[VYBE DIAGNOSTICS] API Error Data:', data);
             throw new Error(data.error ?? 'Parsing failed');
