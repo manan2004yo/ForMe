@@ -7,6 +7,10 @@ import { useAchievementStore } from '@/store/achievementStore'
 import { useAuthStore } from '@/store/authStore'
 import { useSpotifyStore } from '@/store/spotifyStore'
 import { useUserStore } from '@/store/userStore'
+import { useProgressStore } from '@/store/progressStore'
+import { useTrainStore } from '@/store/trainStore'
+import { useFoodLogStore } from '@/store/foodLogStore'
+import { useCnsStore } from '@/store/cnsStore'
 import { AnimatePresence } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
@@ -78,6 +82,10 @@ function AuthenticatedApp() {
     if (user) {
       loadProfile(user.uid)
       useAchievementStore.getState().loadAchievements(user.uid)
+      useProgressStore.getState().loadAll(user.uid)
+      useTrainStore.getState().loadAll(user.uid)
+      useFoodLogStore.getState().loadLogs(user.uid)
+      useCnsStore.getState().fetchLogs(user.uid)
     }
   }, [user, loadProfile])
 
