@@ -85,7 +85,7 @@ export function BarcodeScannerOverlay({
     }
   }, [lastBarcode, stopCamera, onProductFound, onClose, toast])
 
-  const startNativeScanner = useCallback(async (stream: MediaStream) => {
+  const startNativeScanner = useCallback(async () => {
     // @ts-ignore — BarcodeDetector is not in all TS lib versions
     const detector = new BarcodeDetector({
       formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'qr_code'],
@@ -146,7 +146,7 @@ export function BarcodeScannerOverlay({
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: 'environment' } }
         })
-      } catch (cameraErr: any) {
+      } catch {
         // Fallback for laptops or strict browsers that reject facingMode requests
         stream = await navigator.mediaDevices.getUserMedia({ video: true })
       }
@@ -166,7 +166,7 @@ export function BarcodeScannerOverlay({
 
       // @ts-ignore
       if (typeof BarcodeDetector !== 'undefined') {
-        await startNativeScanner(stream)
+        await startNativeScanner()
       } else {
         await startZXingScanner(stream)
       }

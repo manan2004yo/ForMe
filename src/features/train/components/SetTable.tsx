@@ -18,7 +18,7 @@ export function SetTable({ exercise, previousPerformance }: SetTableProps) {
   function handleCopyPrevious() {
     if (!previousPerformance) return
     // Add one set per previous set and pre-fill values
-    previousPerformance.sets.forEach((prevSet) => {
+    previousPerformance.sets.forEach(() => {
       addSet(exercise.instanceId)
     })
     // After adding, update the new sets with previous values

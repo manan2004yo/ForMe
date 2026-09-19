@@ -1,19 +1,24 @@
 import { useToastStore } from '@/store/toastStore'
 import type { MealSlot } from '@/types'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Activity, Camera, Check, ChefHat, X } from 'lucide-react'
+import { Activity, Camera, Check, ChefHat, X, Pencil } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 interface SnapAndLogModalProps {
   slot: MealSlot
   onClose: () => void
-  onLog: (foodName: string, calories: number, protein: number, carbs: number, fat: number) => void
+  onLog: (data: { foodName: string; calories: number; protein: number; carbs: number; fat: number; servings: number; source: string }) => void
 }
 
 export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [result, setResult] = useState<any | null>(null)
+  
+  const [editedFoodName, setEditedFoodName] = useState('')
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [servings, setServings] = useState(1)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const toast = useToastStore()
 
@@ -47,14 +52,49 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
         calories: data.calories || 0,
         protein: data.protein || 0,
         carbs: data.carbs || 0,
-        fat: data.fat || 0
+        fat: data.fat || 0,
+        confidence: data.confidence || "high"
       })
+      
+      setEditedFoodName(data.foodName || "Unknown Food")
+      setServings(1)
+      setIsEditingName(false)
     } catch {
       toast.error('AI Vision is unavailable right now. Please use the Search option to log this meal manually.')
     } finally {
       setIsScanning(false)
     }
   }
+
+  let confidence = 0.9
+  if (result?.confidence) {
+    if (typeof result.confidence === 'string') {
+      const c = result.confidence.toLowerCase()
+      if (c === 'high') confidence = 0.9
+      else if (c === 'medium') confidence = 0.7
+      else if (c === 'low') confidence = 0.5
+    } else if (typeof result.confidence === 'number') {
+      confidence = result.confidence
+    }
+  }
+
+  const confidencePercent = Math.round(confidence * 100)
+  const confidenceLabel =
+    confidence >= 0.85 ? 'High Confidence' :
+    confidence >= 0.60 ? 'Moderate Confidence' :
+    'Low Confidence — please verify'
+
+  const confidenceColor =
+    confidence >= 0.85 ? 'var(--status-good, #10b981)' :
+    confidence >= 0.60 ? 'var(--status-warning, #f59e0b)' :
+    'var(--status-bad, #ef4444)'
+
+  const scaledNutrition = result ? {
+    calories: Math.round(result.calories * servings),
+    protein: parseFloat((result.protein * servings).toFixed(1)),
+    carbs: parseFloat((result.carbs * servings).toFixed(1)),
+    fat: parseFloat((result.fat * servings).toFixed(1)),
+  } : { calories: 0, protein: 0, carbs: 0, fat: 0 }
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex flex-col">
@@ -139,28 +179,106 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
               animate={{ opacity: 1, y: 0 }}
               className="w-full max-w-sm bg-[#1a1a1a] border border-accent/30 rounded-3xl p-6 shadow-[0_0_50px_rgba(45,212,191,0.2)]"
             >
-              <div className="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center text-accent mx-auto mb-4">
-                <Check size={32} />
+              <div className="text-center mb-2">
+                <p className="text-xs font-bold text-white/30 uppercase tracking-widest mb-1">
+                  AI Estimate
+                </p>
+                <p className="text-sm text-white/50">
+                  Does this look right? You can edit before logging.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-white text-center mb-1">{result.foodName}</h3>
-              <p className="text-white/50 text-sm text-center mb-6">AI Estimation Complete</p>
+
+              <div className="flex items-center justify-center mb-4">
+                <div
+                  className="flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold"
+                  style={{
+                    color: confidenceColor,
+                    borderColor: `${confidenceColor}40`,
+                    backgroundColor: `${confidenceColor}15`,
+                  }}
+                >
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: confidenceColor }}
+                  />
+                  {confidenceLabel} · {confidencePercent}%
+                </div>
+              </div>
+
+              {confidence < 0.60 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mx-4 mb-3 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20"
+                >
+                  <p className="text-xs text-amber-400 font-medium text-center">
+                    ⚠ The AI is not confident about this estimate. 
+                    Please verify the food name and macros before logging.
+                  </p>
+                </motion.div>
+              )}
+
+              <div className="flex justify-center mb-6">
+                {isEditingName ? (
+                  <input
+                    type="text"
+                    value={editedFoodName}
+                    onChange={e => setEditedFoodName(e.target.value)}
+                    onBlur={() => setIsEditingName(false)}
+                    autoFocus
+                    className="w-full bg-white/5 border border-accent rounded-xl px-4 py-2 text-white text-lg font-bold text-center focus:outline-none"
+                  />
+                ) : (
+                  <button
+                    onClick={() => setIsEditingName(true)}
+                    className="flex items-center gap-2 group"
+                  >
+                    <h2 className="text-xl font-bold text-white">{editedFoodName}</h2>
+                    <Pencil
+                      size={14}
+                      className="text-white/20 group-hover:text-accent transition-colors"
+                    />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center justify-center gap-4 py-3">
+                <button
+                  onClick={() => setServings(s => Math.max(0.5, parseFloat((s - 0.5).toFixed(1))))}
+                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg flex items-center justify-center active:scale-95 transition-all"
+                >
+                  −
+                </button>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-white tabular-nums">{servings}</p>
+                  <p className="text-xs text-white/40">
+                    {servings === 1 ? 'serving' : 'servings'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setServings(s => parseFloat((s + 0.5).toFixed(1)))}
+                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg flex items-center justify-center active:scale-95 transition-all"
+                >
+                  +
+                </button>
+              </div>
 
               <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-[#121212] p-4 rounded-2xl border border-white/5 text-center">
                   <div className="text-white/40 text-xs uppercase tracking-widest mb-1">Calories</div>
-                  <div className="text-2xl font-bold text-white">{result.calories}</div>
+                  <div className="text-2xl font-bold text-white">{scaledNutrition.calories}</div>
                 </div>
                 <div className="bg-[#121212] p-4 rounded-2xl border border-white/5 text-center">
                   <div className="text-white/40 text-xs uppercase tracking-widest mb-1">Protein</div>
-                  <div className="text-2xl font-bold text-emerald-400">{result.protein}g</div>
+                  <div className="text-2xl font-bold text-emerald-400">{scaledNutrition.protein}g</div>
                 </div>
                 <div className="bg-[#121212] p-4 rounded-2xl border border-white/5 text-center">
                   <div className="text-white/40 text-xs uppercase tracking-widest mb-1">Carbs</div>
-                  <div className="text-2xl font-bold text-blue-400">{result.carbs}g</div>
+                  <div className="text-2xl font-bold text-blue-400">{scaledNutrition.carbs}g</div>
                 </div>
                 <div className="bg-[#121212] p-4 rounded-2xl border border-white/5 text-center">
                   <div className="text-white/40 text-xs uppercase tracking-widest mb-1">Fat</div>
-                  <div className="text-2xl font-bold text-purple-400">{result.fat}g</div>
+                  <div className="text-2xl font-bold text-purple-400">{scaledNutrition.fat}g</div>
                 </div>
               </div>
 
@@ -170,7 +288,15 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
                 </button>
                 <button 
                   onClick={() => {
-                    onLog(result.foodName, result.calories, result.protein, result.carbs, result.fat)
+                    onLog({
+                      foodName: editedFoodName,
+                      calories: scaledNutrition.calories,
+                      protein: scaledNutrition.protein,
+                      carbs: scaledNutrition.carbs,
+                      fat: scaledNutrition.fat,
+                      servings,
+                      source: 'snap_ai',
+                    })
                   }}
                   className="flex-1 py-3 rounded-xl bg-accent text-black font-bold hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
                 >

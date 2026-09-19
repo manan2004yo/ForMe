@@ -376,16 +376,16 @@ export function EatDashboard() {
           <SnapAndLogModal 
             slot={snappingSlot} 
             onClose={() => setSnappingSlot(null)}
-            onLog={(name, cals, p, c, f) => {
+            onLog={(data) => {
               addFoodEntry(user?.uid || "demo", snappingSlot, [{
                 id: uuidv4(),
                 foodItemId: 'ai-vision',
-                foodName: name,
-                quantity: 1,
+                foodName: data.foodName,
+                quantity: data.servings,
                 unit: 'serving',
-                gramsConsumed: 200,
+                gramsConsumed: 200 * data.servings,
                 confidence: 'high',
-                nutrition: { calories: cals, protein: p, carbs: c, fat: f, fiber: 0 }
+                nutrition: { calories: data.calories, protein: data.protein, carbs: data.carbs, fat: data.fat, fiber: 0 }
               }])
               setSnappingSlot(null)
             }}
