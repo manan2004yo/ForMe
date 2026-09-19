@@ -21,7 +21,7 @@ import { saveWorkoutLog } from '@/lib/firebase/dataService'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 import { useMuscleRecoveryStore } from '@/store/muscleRecoveryStore'
-import type { MuscleGroup, LoggedSet, WorkoutLogEntry } from '@/types'
+import type { MuscleGroup, WorkoutLogEntry } from '@/types'
 import type { ExerciseEntry } from '@/lib/data/exerciseDatabase'
 
 // ─── Session-level types ──────────────────────────────────────

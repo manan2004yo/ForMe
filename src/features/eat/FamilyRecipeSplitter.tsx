@@ -128,7 +128,7 @@ export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
           </button>
           <h2 className="text-lg font-semibold text-white tracking-tight">Mom's Kitchen Splitter</h2>
         </div>
-        <button onClick={onClose} className="px-4 py-1.5 rounded-full bg-accent text-black font-semibold text-sm active:scale-95 transition-transform">
+        <button onClick={handleLogPortion} className="px-4 py-1.5 rounded-full bg-accent text-black font-semibold text-sm active:scale-95 transition-transform">
           Save Recipe
         </button>
       </div>

@@ -4,8 +4,8 @@
 
 import { useUserStore } from '@/store/userStore'
 import { clsx } from 'clsx'
-import { Activity, BookOpen, Flame, Home, ShieldAlert, Sparkles, TrendingUp, User } from 'lucide-react'
-import { useState } from 'react'
+import { Activity, BookOpen, Flame, Home, ShieldAlert, TrendingUp, User } from 'lucide-react'
+
 import { useLocation, useNavigate } from 'react-router-dom'
 
 const NAV_ITEMS = [

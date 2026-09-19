@@ -91,7 +91,7 @@ async function callMockProvider(query: string, context: AIContext): Promise<AIRe
 // ─── Router ───────────────────────────────────────────────────
 
 export async function askForme(query: string, context: AIContext, provider: AIProvider = 'openai'): Promise<AIResponse> {
-  console.log(`[AI Router] Routing query to ${provider}`)
+
   
   switch (provider) {
     case 'openai':

@@ -6,7 +6,7 @@ import { useUserStore, toDisplayWeight } from '@/store/userStore'
 import { usePreviousPerformance } from '../hooks/usePreviousPerformance'
 import { SetTable } from './SetTable'
 import { ExerciseHistorySheet } from './ExerciseHistorySheet'
-import clsx from 'clsx'
+
 
 interface ExerciseCardProps {
   exercise: ActiveExercise

@@ -6,7 +6,7 @@ import {
 } from '@/store/muscleRecoveryStore'
 import type { MuscleGroup } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
-import clsx from 'clsx'
+
 
 interface MuscleRecoveryTimelineProps {
   onMuscleClick: (muscle: MuscleGroup) => void
