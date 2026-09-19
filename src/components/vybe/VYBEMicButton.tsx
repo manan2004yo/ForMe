@@ -11,33 +11,53 @@ export function VYBEMicButton({ context }: { context?: VybeContext }) {
   const { listening, startListening, stopListening, setProcessing, setResult, setError, reset } = useVybeStore();
 
   const handleClick = (e: React.MouseEvent) => {
+    console.log('[VYBE DIAGNOSTICS] 1. USER CLICK: handleClick triggered');
     e.preventDefault();
     e.stopPropagation();
 
     if (listening) {
+      console.log('[VYBE DIAGNOSTICS] 2a. Button clicked while listening - stopping');
       if (globalRecognition) {
         globalRecognition.stop();
       }
       stopListening();
     } else {
+      console.log('[VYBE DIAGNOSTICS] 2b. Button clicked while idle - initializing SpeechRecognition');
       const rec = initRecognition();
       if (!rec) {
+        console.error('[VYBE DIAGNOSTICS] ERROR: Speech recognition not supported by browser (initRecognition returned null)');
         setError('Speech recognition not supported in this browser.');
         return;
       }
+      console.log('[VYBE DIAGNOSTICS] 3. SpeechRecognition initialized successfully');
 
       // Clean up previous listeners
       rec.onresult = null;
       rec.onerror = null;
       rec.onend = null;
+      rec.onstart = null;
+      rec.onaudiostart = null;
+
+      rec.onstart = () => {
+        console.log('[VYBE DIAGNOSTICS] EVENT: onstart - Browser has started capturing audio');
+      };
+
+      rec.onaudiostart = () => {
+        console.log('[VYBE DIAGNOSTICS] EVENT: onaudiostart - Audio capturing has begun');
+      };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       rec.onresult = async (event: any) => {
+        console.log('[VYBE DIAGNOSTICS] EVENT: onresult fired', event);
         const transcript = event.results[0][0].transcript.trim();
+        console.log('[VYBE DIAGNOSTICS] Transcript received:', transcript);
         if (!transcript) {
+          console.warn('[VYBE DIAGNOSTICS] Transcript was empty');
           setError('No speech detected.');
           return;
         }
+        
+        console.log('[VYBE DIAGNOSTICS] 4. Triggering fetch to /api/parse-voice');
         setProcessing(true);
         try {
           const response = await fetch('/api/parse-voice', {
@@ -45,33 +65,45 @@ export function VYBEMicButton({ context }: { context?: VybeContext }) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ transcript }),
           });
+          console.log('[VYBE DIAGNOSTICS] 5. Fetch response status:', response.status);
           const data = await response.json();
-          if (!response.ok) throw new Error(data.error ?? 'Parsing failed');
+          if (!response.ok) {
+            console.error('[VYBE DIAGNOSTICS] API Error Data:', data);
+            throw new Error(data.error ?? 'Parsing failed');
+          }
+          console.log('[VYBE DIAGNOSTICS] 6. Structured result received:', data);
           setResult(data);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-          console.error(err);
+          console.error('[VYBE DIAGNOSTICS] ERROR in fetch/parse:', err);
           setError(err.message ?? 'Unexpected error');
         }
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       rec.onerror = (event: any) => {
+        console.error('[VYBE DIAGNOSTICS] EVENT: onerror fired! Error code:', event.error, 'Message:', event.message);
         setError(event.error || 'Speech recognition error');
       };
 
       rec.onend = () => {
+        console.log('[VYBE DIAGNOSTICS] EVENT: onend fired');
         const state = useVybeStore.getState();
         if (!state.result && !state.processing) {
+          console.log('[VYBE DIAGNOSTICS] onend -> resetting store because no result and not processing');
           reset();
+        } else {
+          console.log('[VYBE DIAGNOSTICS] onend -> keeping store state because processing or result exists');
         }
       };
 
       try {
+        console.log('[VYBE DIAGNOSTICS] Attempting rec.start() directly inside click handler');
         rec.start();
+        console.log('[VYBE DIAGNOSTICS] rec.start() executed without throwing an exception');
         startListening(context);
       } catch (err) {
-        console.error('Failed to start microphone', err);
+        console.error('[VYBE DIAGNOSTICS] ERROR: rec.start() threw an exception:', err);
         setError('Failed to start microphone. Please ensure permissions are granted.');
       }
     }
