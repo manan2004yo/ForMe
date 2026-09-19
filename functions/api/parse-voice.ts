@@ -13,7 +13,7 @@ export async function onRequestPost(context: any) {
 
     const prompt = `You are a voice parser for a fitness app. Analyze the given transcript and determine the user's intent. Return ONLY a JSON object with the following shape: {\n  "intent": "LOG_FOOD" | "LOG_WORKOUT" | "UNKNOWN",\n  // For LOG_FOOD include: "foodName", "quantity", "unit" (if mentioned).\n  // For LOG_WORKOUT include: "exerciseName", "sets", "reps", "weight", "weightUnit" (if mentioned).\n  // Include a numeric confidence between 0 and 1 indicating how confident you are in the parsing.\n}`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
