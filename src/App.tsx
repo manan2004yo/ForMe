@@ -6,7 +6,7 @@ import { useAchievementEngine } from '@/lib/engines/useAchievementEngine'
 import { useAchievementStore } from '@/store/achievementStore'
 import { useAuthStore } from '@/store/authStore'
 import { useSpotifyStore } from '@/store/spotifyStore'
-import { useUserStore } from '@/store/userStore'
+import { useUserStore, applyTheme } from '@/store/userStore'
 import { useProgressStore } from '@/store/progressStore'
 import { useTrainStore } from '@/store/trainStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
@@ -206,6 +206,11 @@ function AppRoutes() {
 import { VYBEOverlay } from '@/components/vybe/VYBEOverlay';
 
 export default function App() {
+  useEffect(() => {
+    const theme = useUserStore.getState().theme ?? 'dark'
+    applyTheme(theme) 
+  }, [])
+
   return (
     <>
       <BrowserRouter>

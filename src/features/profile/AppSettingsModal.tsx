@@ -1,4 +1,5 @@
 import { useSpotifyStore } from '@/store/spotifyStore'
+import { useUserStore } from '@/store/userStore'
 import { clsx } from 'clsx'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Bell, Loader2, Moon, Music, Sun } from 'lucide-react'
@@ -6,7 +7,7 @@ import { useState } from 'react'
 
 export function AppSettingsModal({ onClose }: { onClose: () => void }) {
   const [notifications, setNotifications] = useState(true)
-  const [theme, setTheme] = useState('dark')
+  const { theme, setTheme } = useUserStore()
   const { isConnected: isSpotifyConnected, isConnecting: isSpotifyConnecting, connect: connectSpotify, disconnect: disconnectSpotify } = useSpotifyStore()
 
 
@@ -61,7 +62,7 @@ export function AppSettingsModal({ onClose }: { onClose: () => void }) {
               </div>
               <select 
                 value={theme}
-                onChange={e => setTheme(e.target.value)}
+                onChange={e => setTheme(e.target.value as 'light' | 'dark' | 'system')}
                 className="bg-black border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-accent"
               >
                 <option value="dark">Dark</option>

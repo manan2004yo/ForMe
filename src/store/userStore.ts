@@ -68,6 +68,8 @@ interface UserState {
   toggleIncognito: () => void
   weightUnit: 'kg' | 'lb'
   toggleWeightUnit: () => void
+  theme: 'light' | 'dark' | 'system'
+  setTheme: (theme: 'light' | 'dark' | 'system') => void
 }
 
 import { persist } from 'zustand/middleware'
@@ -83,6 +85,12 @@ export const useUserStore = create<UserState>()(
       activeContext: 'normal',
       isIncognito: false,
       weightUnit: 'kg',
+      theme: 'system',
+
+      setTheme: (theme) => {
+        set({ theme })
+        applyTheme(theme)
+      },
 
   toggleWeightUnit: () => set(s => ({ weightUnit: s.weightUnit === 'kg' ? 'lb' : 'kg' })),
 
@@ -192,7 +200,26 @@ export const useUserStore = create<UserState>()(
       set({ metrics: calculateBodyMetrics(profile, activeContext) })
     }
   },
-}), { name: 'forme-user-storage' }))
+}), { 
+  name: 'forme-user-storage',
+  onRehydrateStorage: () => (state) => {
+    if (state) applyTheme(state.theme)
+  }
+}))
+
+export function applyTheme(theme: 'light' | 'dark' | 'system') {
+  const root = document.documentElement
+  root.classList.remove('light', 'dark')
+  
+  if (theme === 'system') {
+    const prefersDark = window.matchMedia(
+      '(prefers-color-scheme: dark)'
+    ).matches
+    root.classList.add(prefersDark ? 'dark' : 'light')
+  } else {
+    root.classList.add(theme)
+  }
+}
 
 export function toDisplayWeight(weightKg: number, unit: 'kg' | 'lb'): number {
   return unit === 'lb' ? Math.round(weightKg * 2.2046 * 4) / 4 : weightKg
