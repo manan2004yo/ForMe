@@ -101,6 +101,29 @@
   --shadow-accent: 0 8px 32px rgba(255, 119, 51, 0.4), 0 0 10px rgba(255, 119, 51, 0.6);
 }
 
+
+.light {
+  /* LIGHT THEME (Clean, Crisp, Light Glass) */
+  --bg: #ffffff;
+  --bg-surface: rgba(255, 255, 255, 0.7);
+  --bg-surface-elevated: rgba(255, 255, 255, 0.85);
+  --bg-surface-floating: rgba(255, 255, 255, 0.95);
+  
+  --text-primary: #000000;
+  --text-secondary: #555555;
+  --text-tertiary: #888888;
+  --text-inverse: #ffffff;
+
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-strong: rgba(0, 0, 0, 0.1);
+
+  /* Shadows for Light Mode (Drop shadows) */
+  --shadow-card: 0 0 0 1px rgba(0,0,0,0.03), 0 10px 40px -10px rgba(0,0,0,0.05);
+  --shadow-card-hover: 0 0 0 1px rgba(0,0,0,0.08), 0 20px 50px -10px rgba(0,0,0,0.1), 0 0 30px rgba(255, 90, 0, 0.15);
+  --shadow-floating: 0 0 0 1px rgba(0,0,0,0.1), 0 30px 60px -20px rgba(0,0,0,0.15);
+  --shadow-accent: 0 8px 32px rgba(255, 90, 0, 0.3), 0 0 10px rgba(255, 90, 0, 0.2);
+}
+
 /* ─── Tailwind v4 Theme Variables ────────────────────────────── */
 
 @theme {
