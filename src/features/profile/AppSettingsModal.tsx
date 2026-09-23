@@ -1,15 +1,12 @@
-import { useSpotifyStore } from '@/store/spotifyStore'
 import { useUserStore } from '@/store/userStore'
 import { clsx } from 'clsx'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Bell, Loader2, Moon, Music, Sun } from 'lucide-react'
+import { ArrowLeft, Bell, Moon } from 'lucide-react'
 import { useState } from 'react'
 
 export function AppSettingsModal({ onClose }: { onClose: () => void }) {
   const [notifications, setNotifications] = useState(true)
-  const { theme, setTheme } = useUserStore()
-  const { isConnected: isSpotifyConnected, isConnecting: isSpotifyConnecting, connect: connectSpotify, disconnect: disconnectSpotify } = useSpotifyStore()
-
+  const { setTheme } = useUserStore()
 
   return (
     <motion.div 
@@ -54,48 +51,19 @@ export function AppSettingsModal({ onClose }: { onClose: () => void }) {
 
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                {theme === 'dark' ? <Moon size={20} className="text-white/70" /> : <Sun size={20} className="text-white/70" />}
+                <Moon size={20} className="text-white/70" />
                 <div>
                   <span className="font-medium text-white block">App Theme</span>
-                  <span className="text-xs text-white/50">Current: {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+                  <span className="text-xs text-white/50">Dark Mode only for now</span>
                 </div>
               </div>
-              <select 
-                value={theme}
-                onChange={e => setTheme(e.target.value as 'light' | 'dark' | 'system')}
-                className="bg-black border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-accent"
-              >
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-                <option value="system">System</option>
-              </select>
-            </div>
-
-            <button 
-              onClick={() => isSpotifyConnected ? disconnectSpotify() : connectSpotify()}
-              className="w-full flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center">
-                  <Music size={16} />
-                </div>
-                <div className="text-left">
-                  <span className="font-medium text-white block">Spotify</span>
-                  <span className="text-xs text-white/40">Performance Tracking</span>
-                </div>
-              </div>
-              <span className={clsx(
-                "text-xs font-semibold px-2 py-1 rounded-lg transition-colors flex items-center gap-1",
-                isSpotifyConnected ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-white/50"
-              )}>
-                {isSpotifyConnecting && <Loader2 size={12} className="animate-spin" />}
-                {isSpotifyConnected ? 'Connected' : 'Connect'}
+              <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/5 text-white/50">
+                Dark
               </span>
-            </button>
+            </div>
 
           </div>
         </div>
-
       </div>
     </motion.div>
   )
