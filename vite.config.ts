@@ -32,8 +32,21 @@ export default defineConfig({
     exclude: ['**/node_modules/**', '**/dist/**', '**/tests/**'],
   },
   build: {
-    // Firebase + Recharts = large bundle; acknowledged and acceptable for now
     chunkSizeWarningLimit: 1600,
     cssTarget: 'chrome61',
+    rollupOptions: {
+      output: {
+        manualChunks: (id: string) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('firebase')) return 'vendor-firebase'
+            if (id.includes('@zxing')) return 'vendor-zxing'
+            if (id.includes('recharts')) return 'vendor-ui'
+            if (id.includes('framer-motion')) return 'vendor-ui'
+            if (id.includes('react-dom') || 
+                id.includes('react-router')) return 'vendor-react'
+          }
+        },
+      },
+    },
   },
 })
