@@ -24,6 +24,7 @@ export function EndWorkoutSheet({ isOpen, onClose, onFinish }: EndWorkoutSheetPr
 
   async function handleFinish() {
     if (!session) return
+    if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 120])
     const state = useWorkoutSessionStore.getState()
     const summaryData: WorkoutSummaryData = {
       label: session.label,

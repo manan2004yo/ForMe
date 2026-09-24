@@ -45,6 +45,7 @@ export function DailyCheckInCard() {
 
   const handleComplete = async () => {
     if (!user) return
+    if (navigator.vibrate) navigator.vibrate([60, 30, 60])
     const today = new Date().toISOString().split('T')[0]
     await addLog(user.uid || (user as any).id || 'demo', today, {
       date: today,

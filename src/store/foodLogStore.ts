@@ -127,6 +127,7 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
     }
 
     set(state => ({ entries: [...state.entries, entry] }))
+    if (navigator.vibrate) navigator.vibrate(40)
 
     // Record portion memory so user's preferred unit is remembered
     const authUid = useAuthStore.getState().user?.uid
