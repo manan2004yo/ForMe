@@ -85,7 +85,7 @@ export const useUserStore = create<UserState>()(
       activeContext: 'normal',
       isIncognito: false,
       weightUnit: 'kg',
-      theme: 'system',
+      theme: 'dark',
 
       setTheme: (theme) => {
         set({ theme })
@@ -203,7 +203,10 @@ export const useUserStore = create<UserState>()(
 }), { 
   name: 'forme-user-storage',
   onRehydrateStorage: () => (state) => {
-    if (state) applyTheme(state.theme)
+    if (state) {
+      state.theme = 'dark'
+      applyTheme('dark')
+    }
   }
 }))
 
