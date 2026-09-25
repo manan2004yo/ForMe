@@ -193,78 +193,37 @@ export function BarcodeScannerOverlay({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
     setScannerState('analyzing_image')
-    scanningRef.current = true
-
     try {
+      const { BrowserMultiFormatReader } = await import('@zxing/browser')
+      const reader = new BrowserMultiFormatReader()
       const imgURL = URL.createObjectURL(file)
       const img = new Image()
-      
       img.onload = async () => {
         try {
-          // Resize image to max 1200px width/height to prevent Cloudflare payload limits
-          const canvas = document.createElement('canvas')
-          const MAX_DIM = 1200
-          let width = img.width
-          let height = img.height
-
-          if (width > height && width > MAX_DIM) {
-            height = Math.round((height * MAX_DIM) / width)
-            width = MAX_DIM
-          } else if (height > MAX_DIM) {
-            width = Math.round((width * MAX_DIM) / height)
-            height = MAX_DIM
-          }
-
-          canvas.width = width
-          canvas.height = height
-          const ctx = canvas.getContext('2d')
-          
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height)
-          }
-
-          // Compress to JPEG 80% quality
-          const base64Image = canvas.toDataURL('image/jpeg', 0.8)
-          
-          const response = await fetch('/api/read-barcode-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: base64Image })
-          })
-
-          if (!response.ok) {
-            throw new Error('API Error')
-          }
-
-          const data = await response.json()
-          
-          if (data.barcode && data.barcode !== 'NOT_FOUND') {
-            handleBarcode(data.barcode)
+          const result = await reader.decodeFromImageElement(img)
+          if (result) {
+            scanningRef.current = true
+            handleBarcode(result.getText())
           } else {
-            setErrorDetail('AI could not confidently detect a barcode. Try a closer/clearer shot.')
+            setErrorDetail('No barcode found in this image. Try a clearer shot.')
             setScannerState('error')
           }
-        } catch (err) {
-          console.error(err)
-          setErrorDetail('Failed to analyze image.')
+        } catch {
+          setErrorDetail('No barcode found in this image. Try a clearer shot.')
           setScannerState('error')
         } finally {
           URL.revokeObjectURL(imgURL)
         }
       }
-      
       img.onerror = () => {
         setErrorDetail('Failed to load the image.')
         setScannerState('error')
         URL.revokeObjectURL(imgURL)
       }
-      
       img.src = imgURL
-    } catch (err) {
-      console.error(err)
-      setErrorDetail('Failed to process image.')
+    } catch {
+      setErrorDetail('Failed to load barcode decoder.')
       setScannerState('error')
     }
   }
@@ -391,8 +350,8 @@ export function BarcodeScannerOverlay({
                   >
                     <Camera size={36} style={{ color: 'var(--accent, #2DD4BF)' }} />
                   </motion.div>
-                  <p className="text-white font-semibold text-base">Analyzing Image...</p>
-                  <p className="text-white/40 text-xs">Extracting barcode with AI</p>
+                  <p className="text-white font-semibold text-base">Scanning Image...</p>
+                  <p className="text-white/40 text-xs">Detecting barcode...</p>
                 </div>
               </div>
             )}
