@@ -5,14 +5,13 @@
 import { useAchievementEngine } from '@/lib/engines/useAchievementEngine'
 import { useAchievementStore } from '@/store/achievementStore'
 import { useAuthStore } from '@/store/authStore'
-import { useSpotifyStore } from '@/store/spotifyStore'
 import { useUserStore, applyTheme } from '@/store/userStore'
 import { useProgressStore } from '@/store/progressStore'
 import { useTrainStore } from '@/store/trainStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useCnsStore } from '@/store/cnsStore'
 import { AnimatePresence } from 'framer-motion'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { ActiveWorkoutOverlay } from '@/features/train/ActiveWorkoutOverlay'
 
@@ -34,43 +33,6 @@ import { ProgressDashboard } from '@/features/progress/ProgressDashboard'
 import { TrainDashboard } from '@/features/train/TrainDashboard'
 import { useToastStore } from '@/store/toastStore'
 
-
-function SpotifyCallback() {
-  const location = useLocation()
-  const navigate = useNavigate()
-  
-  const processedCode = useRef<string | null>(null)
-  
-  useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const code = params.get('code')
-    const error = params.get('error')
-    
-    // Prevent double-firing the same code (React Strict Mode / re-renders)
-    if (code && processedCode.current !== code) {
-      processedCode.current = code
-      
-      // Clear URL so it doesn't get processed again on reload
-      window.history.replaceState({}, document.title, window.location.pathname)
-      
-      useSpotifyStore.getState().handleCallback(code).then(() => {
-        navigate('/train')
-      })
-    } else if (error) {
-      useToastStore.getState().error(`Spotify auth error: ${error}`)
-      navigate('/train')
-    } else {
-      navigate('/train')
-    }
-  }, [location, navigate])
-
-  return (
-    <div className="min-h-dvh flex flex-col items-center justify-center bg-bg">
-      <div className="w-12 h-12 rounded-full border-4 border-accent border-t-transparent animate-spin mb-4" />
-      <p className="text-white font-medium">Authenticating with Spotify...</p>
-    </div>
-  )
-}
 
 function AuthenticatedApp() {
   const { user, logout } = useAuthStore()
@@ -155,7 +117,6 @@ function AuthenticatedApp() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/integrations" element={<IntegrationsPage />} />
           <Route path="/profile/achievements" element={<AchievementsPage />} />
-          <Route path="/callback" element={<SpotifyCallback />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
