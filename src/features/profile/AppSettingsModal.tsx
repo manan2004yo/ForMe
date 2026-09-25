@@ -1,11 +1,8 @@
 import { useUserStore } from '@/store/userStore'
-import { clsx } from 'clsx'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Bell, Moon } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Moon } from 'lucide-react'
 
 export function AppSettingsModal({ onClose }: { onClose: () => void }) {
-  const [notifications, setNotifications] = useState(true)
   const { setTheme } = useUserStore()
 
   return (
@@ -27,28 +24,6 @@ export function AppSettingsModal({ onClose }: { onClose: () => void }) {
           <h3 className="text-xs font-medium text-white/50 uppercase tracking-wider mb-4">Preferences</h3>
           
           <div className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-white/5">
-              <div className="flex items-center gap-3">
-                <Bell size={20} className="text-white/70" />
-                <div>
-                  <span className="font-medium text-white block">Push Notifications</span>
-                  <span className="text-xs text-white/50">Reminders for meals & workouts</span>
-                </div>
-              </div>
-              <button 
-                onClick={() => setNotifications(!notifications)}
-                className={clsx(
-                  "w-12 h-6 rounded-full transition-colors relative",
-                  notifications ? "bg-accent" : "bg-white/10"
-                )}
-              >
-                <div className={clsx(
-                  "w-5 h-5 rounded-full bg-black absolute top-0.5 transition-transform",
-                  notifications ? "translate-x-6" : "translate-x-0.5 bg-white/50"
-                )} />
-              </button>
-            </div>
-
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <Moon size={20} className="text-white/70" />
@@ -61,7 +36,6 @@ export function AppSettingsModal({ onClose }: { onClose: () => void }) {
                 Dark
               </span>
             </div>
-
           </div>
         </div>
       </div>
