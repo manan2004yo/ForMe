@@ -156,7 +156,7 @@ export const useUserStore = create<UserState>()(
         set({ profile: defaultProfile, metrics, isDemoMode: false, error: null })
       }
     } catch (err: any) {
-      set({ error: err.message || 'Failed to load profile. Check network connection or Firestore rules.' })
+      set({ error: err.message || 'Unable to load your profile. Please check your internet connection.' })
     } finally {
       set({ isLoading: false })
     }

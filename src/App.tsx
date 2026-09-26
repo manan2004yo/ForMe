@@ -57,8 +57,8 @@ function AuthenticatedApp() {
         <div className="w-16 h-16 rounded-2xl bg-error/10 flex items-center justify-center mb-4">
           <span className="text-error text-2xl font-bold">!</span>
         </div>
-        <h2 className="text-text-primary font-heading font-bold text-xl mb-2">Database Connection Error</h2>
-        <p className="text-text-secondary text-sm mb-6 max-w-sm">{error}</p>
+        <h2 className="text-text-primary font-heading font-bold text-xl mb-2">Unable to Load Your Data</h2>
+        <p className="text-text-secondary text-sm mb-6 max-w-sm">Something went wrong loading your profile. Please check your internet connection and try again.</p>
         <div className="flex gap-3">
           <button 
             onClick={() => user && loadProfile(user.uid)} 
