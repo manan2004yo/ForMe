@@ -9,8 +9,10 @@ import {
   createUserWithEmailAndPassword,
   deleteUser,
   EmailAuthProvider,
+  GoogleAuthProvider,
   onAuthStateChanged,
   reauthenticateWithCredential,
+  reauthenticateWithPopup,
   sendEmailVerification,
   sendPasswordResetEmail,
   setPersistence,
@@ -143,4 +145,10 @@ export async function reauthenticateWithPassword(password: string): Promise<void
   if (!user || !user.email) throw new Error('No authenticated user')
   const credential = EmailAuthProvider.credential(user.email, password)
   await reauthenticateWithCredential(user, credential)
+}
+
+export async function reauthenticateWithGoogleProvider(): Promise<void> {
+  const user = auth.currentUser
+  if (!user) throw new Error('No authenticated user')
+  await reauthenticateWithPopup(user, googleProvider)
 }
