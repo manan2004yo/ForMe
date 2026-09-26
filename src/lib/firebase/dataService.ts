@@ -450,6 +450,11 @@ export async function deleteUserData(uid: string): Promise<void> {
   // Delete specific known documents
   try { await deleteDoc(doc(db, 'users', uid, 'workoutPlan', 'current')) } catch {}
   try { await deleteDoc(doc(db, 'users', uid, 'dietPlan', 'current')) } catch {}
+  try { await deleteDoc(doc(db, 'users', uid, 'manualDietPlan', 'current')) } catch {}
+  try { await deleteDoc(doc(db, 'users', uid, 'dietTemplates', 'all')) } catch {}
+  try { await deleteDoc(doc(db, 'users', uid, 'manualWorkoutPlan', 'current')) } catch {}
+  try { await deleteDoc(doc(db, 'users', uid, 'workoutTemplates', 'all')) } catch {}
+  try { await deleteDoc(doc(db, 'users', uid, 'achievements', 'current')) } catch {}
 
   // Delete the root user document
   try {
