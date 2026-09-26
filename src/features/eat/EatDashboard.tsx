@@ -3,7 +3,6 @@
 // ============================================================
 
 import { PageTransition } from '@/components/layout/PageTransition';
-import { VYBEMicButton } from '@/components/vybe/VYBEMicButton';
 
 import { AnimatedNumber, ProgressBar } from '@/components/shared'
 import { useAuthStore } from '@/store/authStore'
@@ -14,7 +13,7 @@ import type { FoodLogEntry, MealSlot, NutritionInfo } from '@/types'
 import { clsx } from 'clsx'
 import { format } from 'date-fns'
 import { ChevronDown, ChevronUp, Coffee, Leaf, Moon, Plus, Sun, Sunset } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { EditFoodModal } from './EditFoodModal'
 import { FamilyRecipeSplitter } from './FamilyRecipeSplitter'
@@ -201,22 +200,6 @@ export function EatDashboard() {
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null)
   const [showMicronutrients, setShowMicronutrients] = useState(false)
 
-  // Hidden VYBE mic button ref — triggered by AddFoodSheet's "Speak to Vybe" action
-  const vybeSlotRef = useRef<MealSlot | null>(null)
-
-  // Listen for VYBE trigger events dispatched by AddFoodSheet
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const slot = (e as CustomEvent<{ slot: MealSlot }>).detail.slot
-      vybeSlotRef.current = slot
-      // Programmatically click the VYBE mic button for that slot
-      const vybeBtn = document.querySelector(`[data-vybe-slot="${slot}"]`) as HTMLElement | null
-      vybeBtn?.click()
-    }
-    window.addEventListener('vybe:trigger', handler)
-    return () => window.removeEventListener('vybe:trigger', handler)
-  }, [])
-
   const cnsStatus = getCurrentStatus()
   const isFried = cnsStatus === 'Fried'
 
@@ -333,14 +316,6 @@ export function EatDashboard() {
           ))}
         </div>
 
-        {/* Hidden VYBE mic buttons (one per slot) — triggered programmatically */}
-        <div className="sr-only" aria-hidden="true">
-          {MEAL_CONFIG.map(config => (
-            <span key={config.slot} data-vybe-slot={config.slot}>
-              <VYBEMicButton context={{ mealSlot: config.slot }} />
-            </span>
-          ))}
-        </div>
 
         {editingEntry && (
           <EditFoodModal

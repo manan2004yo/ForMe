@@ -5,9 +5,11 @@
 
 import { parseNaturalLanguageFoodEntry, convertToLoggedItems } from '@/lib/engines/nlpParser'
 import { getAllPortionMemories } from '@/lib/services/portionMemoryService'
+import { startVybeListening } from '@/components/vybe/VYBEMicButton'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useToastStore } from '@/store/toastStore'
+import { useVybeStore } from '@/store/vybeStore'
 import type { LoggedFoodItem, MealSlot } from '@/types'
 import { clsx } from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -225,16 +227,22 @@ export function AddFoodSheet({ slot, onClose, callbacks }: AddFoodSheetProps) {
   const { user } = useAuthStore()
   const { addFoodEntry } = useFoodLogStore()
   const toast = useToastStore()
+  const { startListening, setProcessing, setResult, setError, reset } = useVybeStore()
 
   const [showNlp, setShowNlp] = useState(false)
 
   const mealLabel = MEAL_LABELS[slot]
 
   const handleVybe = () => {
-    // Close the sheet first; VYBEMicButton is always rendered globally in EatDashboard
-    // so we just trigger a click on the global VYBE button for this slot.
-    // Implementation: dispatch a custom event that EatDashboard listens to.
-    window.dispatchEvent(new CustomEvent('vybe:trigger', { detail: { slot } }))
+    // Call startVybeListening DIRECTLY and SYNCHRONOUSLY inside this click handler.
+    // rec.start() must fire as a direct result of the user gesture — any indirection
+    // (window events, programmatic .click() calls, async gaps) causes browsers to
+    // silently refuse to start Speech Recognition.
+    startVybeListening(
+      { mealSlot: slot },
+      { startListening, setProcessing, setResult, setError, reset }
+    )
+    // Close the sheet visually AFTER rec.start() has been invoked synchronously above.
     onClose()
   }
 
