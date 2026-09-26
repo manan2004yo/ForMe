@@ -89,17 +89,29 @@ function parseSegment(segment: string): ParsedFoodEntry['parsedItems'][0] | null
   let unit: PortionUnit = 'piece'
   let foodText = remainingText
 
-  for (const [unitWord, unitVal] of Object.entries(UNIT_ALIASES)) {
-    const unitPattern = new RegExp(`\\b${unitWord}\\b\\s*(?:of\\s*)?`, 'i')
-    if (unitPattern.test(remainingText)) {
-      unit = unitVal
-      foodText = remainingText.replace(unitPattern, '').trim()
-      break
+  // CRITICAL: Check if remainingText itself is a food name BEFORE stripping units.
+  // Words like "roti", "chapati", "paratha" exist in BOTH UNIT_ALIASES and as food
+  // names/aliases. If we let the unit loop run first, it strips the word entirely
+  // (leaving foodText='') and the food is silently dropped.
+  // If the whole remaining text matches a food directly, skip unit-stripping and
+  // use that food's own defaultUnit instead.
+  const directFoodMatch = findBestFoodMatch(remainingText)
+  if (directFoodMatch) {
+    unit = directFoodMatch.defaultUnit
+    foodText = remainingText
+  } else {
+    for (const [unitWord, unitVal] of Object.entries(UNIT_ALIASES)) {
+      const unitPattern = new RegExp(`\\b${unitWord}\\b\\s*(?:of\\s*)?`, 'i')
+      if (unitPattern.test(remainingText)) {
+        unit = unitVal
+        foodText = remainingText.replace(unitPattern, '').trim()
+        break
+      }
     }
   }
 
   // Find food item
-  const foodItem = findBestFoodMatch(foodText)
+  const foodItem = directFoodMatch || findBestFoodMatch(foodText)
 
   return {
     rawText: segment,
