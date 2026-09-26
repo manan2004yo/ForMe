@@ -13,8 +13,8 @@ import { useUserStore } from '@/store/userStore'
 import type { FoodLogEntry, MealSlot, NutritionInfo } from '@/types'
 import { clsx } from 'clsx'
 import { format } from 'date-fns'
-import { Barcode, ChevronDown, ChevronUp, Coffee, Leaf, Moon, Plus, Search, Sun, Sunset } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ChevronDown, ChevronUp, Coffee, Leaf, Moon, Plus, Sun, Sunset } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { EditFoodModal } from './EditFoodModal'
 import { FamilyRecipeSplitter } from './FamilyRecipeSplitter'
@@ -23,6 +23,7 @@ import { SnapAndLogModal } from './SnapAndLogModal'
 import { BarcodeScannerOverlay } from './components/BarcodeScannerOverlay'
 import { BarcodeResultSheet } from './components/BarcodeResultSheet'
 import { MicronutrientSheet } from './components/MicronutrientSheet'
+import { AddFoodSheet } from './components/AddFoodSheet'
 import type { ScannedProduct } from '@/lib/services/barcodeProductService'
 import { calculateNutritionForGrams } from '@/lib/services/barcodeProductService'
 
@@ -47,13 +48,11 @@ function NutritionChip({ label, value, unit, colorClass }: { label: string; valu
   )
 }
 
-function MealSection({ config, entries, onDelete, onBrowse, onSnap, onScan, onEdit }: {
+function MealSection({ config, entries, onDelete, onAddFood, onEdit }: {
   config: typeof MEAL_CONFIG[0]
   entries: FoodLogEntry[]
   onDelete: (entryId: string) => void
-  onBrowse: (slot: MealSlot) => void
-  onSnap: (slot: MealSlot) => void
-  onScan: (slot: MealSlot) => void
+  onAddFood: (slot: MealSlot) => void
   onEdit: (entry: FoodLogEntry) => void
 }) {
   const [expanded, setExpanded] = useState(true)
@@ -71,8 +70,6 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap, onScan, onEd
       fiber: acc.fiber + t.fiber,
     }
   }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
-
-  
 
   return (
     <div className="glass-panel overflow-hidden mb-4 transition-all duration-300 hover:shadow-card-hover">
@@ -101,28 +98,13 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap, onScan, onEd
         </div>
         
         <div className="flex items-center gap-2">
+          {/* Single unified Add Food button */}
           <button
-            onClick={(e) => { e.stopPropagation(); onSnap(config.slot); }}
-
+            onClick={(e) => { e.stopPropagation(); onAddFood(config.slot); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-black hover:bg-accent/90 transition-all text-xs font-bold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 shadow-[0_0_10px_rgba(45,212,191,0.2)]"
           >
-            <Sun size={14} /> Snap
+            <Plus size={14} /> Add Food
           </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onScan(config.slot); }}
-
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
-          >
-            <Barcode size={14} /> Scan
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onBrowse(config.slot); }}
-
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-all text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95"
-          >
-            <Search size={14} /> Search
-          </button>
-            <VYBEMicButton context={{ mealSlot: config.slot }} />
           {hasFood && (
             <button 
               onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
@@ -183,7 +165,6 @@ function MealSection({ config, entries, onDelete, onBrowse, onSnap, onScan, onEd
               ))}
             </div>
           ))}
-          
 
           <div className="grid grid-cols-4 gap-2 mt-4 p-3 bg-white/5 rounded-xl border border-white/5">
             <NutritionChip label="Calories" value={totals.calories} unit="kcal" colorClass="text-white" />
@@ -208,7 +189,9 @@ export function EatDashboard() {
       loadLogs(user.uid, selectedDate)
     }
   }, [user, loadLogs, selectedDate])
+
   const { getCurrentStatus } = useCnsStore()
+  const [addFoodSlot, setAddFoodSlot] = useState<MealSlot | null>(null)
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
   const [snappingSlot, setSnappingSlot] = useState<MealSlot | null>(null)
   const [scanningSlot, setScanningSlot] = useState<MealSlot | null>(null)
@@ -217,6 +200,22 @@ export function EatDashboard() {
   const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null)
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null)
   const [showMicronutrients, setShowMicronutrients] = useState(false)
+
+  // Hidden VYBE mic button ref — triggered by AddFoodSheet's "Speak to Vybe" action
+  const vybeSlotRef = useRef<MealSlot | null>(null)
+
+  // Listen for VYBE trigger events dispatched by AddFoodSheet
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const slot = (e as CustomEvent<{ slot: MealSlot }>).detail.slot
+      vybeSlotRef.current = slot
+      // Programmatically click the VYBE mic button for that slot
+      const vybeBtn = document.querySelector(`[data-vybe-slot="${slot}"]`) as HTMLElement | null
+      vybeBtn?.click()
+    }
+    window.addEventListener('vybe:trigger', handler)
+    return () => window.removeEventListener('vybe:trigger', handler)
+  }, [])
 
   const cnsStatus = getCurrentStatus()
   const isFried = cnsStatus === 'Fried'
@@ -322,33 +321,25 @@ export function EatDashboard() {
 
         {/* Meal Slots */}
         <div className="space-y-1">
-          
-        {/* Mom's Kitchen Splitter CTA */}
-        <button 
-          onClick={() => setShowRecipeSplitter(true)}
-          className="w-full mt-4 bg-gradient-to-r from-accent/20 to-[#121212] border border-accent/20 rounded-2xl p-4 flex items-center justify-between group active:scale-[0.98] transition-transform text-left"
-        >
-          <div>
-            <h3 className="text-white font-semibold text-sm">Mom's Kitchen Splitter</h3>
-            <p className="text-xs text-white/50 mt-1">Calculate exact macros for family meals</p>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-black transition-colors">
-            <Plus size={16} />
-          </div>
-        </button>
-
           {MEAL_CONFIG.map(config => (
-              <MealSection
-                key={config.slot}
-                config={config}
-                entries={todayEntries.filter(e => e.meal === config.slot)}
-                onDelete={(id) => removeEntry(user?.uid || "demo", id)}
-                onBrowse={setBrowsingSlot}
-                onSnap={setSnappingSlot}
-                onScan={(slot) => setScanningSlot(slot)}
-                onEdit={(entry) => setEditingEntry(entry)}
-              />
-            ))}
+            <MealSection
+              key={config.slot}
+              config={config}
+              entries={todayEntries.filter(e => e.meal === config.slot)}
+              onDelete={(id) => removeEntry(user?.uid || "demo", id)}
+              onAddFood={setAddFoodSlot}
+              onEdit={(entry) => setEditingEntry(entry)}
+            />
+          ))}
+        </div>
+
+        {/* Hidden VYBE mic buttons (one per slot) — triggered programmatically */}
+        <div className="sr-only" aria-hidden="true">
+          {MEAL_CONFIG.map(config => (
+            <span key={config.slot} data-vybe-slot={config.slot}>
+              <VYBEMicButton context={{ mealSlot: config.slot }} />
+            </span>
+          ))}
         </div>
 
         {editingEntry && (
@@ -411,9 +402,24 @@ export function EatDashboard() {
         )}
       </div>
       </PageTransition>
+
       {showRecipeSplitter && <FamilyRecipeSplitter onClose={() => setShowRecipeSplitter(false)} />}
 
-      {/* Phase 5: Barcode Scanner */}
+      {/* Unified Add Food Sheet */}
+      {addFoodSlot && (
+        <AddFoodSheet
+          slot={addFoodSlot}
+          onClose={() => setAddFoodSlot(null)}
+          callbacks={{
+            onSnap: (slot) => { setAddFoodSlot(null); setSnappingSlot(slot) },
+            onScan: (slot) => { setAddFoodSlot(null); setScanningSlot(slot) },
+            onSearch: (slot) => { setAddFoodSlot(null); setBrowsingSlot(slot) },
+            onFamilyMeal: () => { setAddFoodSlot(null); setShowRecipeSplitter(true) },
+          }}
+        />
+      )}
+
+      {/* Barcode Scanner */}
       <BarcodeScannerOverlay
         isOpen={!!scanningSlot}
         onClose={() => setScanningSlot(null)}
@@ -450,6 +456,7 @@ export function EatDashboard() {
         }}
         onClose={() => setScannedProduct(null)}
       />
+
       <MicronutrientSheet
         isOpen={showMicronutrients}
         onClose={() => setShowMicronutrients(false)}
