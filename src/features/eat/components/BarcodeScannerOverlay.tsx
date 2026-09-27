@@ -18,6 +18,7 @@ interface BarcodeScannerOverlayProps {
   isOpen: boolean
   onClose: () => void
   onProductFound: (product: ScannedProduct) => void
+  onSearchManually?: () => void
 }
 
 type ScannerState =
@@ -35,6 +36,7 @@ export function BarcodeScannerOverlay({
   isOpen,
   onClose,
   onProductFound,
+  onSearchManually,
 }: BarcodeScannerOverlayProps) {
   const videoRef     = useRef<HTMLVideoElement>(null)
   const streamRef    = useRef<MediaStream | null>(null)
@@ -378,7 +380,11 @@ export function BarcodeScannerOverlay({
                       Scan Different Barcode
                     </button>
                     <button
-                      onClick={() => { stopCamera(); onClose() }}
+                      onClick={() => {
+                        stopCamera()
+                        if (onSearchManually) onSearchManually()
+                        else onClose()
+                      }}
                       className="w-full py-3.5 rounded-2xl bg-accent text-black font-semibold transition-all active:scale-[0.98]"
                     >
                       Search Manually Instead

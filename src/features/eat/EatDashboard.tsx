@@ -404,6 +404,13 @@ export function EatDashboard() {
           setScannedProduct(product)
           setScanningSlot(null)
         }}
+        onSearchManually={() => {
+          // scanningSlot is still set here (not_found fires before setScanningSlot(null))
+          // Open FoodSearch for the same slot the scanner was opened for
+          const slot = scanningSlot
+          setScanningSlot(null)
+          if (slot) setBrowsingSlot(slot)
+        }}
       />
 
       <BarcodeResultSheet
