@@ -1,50 +1,40 @@
+import { generateText } from '../lib/aiOrchestrator'
+import type { ConversationMessage } from '../lib/aiOrchestrator'
+
 export async function onRequestPost(context: any) {
   try {
-    const { request, env } = context;
-    const body = await request.json();
-    
-    if (!env.GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: "Gemini API key not configured in Cloudflare environment variables." }), { status: 500 });
-    }
+    const { request, env } = context
+    const body = await request.json()
 
-    const systemPrompt = "You are Forme AI, a hardcore, no-nonsense fitness and nutrition coach. You give direct, actionable, science-based advice. Keep responses under 3 paragraphs.";
+    const systemPrompt =
+      'You are Forme AI, a hardcore, no-nonsense fitness and nutrition coach. ' +
+      'You give direct, actionable, science-based advice. Keep responses under 3 paragraphs.'
 
-    // Map OpenAI style messages to Gemini style
-    const geminiContents = body.messages.map((msg: any) => ({
+    // Map OpenAI-style messages to the Orchestrator's ConversationMessage format.
+    // The frontend's modelRouter.ts sends: [{ role: 'user'|'assistant', content: '...' }]
+    // The Orchestrator (and Gemini) use:   [{ role: 'user'|'model', content: '...' }]
+    const conversationHistory: ConversationMessage[] = body.messages.map((msg: any) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }]
-    }));
+      content: msg.content,
+    }))
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${env.GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: { text: systemPrompt }
-        },
-        contents: geminiContents
-      })
-    });
+    const result = await generateText(env, '', {
+      systemInstruction: systemPrompt,
+      conversationHistory,
+    })
 
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error?.message || 'Gemini API error');
+    if (!result.success) {
+      return new Response(JSON.stringify({ error: result.error || 'AI Coach error' }), { status: 500 })
     }
 
-    // Map Gemini response back to OpenAI style so frontend modelRouter.ts doesn't need changing
-    const messageText = data.candidates[0]?.content?.parts[0]?.text || '';
-
-    return new Response(JSON.stringify({
-      choices: [
-        { message: { content: messageText } }
-      ]
-    }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    // Return in OpenAI-style shape so frontend's modelRouter.ts doesn't need changing
+    return new Response(
+      JSON.stringify({
+        choices: [{ message: { content: result.data } }],
+      }),
+      { headers: { 'Content-Type': 'application/json' } }
+    )
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   }
 }
