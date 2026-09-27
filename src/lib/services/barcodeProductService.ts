@@ -52,6 +52,13 @@ export async function fetchProductByBarcode(barcode: string): Promise<BarcodePro
     }
 
     const p = data.product
+
+    // If the product name is predominantly non-Latin script (Hebrew, Cyrillic,
+    // CJK, Arabic, etc.), treat as not_found rather than show unreadable garbage.
+    if (p.product_name && isPrimarilyNonLatinScript(p.product_name)) {
+      return { status: 'not_found' }
+    }
+
     const n = p.nutriments ?? {}
 
     const calories = n['energy-kcal_100g'] ?? n['energy_100g'] ?? 0
@@ -93,6 +100,24 @@ export async function fetchProductByBarcode(barcode: string): Promise<BarcodePro
     const message = err instanceof Error ? err.message : 'Unknown error'
     return { status: 'network_error', message }
   }
+}
+
+/**
+ * Returns true if more than 30% of the text's meaningful characters are from
+ * non-Latin scripts (Hebrew, Cyrillic, CJK, Arabic, etc.).
+ * Used to reject Open Food Facts product names that were entered in a foreign
+ * script and would appear as garbage to an English-speaking user.
+ */
+function isPrimarilyNonLatinScript(text: string): boolean {
+  if (!text || text.trim().length === 0) return false
+  // Count characters outside basic Latin, Latin-1 Supplement,
+  // and common punctuation/numbers/whitespace
+  const nonLatinPattern = /[^\u0000-\u024F\u2000-\u206F\s\d.,()&'\-/]/g
+  const nonLatinMatches = text.match(nonLatinPattern) || []
+  const totalMeaningfulChars = text.replace(/\s/g, '').length
+  if (totalMeaningfulChars === 0) return false
+  // If more than 30% of characters are non-Latin script, treat as garbage
+  return (nonLatinMatches.length / totalMeaningfulChars) > 0.3
 }
 
 /** Parses serving size strings like "30g", "1 cup (240ml)" → grams */
