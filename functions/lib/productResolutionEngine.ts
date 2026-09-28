@@ -5,7 +5,7 @@
 //
 // Multi-source resolution chain for barcode → product data.
 // Resolution order (first successful result wins):
-//   1. Vybe verified cache    (Firestore: 'verifiedProducts/{barcode}')
+//   1. Vybe product cache     (Cloudflare KV binding: VERIFIED_PRODUCTS)
 //   2. Open Food Facts        (world.openfoodfacts.org — free, no key)
 //   3. UPCitemdb              (api.upcitemdb.com — keyless trial, rate-limited)
 //   4. GS1                   (STUB ONLY — requires paid membership, skipped)
@@ -15,14 +15,9 @@
 //   2. Add it to the RESOLUTION_CHAIN array in resolveProduct().
 //   3. No other code changes required.
 //
-// FIRESTORE CACHE:
-//   Reads  → Firestore REST API with Firebase API key (public reads if
-//             security rules allow 'verifiedProducts' to be read openly).
-//   Writes → Require FIREBASE_SERVICE_ACCOUNT_KEY env var (a base64-encoded
-//             service account JSON). If not set, cache writes are silently
-//             skipped — the resolution chain still works, just without caching.
-//   To enable writes: add FIREBASE_SERVICE_ACCOUNT_KEY to Cloudflare Pages
-//   environment variables. See DEPLOYMENT.md.
+// KV CACHE:
+//   Cache reads and writes use the VERIFIED_PRODUCTS KV binding.
+//   If the binding is missing, the cache is skipped and the chain still works.
 // ============================================================
 
 // ── Public types ────────────────────────────────────────────
@@ -88,67 +83,27 @@ async function fetchFromVybeCache(
   env: any,
   barcode: string
 ): Promise<ResolvedProduct | null> {
-  const projectId: string | undefined = env.VITE_FIREBASE_PROJECT_ID
-  const apiKey: string | undefined = env.VITE_FIREBASE_API_KEY
-  if (!projectId || !apiKey) return null
-
+  if (!env.VERIFIED_PRODUCTS) return null
   try {
-    // Firestore REST read — no auth token required if security rules allow
-    // verifiedProducts to be publicly readable (match /verifiedProducts/{doc} { allow read: if true; })
-    const url =
-      `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/verifiedProducts/${barcode}?key=${apiKey}`
-    const res = await fetch(url)
-    if (!res.ok) return null // 404 = not cached, any other error = skip
-    const doc = await res.json() as any
-    if (!doc.fields) return null
-
-    // Helper: extract a Firestore value field
-    const fStr = (key: string): string | null =>
-      doc.fields[key]?.stringValue ?? null
-    const fNum = (key: string): number =>
-      parseFloat(doc.fields[key]?.doubleValue ?? doc.fields[key]?.integerValue ?? '0')
-
-    const per100gFields = doc.fields.per100g?.mapValue?.fields
-    if (!per100gFields) return null
-
-    return {
-      barcode,
-      name: fStr('name') ?? 'Unknown Product',
-      brand: fStr('brand'),
-      per100g: {
-        calories: parseFloat(per100gFields.calories?.doubleValue ?? per100gFields.calories?.integerValue ?? '0'),
-        protein:  parseFloat(per100gFields.protein?.doubleValue  ?? per100gFields.protein?.integerValue  ?? '0'),
-        carbs:    parseFloat(per100gFields.carbs?.doubleValue    ?? per100gFields.carbs?.integerValue    ?? '0'),
-        fat:      parseFloat(per100gFields.fat?.doubleValue      ?? per100gFields.fat?.integerValue      ?? '0'),
-        fiber:    parseFloat(per100gFields.fiber?.doubleValue    ?? per100gFields.fiber?.integerValue    ?? '0'),
-      },
-      servingSizeG: fNum('servingSizeG') || null,
-      dataSource: 'vybe_cache',
-      imageUrl: fStr('imageUrl'),
-      resolvedAt: fStr('resolvedAt') ?? nowIso(),
-    }
+    const cached = await env.VERIFIED_PRODUCTS.get(barcode, 'json') as ResolvedProduct | null
+    if (!cached || !cached.name || !cached.per100g) return null
+    return { ...cached, dataSource: 'vybe_cache' }
   } catch {
     return null
   }
 }
 
 /**
- * Writes a resolved product into the Vybe verified cache.
- * Silently skipped if FIREBASE_SERVICE_ACCOUNT_KEY is not configured.
- * Enable by adding a base64-encoded service account JSON to Cloudflare env.
+ * Writes a resolved product into the Vybe product cache (Cloudflare KV).
+ * Silently skipped if the VERIFIED_PRODUCTS binding is missing.
  */
 async function writeToVybeCache(env: any, product: ResolvedProduct): Promise<void> {
-  const projectId: string | undefined = env.VITE_FIREBASE_PROJECT_ID
-  const serviceAccountB64: string | undefined = env.FIREBASE_SERVICE_ACCOUNT_KEY
-  if (!projectId || !serviceAccountB64) return // Cache writes disabled — no service account configured yet
-
-  // TODO: When FIREBASE_SERVICE_ACCOUNT_KEY is added to Cloudflare env:
-  // 1. Decode the base64 service account JSON.
-  // 2. Exchange for a short-lived Bearer token via Google OAuth2 endpoint.
-  // 3. PATCH the Firestore REST document with the bearer token.
-  // Skipping for now — reads work without auth if Firestore rules allow it.
-  // This stub is intentionally left as a clearly-marked future implementation point.
-  console.log(`[ProductResolutionEngine] Cache write skipped (no service account): ${product.barcode}`)
+  if (!env.VERIFIED_PRODUCTS) return
+  try {
+    await env.VERIFIED_PRODUCTS.put(product.barcode, JSON.stringify(product))
+  } catch (err: any) {
+    console.error('[ProductResolutionEngine] Cache write failed:', err?.message)
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
