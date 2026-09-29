@@ -1,205 +1,131 @@
-# PRODUCT_ARCHITECTURE.md
+# FORME — Product & Nutrition Architecture
 
-> **Note:** "ForMe" is the temporary internal product name. The final product name has not been decided. This document will be renamed when the brand is finalized.
+This document is the source of truth for how FORME resolves
+nutrition data. It exists so future work (Snap AI rebuild, Vybe
+rebuild, any new food-input method) stays consistent with these
+rules instead of re-inventing them differently each time.
 
----
+## The Two Pillars
 
-## Overview
+**Pillar 1 — Packaged Foods.** Anything with a barcode: snack
+packets, drinks, jars, boxes. Resolved via barcode scanning.
 
-A mobile-first Indian fitness and nutrition Progressive Web App (PWA-ready). The app provides personalized meal tracking, workout planning, and body recomposition analytics built specifically for Indian food, budgets, and schedules.
+**Pillar 2 — Cooked, whole, and fresh foods.** Home-cooked meals,
+fruits, vegetables, anything without a package. Resolved via
+manual text entry (matched against our own Indian food database
+first, AI as fallback) or a photo of the plated meal. The public
+barcode database is never used for this pillar — it has no
+meaningful coverage for unpackaged food.
 
----
+## Pillar 1 — Packaged Food Resolution Chain
 
-## Tech Stack
+    Barcode scanned
+      |
+      v
+    Vybe verified cache (Cloudflare KV) — instant, no external call
+      |  miss
+      v
+    Open Food Facts — free, has good coverage for major brands
+      |  miss or incomplete
+      v
+    UPCitemdb — keyless trial tier, name/brand only, rarely has nutrition
+      |  miss
+      v
+    GS1 — STUB ONLY. No key configured. Always skipped until a
+          GS1 membership is obtained. Identity verification only,
+          never treated as a nutrition source.
+      |
+      v
+    Do we have at least a product NAME from any source above?
+      |                                  |
+     YES                                 NO
+      |                                  |
+      v                                  v
+    AI Nutrition Estimator          Manual Add screen
+    (name -> estimated profile)     (user types name,
+      |                              can Snap the label
+      v                              to auto-fill)
+    Shown with an "AI Estimate"
+    trust badge, downgraded to
+    "Low Confidence" automatically
+    for high-risk categories
+    (coffee, tea, supplements,
+    seasonings) or when the
+    numbers don't check out
+    internally
 
-| Layer | Technology |
-|---|---|
-| Framework | React 19 (with Strict Mode) |
-| Build tool | Vite 8 |
-| Language | TypeScript 6 |
-| Styling | Tailwind CSS v4 + custom CSS design system |
-| Routing | React Router v7 (BrowserRouter / client-side SPA) |
-| State management | Zustand v5 (with `persist` middleware) |
-| Backend / Auth | Firebase (Auth + Firestore + Storage) |
-| Charts | Recharts v3 |
-| Icons | Lucide React |
-| Date utilities | date-fns v4 |
-| Linter | Oxlint |
+If the user is not satisfied with either a Database result or an
+AI Estimate, "Snap Nutrition Label" reads the actual back-of-pack
+label via the AI Orchestrator's vision capability and overwrites
+whatever was shown. A label read is always the highest-trust tier.
 
----
+## Pillar 2 — Cooked / Whole Food Resolution Chain
 
-## Frontend Architecture
+    Manual text entry
+      |
+      v
+    Local Indian food database (INDIAN_FOODS, exact/alias match)
+      |  no match
+      v
+    AI text estimator (meal mode) — deep micronutrient profile
+    (potassium, magnesium, iron, calcium, zinc, vitamin A/C/D)
 
-```
-src/
-├── main.tsx                  # App entry point
-├── App.tsx                   # Root component: BrowserRouter + Auth guard + routing
-├── index.css                 # Global design system (CSS custom properties, utilities)
-│
-├── features/                 # Feature-sliced architecture
-│   ├── auth/                 # Landing, Login, Signup pages
-│   ├── home/                 # Home dashboard
-│   ├── eat/                  # Food tracking dashboard
-│   ├── plan/                 # Meal plan dashboard
-│   ├── train/                # Training dashboard
-│   ├── progress/             # Progress tracking dashboard
-│   ├── profile/              # User profile page
-│   └── onboarding/           # Onboarding flow (post-signup)
-│
-├── components/
-│   ├── layout/               # AppShell (bottom nav, layout wrapper)
-│   └── ui/                   # Reusable UI components
-│
-├── store/                    # Zustand stores
-│   ├── authStore.ts          # Firebase auth state + demo user mode
-│   ├── userStore.ts          # User profile data (Firestore)
-│   ├── foodLogStore.ts       # Food logging state
-│   ├── progressStore.ts      # Progress tracking state
-│   ├── toastStore.ts         # Global toast notifications
-│   └── waterStreakStore.ts   # Water intake streak tracking
-│
-├── lib/
-│   ├── firebase/
-│   │   ├── config.ts         # Firebase SDK initialization (reads VITE_* env vars)
-│   │   ├── authService.ts    # Auth operations (signup, login, Google, logout)
-│   │   └── dataService.ts    # Firestore CRUD operations
-│   ├── engines/
-│   │   ├── dietEngine.ts     # BMR/TDEE/macro calculation logic
-│   │   ├── workoutEngine.ts  # Workout plan generation logic
-│   │   └── nlpParser.ts      # Natural language food log parsing
-│   ├── calculations/         # Body measurement calculations
-│   └── data/                 # Static data (Indian food database, exercises)
-│
-└── types/                    # TypeScript type definitions
-```
+    Plate photo
+      |
+      v
+    Snap AI vision (meal mode) — same deep micronutrient profile,
+    always an ESTIMATE, UI must say so
 
----
+The public barcode/product database is intentionally never
+consulted for Pillar 2. It is a packaged-goods database and has
+no meaningful data for a home-cooked plate of dal and rice.
 
-## Routing
+## Trust Tiers (used across both pillars)
 
-This is a **client-side SPA** using React Router's `BrowserRouter`. There is NO server-side rendering.
-
-| Route | Component | Auth required |
+| Tier | Badge | Meaning |
 |---|---|---|
-| `/landing` | `LandingPage` | No |
-| `/login` | `LoginPage` | No (redirects to `/` if logged in) |
-| `/signup` | `SignupPage` | No (redirects to `/` if logged in) |
-| `/` | `HomeDashboard` | Yes |
-| `/eat` | `EatDashboard` | Yes |
-| `/plan` | `PlanDashboard` | Yes |
-| `/train` | `TrainDashboard` | Yes |
-| `/progress` | `ProgressDashboard` | Yes |
-| `/profile` | `ProfilePage` | Yes |
-| `/*` (unauthenticated) | `LandingPage` | — |
-| `/*` (authenticated) | Redirects to `/` | — |
+| Label-verified | green, "Verified from Label" | User scanned the actual package label |
+| Database | green, "Database" | Real data from cache or Open Food Facts |
+| AI Estimate | amber, "AI Estimate" | Name-based or vision-based AI guess |
+| AI Estimate (Low Confidence) | amber, "AI Estimate · Low Confidence" | AI estimate flagged as unreliable — high-risk category or internally inconsistent numbers |
 
-**SPA routing note:** The `public/_redirects` file routes all paths to `index.html` on Cloudflare Pages, enabling client-side routing to work correctly on refresh and direct URL access.
+## Required Data Fields
 
----
+Every food entry, regardless of pillar or tier, must be able to
+carry:
 
-## Backend Architecture
+- Core 4: calories, protein, carbs, fat
+- Essential extras: fiber, sugar, sodium
+- Pillar 2 only, when available: potassium, magnesium, iron,
+  calcium, zinc, vitamin A, vitamin C, vitamin D
 
-There is **no custom backend server**. All backend functionality is provided by Firebase:
+Any field the source does not provide is `null` (unknown), never
+`0`. A `0` must only ever mean "this food genuinely has zero of
+this nutrient," never "we don't know."
 
-### Firebase Authentication
-- Email/Password login and signup
-- Google OAuth (sign-in with popup)
-- Password reset via email
-- Email verification on signup
+## Non-Negotiable Rules
 
-### Firestore Database
-- `users/{uid}` — user profile, onboarding data, preferences
-- Food logs, progress entries, and other user data are stored per-user
+1. Never fabricate a value to fill a gap. Unknown stays unknown.
+2. Every screen that shows nutrition data must let the user tap
+   and manually type/edit any field.
+3. A confirmed correction (via label scan or manual edit) saves
+   to the user's personal library so it is fixed permanently for
+   that user, and is never silently overwritten by a lower-trust
+   source on a future scan of the same barcode.
+4. AI estimates are never written to the shared Vybe cache as if
+   verified. Only Database-tier and Label-verified results are
+   eligible for the shared cache.
+5. High-risk categories for AI estimation (coffee, tea,
+   supplements, seasonings, extracts) are automatically capped at
+   Low Confidence and must never be shown as a confident result.
 
-### Firebase Storage
-- Currently initialized but not actively used for media uploads (reserved for future profile photos)
+## Status
 
-### Unconfigured / Demo Mode
-If `VITE_FIREBASE_API_KEY` is not set or contains the placeholder value `YOUR_API_KEY`, the app gracefully skips Firebase initialization and marks auth as initialized with no user. This allows the **Demo Mode** (`Explore with Demo Profile`) to work without Firebase credentials.
-
----
-
-## AI / Intelligence Integrations
-
-There are **no external AI API calls** (no OpenAI, Gemini, etc.). All intelligence is client-side:
-
-| Engine | Description |
-|---|---|
-| `dietEngine.ts` | Calculates BMR (Mifflin-St Jeor), TDEE, and macro targets |
-| `workoutEngine.ts` | Generates progressive overload workout plans |
-| `nlpParser.ts` | Parses natural language food inputs (e.g. "2 roti + dal") |
-
----
-
-## Authentication Flow
-
-```
-App loads
-  → AuthStore.initialize()
-      → If Firebase configured: subscribe to onAuthStateChanged
-      → If not configured: set isInitialized=true, no user
-  → isInitialized=false → Show loading spinner
-  → isInitialized=true, no user → Show LandingPage (or /landing / /login / /signup)
-  → isInitialized=true, user exists, onboardingComplete=false → OnboardingFlow
-  → isInitialized=true, user exists, onboardingComplete=true → AppShell + authenticated routes
-```
-
----
-
-## Deployment Architecture
-
-```
-Local development (Vite dev server, port 5173)
-         ↓  npm run build
-    dist/ (static files: index.html + assets/)
-         ↓  Git push to GitHub
-    GitHub repository
-         ↓  Cloudflare Pages auto-deploy
-    Cloudflare Pages (global CDN, HTTPS)
-         ↓
-    Public HTTPS URL (*.pages.dev or custom domain)
-```
-
-**Hosting:** Cloudflare Pages  
-**Type:** Static site (pure SPA — no server functions required)  
-**Build command:** `npm run build`  
-**Output directory:** `dist`  
-**Node version:** 20+ (set in Cloudflare Pages environment settings)  
-
----
-
-## Environment Variables
-
-All environment variables are Vite `VITE_*` prefixed (they get inlined into the client bundle at build time).
-
-| Variable | Required | Description |
-|---|---|---|
-| `VITE_FIREBASE_API_KEY` | Yes (for auth) | Firebase Web API key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Yes (for auth) | Firebase auth domain |
-| `VITE_FIREBASE_PROJECT_ID` | Yes (for auth) | Firebase project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Yes (for auth) | Firebase storage bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Yes (for auth) | Firebase messaging sender ID |
-| `VITE_FIREBASE_APP_ID` | Yes (for auth) | Firebase app ID |
-
-**Security note:** Firebase Web SDK config values (apiKey, etc.) are designed to be public-facing — they are not secret in the traditional sense. Security is enforced by Firebase Security Rules in the Firebase Console. Do NOT store server-side secrets (database admin keys, service account credentials) in these variables.
-
----
-
-## Security Considerations
-
-- All Firebase config is client-side (this is normal for Firebase Web SDK)
-- Firebase Security Rules must be configured in the Firebase Console before production launch
-- Firestore should be switched from test mode to production rules
-- No server-side secrets exist in this architecture
-- HTTPS is provided automatically by Cloudflare Pages
-
----
-
-## Future Expansion Points
-
-- **Custom domain:** Can be connected in Cloudflare Pages → Custom domains at any time
-- **Push notifications:** Firebase Cloud Messaging (FCM) is available in the Firebase project
-- **Backend functions:** Cloudflare Workers or Firebase Cloud Functions can be added for server-side logic
-- **Native app:** React Native + shared logic layer (engines are pure TypeScript, easily portable)
-- **Offline support:** Service worker / PWA manifest can be added via `vite-plugin-pwa`
-- **Analytics:** `VITE_FIREBASE_MEASUREMENT_ID` can be added for Firebase Analytics
+- Pillar 1 barcode chain: implemented (AI Orchestrator, Product
+  Resolution Engine, Nutrition Estimator, trust badges) as of this
+  document's creation. Snap Nutrition Label mode and Manual
+  Add/Edit screens are the next steps.
+- Pillar 2 (manual + plate Snap with deep micros): scheduled as
+  part of the Snap AI rebuild phase, not yet implemented.
+- Personal library (rule 3 above): scheduled as the step after
+  Manual Add/Edit.
