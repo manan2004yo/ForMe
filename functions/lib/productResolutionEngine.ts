@@ -96,6 +96,23 @@ function extractKcal(n: any): number | null {
 
 const FETCH_TIMEOUT_MS = 6000
 
+/**
+ * Calories must roughly equal 4*protein + 4*carbs + 9*fat. All four values
+ * must be known. All-zero is treated as "no data", not "zero calorie".
+ * The band is wide because fiber, sugar alcohols and label rounding shift
+ * the total; it only rejects numbers that cannot be true.
+ */
+function isConsistentNutrition(
+  calories: number,
+  protein: number,
+  carbs: number,
+  fat: number
+): boolean {
+  if (calories === 0 && protein === 0 && carbs === 0 && fat === 0) return false
+  const computed = 4 * protein + 4 * carbs + 9 * fat
+  return Math.abs(calories - computed) <= Math.max(40, calories * 0.25)
+}
+
 // ─────────────────────────────────────────────────────────────
 // PROVIDER 1 — Vybe Verified Cache (Firestore REST)
 // ─────────────────────────────────────────────────────────────
@@ -107,7 +124,15 @@ async function fetchFromVybeCache(
   if (!env.VERIFIED_PRODUCTS) return null
   try {
     const cached = await env.VERIFIED_PRODUCTS.get(barcode, 'json') as ResolvedProduct | null
-    if (!cached || !cached.name || !cached.per100g || typeof cached.per100g.calories !== 'number') return null
+    if (!cached || !cached.name || !cached.per100g) return null
+    const { calories, protein, carbs, fat } = cached.per100g
+    if (
+      typeof calories !== 'number' || typeof protein !== 'number' ||
+      typeof carbs !== 'number' || typeof fat !== 'number' ||
+      !isConsistentNutrition(calories, protein, carbs, fat)
+    ) {
+      return null
+    }
     return { ...cached, dataSource: 'vybe_cache' }
   } catch {
     return null
@@ -159,9 +184,13 @@ async function fetchFromOpenFoodFacts(barcode: string): Promise<ResolutionResult
   const fat      = toNum(n['fat_100g'])
   const fiber    = toNum(n['fiber_100g'])
 
-  // Calories are required. All-zero is treated as unknown (safe failure).
-  // Missing macros stay null (unknown) and are never turned into 0.
-  if (calories === null || (calories === 0 && !protein && !carbs && !fat)) {
+  // Calories and all three macros must be known and agree with each other.
+  // Otherwise this source is incomplete or untrustworthy: report the name
+  // only and let the estimator or label scan take over. Nothing is guessed here.
+  if (
+    calories === null || protein === null || carbs === null || fat === null ||
+    !isConsistentNutrition(calories, protein, carbs, fat)
+  ) {
     return {
       status: 'missing_nutrition',
       name: p.product_name ?? 'Unknown Product',
@@ -261,7 +290,10 @@ async function fetchFromUPCitemdb(
   const carbs    = toNum(nutrition?.carbs)
   const fat      = toNum(nutrition?.fat)
 
-  if (calories === null || (calories === 0 && !protein && !carbs && !fat)) {
+  if (
+    calories === null || protein === null || carbs === null || fat === null ||
+    !isConsistentNutrition(calories, protein, carbs, fat)
+  ) {
     return { status: 'missing_nutrition', name, barcode }
   }
 
