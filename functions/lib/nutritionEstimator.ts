@@ -117,6 +117,9 @@ function buildPrompt(name: string, mode: EstimateMode): string {
   ].join('\n')
 }
 
+const LOW_TRUST_NAME_PATTERN =
+  /\b(coffee|tea|chai|espresso|instant|powder|supplement|protein\s*powder|multivitamin|electrolyte|energy\s*drink|soda|cola|juice\s*concentrate|extract|seasoning|spice|masala\s*powder|salt|sugar\s*substitute)\b/i
+
 function toNum(v: unknown): number | null {
   if (v === null || v === undefined || v === '') return null
   const n = Number(v)
@@ -167,15 +170,32 @@ export async function estimateNutrition(
   let confidence: EstimateConfidence =
     result.data.confidence === 'medium' ? 'medium' : result.data.confidence === 'high' ? 'medium' : 'low'
 
+  // Categories where the model has historically fabricated plausible-looking
+  // but wrong numbers (e.g. treating instant coffee powder like a solid food).
+  // These never get better than 'low' from this estimator alone.
+  if (LOW_TRUST_NAME_PATTERN.test(name)) {
+    confidence = 'low'
+  }
+
   // Atwater consistency check: calories should roughly equal 4p + 4c + 9f
   let consistent: boolean | null = null
   const { calories, protein, carbs, fat } = nutrients
   if (calories !== null && protein !== null && carbs !== null && fat !== null) {
     const computed = 4 * protein + 4 * carbs + 9 * fat
-    consistent = Math.abs(calories - computed) <= Math.max(30, calories * 0.25)
-    if (basis === 'per_100g' && protein + carbs + fat > 105) consistent = false
+    // Tighter band: internal consistency alone does not prove accuracy,
+    // it only catches numbers that don't even agree with each other.
+    consistent = Math.abs(calories - computed) <= Math.max(20, calories * 0.15)
+    if (basis === 'per_100g' && protein + carbs + fat > 100) consistent = false
   }
   if (calories === null || consistent === false) confidence = 'low'
+
+  // A near-zero-calorie category (coffee, tea, seasonings, plain spices) that
+  // instead returns a large calorie/macro estimate is a strong fabrication
+  // signal, independent of internal consistency.
+  if (LOW_TRUST_NAME_PATTERN.test(name) && calories !== null && calories > 50) {
+    confidence = 'low'
+    consistent = false
+  }
 
   return {
     status: 'ok',
