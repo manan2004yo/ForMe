@@ -150,7 +150,7 @@ export function calculateNutritionForGrams(
 // ============================================================
 
 export interface ProductTrust {
-  tier: 'database' | 'ai_estimate'
+  tier: 'database' | 'ai_estimate' | 'label' | 'manual'
   label: string
   confidence?: 'medium' | 'low'
   consistent?: boolean | null
