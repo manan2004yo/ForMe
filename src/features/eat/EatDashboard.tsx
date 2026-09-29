@@ -23,7 +23,7 @@ import { BarcodeScannerOverlay } from './components/BarcodeScannerOverlay'
 import { BarcodeResultSheet } from './components/BarcodeResultSheet'
 import { MicronutrientSheet } from './components/MicronutrientSheet'
 import { AddFoodSheet } from './components/AddFoodSheet'
-import type { ScannedProduct } from '@/lib/services/barcodeProductService'
+import type { ResolvedScannedProduct } from '@/lib/services/barcodeProductService'
 import { calculateNutritionForGrams } from '@/lib/services/barcodeProductService'
 
 const MEAL_CONFIG: { slot: MealSlot; label: string; icon: any; time: string }[] = [
@@ -196,7 +196,7 @@ export function EatDashboard() {
   const [scanningSlot, setScanningSlot] = useState<MealSlot | null>(null)
   // Keep slot alive after scanner closes so BarcodeResultSheet can log to correct meal
   const [pendingScanSlot, setPendingScanSlot] = useState<MealSlot>('snack')
-  const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null)
+  const [scannedProduct, setScannedProduct] = useState<ResolvedScannedProduct | null>(null)
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null)
   const [showMicronutrients, setShowMicronutrients] = useState(false)
 

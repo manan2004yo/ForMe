@@ -143,3 +143,112 @@ export function calculateNutritionForGrams(
     fiber:    parseFloat((product.per100g.fiber   * ratio).toFixed(1)),
   }
 }
+
+// ============================================================
+// NEW — Resolution Engine adapter (prefer this over fetchProductByBarcode)
+// fetchProductByBarcode is kept as-is for reference / legacy fallback.
+// ============================================================
+
+export interface ProductTrust {
+  tier: 'database' | 'ai_estimate'
+  label: string
+  confidence?: 'medium' | 'low'
+  consistent?: boolean | null
+}
+
+export interface ResolvedScannedProduct extends ScannedProduct {
+  trust: ProductTrust
+  /** null fields from the underlying source are preserved here per nutrient,
+   * separate from per100g which stays number-typed for display math. */
+  unknownFields: string[]
+}
+
+export type ResolveBarcodeResult =
+  | { status: 'found'; product: ResolvedScannedProduct }
+  | { status: 'missing_nutrition'; name: string; barcode: string }
+  | { status: 'not_found' }
+  | { status: 'network_error'; message: string }
+
+/**
+ * NEW resolution path. Calls the Product Resolution Engine + AI Estimator
+ * via the /api/resolve-barcode/{barcode} endpoint instead of hitting
+ * Open Food Facts directly. Prefer this over fetchProductByBarcode
+ * going forward; fetchProductByBarcode is kept only as a reference/fallback.
+ */
+export async function resolveBarcodeProduct(barcode: string): Promise<ResolveBarcodeResult> {
+  try {
+    const response = await fetch(`/api/resolve-barcode/${barcode}`)
+    if (!response.ok) {
+      return { status: 'network_error', message: `HTTP ${response.status}` }
+    }
+    const data = await response.json()
+
+    if (data.status === 'not_found') return { status: 'not_found' }
+    if (data.status === 'error') return { status: 'network_error', message: data.message }
+    if (data.status === 'missing_nutrition') {
+      return { status: 'missing_nutrition', name: data.name, barcode: data.barcode ?? barcode }
+    }
+
+    // status === 'found'
+    if (data.source === 'database') {
+      const p = data.product
+      const unknownFields: string[] = []
+      const num = (v: number | null, field: string): number => {
+        if (v === null) { unknownFields.push(field); return 0 }
+        return v
+      }
+      const product: ResolvedScannedProduct = {
+        barcode: p.barcode,
+        name: p.name,
+        brand: p.brand,
+        per100g: {
+          calories: num(p.per100g.calories, 'calories'),
+          protein: num(p.per100g.protein, 'protein'),
+          carbs: num(p.per100g.carbs, 'carbs'),
+          fat: num(p.per100g.fat, 'fat'),
+          fiber: num(p.per100g.fiber, 'fiber'),
+        },
+        servingSizeG: p.servingSizeG,
+        dataSource: 'manufacturer',
+        imageUrl: p.imageUrl,
+        trust: { tier: 'database', label: 'Database' },
+        unknownFields,
+      }
+      return { status: 'found', product }
+    }
+
+    // source === 'ai_estimate'
+    const e = data.estimate
+    const unknownFields: string[] = []
+    const num = (v: number | null, field: string): number => {
+      if (v === null) { unknownFields.push(field); return 0 }
+      return v
+    }
+    const product: ResolvedScannedProduct = {
+      barcode: data.barcode ?? barcode,
+      name: e.name,
+      brand: null,
+      per100g: {
+        calories: num(e.nutrients.calories, 'calories'),
+        protein: num(e.nutrients.protein, 'protein'),
+        carbs: num(e.nutrients.carbs, 'carbs'),
+        fat: num(e.nutrients.fat, 'fat'),
+        fiber: num(e.nutrients.fiber, 'fiber'),
+      },
+      servingSizeG: e.servingSizeG,
+      dataSource: 'estimated',
+      imageUrl: null,
+      trust: {
+        tier: 'ai_estimate',
+        label: 'AI Estimate',
+        confidence: e.confidence,
+        consistent: e.consistent,
+      },
+      unknownFields,
+    }
+    return { status: 'found', product }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return { status: 'network_error', message }
+  }
+}

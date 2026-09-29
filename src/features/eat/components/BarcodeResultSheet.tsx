@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Package, CheckCircle } from 'lucide-react'
-import type { ScannedProduct } from '@/lib/services/barcodeProductService'
+import type { ResolvedScannedProduct } from '@/lib/services/barcodeProductService'
 import { calculateNutritionForGrams } from '@/lib/services/barcodeProductService'
 import { clsx } from 'clsx'
 
 interface BarcodeResultSheetProps {
-  product: ScannedProduct | null
-  onLog: (product: ScannedProduct, grams: number) => void
+  product: ResolvedScannedProduct | null
+  onLog: (product: ResolvedScannedProduct, grams: number) => void
   onClose: () => void
 }
 
@@ -70,9 +70,12 @@ export function BarcodeResultSheet({ product, onLog, onClose }: BarcodeResultShe
                       <Package size={13} style={accentStyle} className="shrink-0" />
                       <span
                         className="text-[10px] font-bold uppercase tracking-wider"
-                        style={accentStyle}
+                        style={{
+                          color: product.trust?.tier === 'database' ? '#34D399' : '#F59E0B',
+                        }}
                       >
-                        {product.dataSource === 'manufacturer' ? 'Manufacturer Data' : 'Estimated Data'}
+                        {product.trust?.label ?? (product.dataSource === 'manufacturer' ? 'Manufacturer Data' : 'Estimated Data')}
+                        {product.trust?.tier === 'ai_estimate' && product.trust.confidence === 'low' && ' · Low Confidence'}
                       </span>
                     </div>
                     <h2 className="text-lg font-bold text-white leading-tight">{product.name}</h2>
@@ -87,6 +90,14 @@ export function BarcodeResultSheet({ product, onLog, onClose }: BarcodeResultShe
                     <X size={18} />
                   </button>
                 </div>
+
+                {product.trust?.tier === 'ai_estimate' && (product.trust.confidence === 'low' || product.trust.consistent === false) && (
+                  <div className="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-3">
+                    <p className="text-xs text-amber-300">
+                      This is a rough AI estimate and may be inaccurate. Snap the nutrition label for exact values.
+                    </p>
+                  </div>
+                )}
 
                 {/* Per 100g reference */}
                 <div className="px-4 py-3 rounded-2xl bg-white/5 border border-white/5 mb-4">

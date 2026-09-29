@@ -10,14 +10,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Zap, AlertCircle, Camera } from 'lucide-react'
-import type { ScannedProduct } from '@/lib/services/barcodeProductService'
-import { fetchProductByBarcode } from '@/lib/services/barcodeProductService'
+import type { ScannedProduct, ResolvedScannedProduct } from '@/lib/services/barcodeProductService'
+import { resolveBarcodeProduct } from '@/lib/services/barcodeProductService'
 import { useToastStore } from '@/store/toastStore'
 
 interface BarcodeScannerOverlayProps {
   isOpen: boolean
   onClose: () => void
-  onProductFound: (product: ScannedProduct) => void
+  onProductFound: (product: ResolvedScannedProduct) => void
   onSearchManually?: () => void
 }
 
@@ -73,7 +73,7 @@ export function BarcodeScannerOverlay({
 
     if (navigator.vibrate) navigator.vibrate(60)
 
-    const result = await fetchProductByBarcode(barcode)
+    const result = await resolveBarcodeProduct(barcode)
 
     if (result.status === 'found') {
       onProductFound(result.product)
