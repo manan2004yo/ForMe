@@ -26,6 +26,21 @@ import { AddFoodSheet } from './components/AddFoodSheet'
 import type { ResolvedScannedProduct } from '@/lib/services/barcodeProductService'
 import { calculateNutritionForGrams } from '@/lib/services/barcodeProductService'
 
+/** Blank product for the Manual Add flow. Every nutrient starts unknown ("—"). */
+function buildBlankManualProduct(barcode: string, name: string): ResolvedScannedProduct {
+  return {
+    barcode,
+    name,
+    brand: null,
+    per100g: { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
+    servingSizeG: null,
+    dataSource: 'custom',
+    imageUrl: null,
+    trust: { tier: 'manual', label: 'Entered by you' },
+    unknownFields: ['calories', 'protein', 'carbs', 'fat', 'fiber'],
+  }
+}
+
 const MEAL_CONFIG: { slot: MealSlot; label: string; icon: any; time: string }[] = [
   { slot: 'breakfast', label: 'Breakfast', icon: Sun, time: 'Morning' },
   { slot: 'lunch', label: 'Lunch', icon: Sun, time: 'Afternoon' },
@@ -197,6 +212,7 @@ export function EatDashboard() {
   // Keep slot alive after scanner closes so BarcodeResultSheet can log to correct meal
   const [pendingScanSlot, setPendingScanSlot] = useState<MealSlot>('snack')
   const [scannedProduct, setScannedProduct] = useState<ResolvedScannedProduct | null>(null)
+  const [isManualScan, setIsManualScan] = useState(false)
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null)
   const [showMicronutrients, setShowMicronutrients] = useState(false)
 
@@ -401,21 +417,24 @@ export function EatDashboard() {
         onProductFound={(product) => {
           // Persist the slot BEFORE clearing scanningSlot
           if (scanningSlot) setPendingScanSlot(scanningSlot)
+          setIsManualScan(false)
           setScannedProduct(product)
           setScanningSlot(null)
         }}
-        onSearchManually={() => {
-          // scanningSlot is still set here (not_found fires before setScanningSlot(null))
-          // Open FoodSearch for the same slot the scanner was opened for
+        onSearchManually={(ctx) => {
+          // scanningSlot is still set here. Keep its slot so the sheet logs to the right meal.
           const slot = scanningSlot
           setScanningSlot(null)
-          if (slot) setBrowsingSlot(slot)
+          if (slot) setPendingScanSlot(slot)
+          setIsManualScan(true)
+          setScannedProduct(buildBlankManualProduct(ctx.barcode, ctx.name))
         }}
       />
 
       <BarcodeResultSheet
-        key={scannedProduct ? scannedProduct.barcode : 'empty'}
+        key={scannedProduct ? `${isManualScan ? 'manual' : 'scan'}-${scannedProduct.barcode}` : 'empty'}
         product={scannedProduct}
+        isManualAdd={isManualScan}
         onLog={(product, grams) => {
           const nutrition = calculateNutritionForGrams(product, grams)
           addFoodEntry(
@@ -436,8 +455,9 @@ export function EatDashboard() {
             grams
           )
           setScannedProduct(null)
+          setIsManualScan(false)
         }}
-        onClose={() => setScannedProduct(null)}
+        onClose={() => { setScannedProduct(null); setIsManualScan(false) }}
       />
 
       <MicronutrientSheet

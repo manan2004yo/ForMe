@@ -388,7 +388,7 @@ export function BarcodeScannerOverlay({
                       }}
                       className="w-full py-3.5 rounded-2xl bg-accent text-black font-semibold transition-all active:scale-[0.98]"
                     >
-                      Search Manually Instead
+                      Add Product Manually
                     </button>
                     <button
                       onClick={() => { stopCamera(); onClose() }}
