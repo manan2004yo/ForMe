@@ -89,6 +89,7 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
   const [portionChoice, setPortionChoice] = useState<PortionChoice>('full')
   const [customGrams, setCustomGrams] = useState('')
   const [editName, setEditName] = useState<string>(initialProduct?.name ?? '')
+  const [isEditingName, setIsEditingName] = useState(false)
 
   // Mutable product state (Snap Label or manual edits overwrite this)
   const [product, setProduct] = useState<ResolvedScannedProduct | null>(initialProduct)
@@ -250,7 +251,7 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
     if (!canLog || !product) return
     const logProduct: ResolvedScannedProduct = {
       ...product,
-      name: isManualAdd ? editName.trim() : product.name,
+      name: editName.trim() || product.name,
       per100g: effectiveP100g,
       unknownFields,
     }
@@ -314,7 +315,32 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-lg font-bold text-white placeholder:text-white/30 focus:outline-none focus:border-accent transition-all"
                       />
                     ) : (
-                      <h2 className="text-lg font-bold text-white leading-tight">{product.name}</h2>
+                      isEditingName ? (
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={e => setEditName(e.target.value)}
+                          onBlur={() => {
+                            if (editName.trim().length === 0) setEditName(initialProduct?.name ?? '')
+                            setIsEditingName(false)
+                          }}
+                          onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                          maxLength={80}
+                          autoFocus
+                          aria-label="Product name"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-lg font-bold text-white placeholder:text-white/30 focus:outline-none focus:border-accent transition-all"
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingName(true)}
+                          aria-label="Edit product name"
+                          className="flex items-center gap-2 text-left w-full min-h-[44px] rounded-xl active:bg-white/5 transition-colors"
+                        >
+                          <span className="text-lg font-bold text-white leading-tight">{editName}</span>
+                          <Pencil size={12} className="text-white/30 shrink-0" />
+                        </button>
+                      )
                     )}
                     {product.brand && (
                       <p className="text-sm text-white/40 mt-0.5">{product.brand}</p>
