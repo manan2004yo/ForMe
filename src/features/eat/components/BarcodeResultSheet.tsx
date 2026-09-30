@@ -51,6 +51,38 @@ async function resizeDataUrl(dataUrl: string, maxDim = 1024): Promise<string> {
 
 // ─────────────────────────────────────────────────────────────
 
+type MacroField = 'calories' | 'protein' | 'carbs' | 'fat'
+
+function MacroCell({
+  label,
+  field,
+  value,
+  color,
+  onChange,
+}: {
+  label: string
+  field: MacroField
+  value: string
+  color: string
+  onChange: (field: MacroField, value: string) => void
+}) {
+  return (
+    <div className="text-center">
+      <input
+        type="text"
+        inputMode="decimal"
+        value={value}
+        placeholder="—"
+        onChange={e => onChange(field, e.target.value.replace(/[^0-9.]/g, ''))}
+        className="w-full bg-transparent text-sm font-bold tabular-nums text-center focus:outline-none focus:bg-white/10 rounded-lg px-1 py-0.5 transition-colors"
+        style={{ color, minWidth: 0 }}
+        aria-label={`${label} per 100g`}
+      />
+      <p className="text-[10px] text-white/30 mt-0.5">{label}</p>
+    </div>
+  )
+}
+
 export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: BarcodeResultSheetProps) {
   const [portionChoice, setPortionChoice] = useState<PortionChoice>('full')
   const [customGrams, setCustomGrams] = useState('')
@@ -114,7 +146,7 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
 
   // ── handlers ──────────────────────────────────────────────
 
-  function applyManualEdit(field: 'calories' | 'protein' | 'carbs' | 'fat', value: string) {
+  function applyManualEdit(field: MacroField, value: string) {
     const setters: Record<string, (v: string) => void> = {
       calories: setEditCalories,
       protein:  setEditProtein,
@@ -207,36 +239,6 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
       unknownFields,
     }
     onLog(logProduct, effectiveGrams)
-  }
-
-  // ── editable macro cell ───────────────────────────────────
-
-  function MacroCell({
-    label,
-    field,
-    value,
-    color,
-  }: {
-    label: string
-    field: 'calories' | 'protein' | 'carbs' | 'fat'
-    value: string
-    color: string
-  }) {
-    return (
-      <div className="text-center">
-        <input
-          type="text"
-          inputMode="decimal"
-          value={value}
-          placeholder="—"
-          onChange={e => applyManualEdit(field, e.target.value.replace(/[^0-9.]/g, ''))}
-          className="w-full bg-transparent text-sm font-bold tabular-nums text-center focus:outline-none focus:bg-white/10 rounded-lg px-1 py-0.5 transition-colors"
-          style={{ color, minWidth: 0 }}
-          aria-label={`${label} per 100g`}
-        />
-        <p className="text-[10px] text-white/30 mt-0.5">{label}</p>
-      </div>
-    )
   }
 
   // ── render ────────────────────────────────────────────────
@@ -349,10 +351,10 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
                     <p className="text-[10px] text-white/20">tap to edit</p>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
-                    <MacroCell label="Kcal"    field="calories" value={editCalories} color="var(--accent,#2DD4BF)" />
-                    <MacroCell label="Protein" field="protein"  value={editProtein}  color="#34D399" />
-                    <MacroCell label="Carbs"   field="carbs"    value={editCarbs}    color="#60A5FA" />
-                    <MacroCell label="Fat"     field="fat"      value={editFat}      color="#C084FC" />
+                    <MacroCell label="Kcal"    field="calories" value={editCalories} color="var(--accent,#2DD4BF)" onChange={applyManualEdit} />
+                    <MacroCell label="Protein" field="protein"  value={editProtein}  color="#34D399" onChange={applyManualEdit} />
+                    <MacroCell label="Carbs"   field="carbs"    value={editCarbs}    color="#60A5FA" onChange={applyManualEdit} />
+                    <MacroCell label="Fat"     field="fat"      value={editFat}      color="#C084FC" onChange={applyManualEdit} />
                   </div>
                 </div>
 
