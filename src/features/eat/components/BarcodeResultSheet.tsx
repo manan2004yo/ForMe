@@ -9,6 +9,8 @@ interface BarcodeResultSheetProps {
   product: ResolvedScannedProduct | null
   onLog: (product: ResolvedScannedProduct, grams: number) => void
   onClose: () => void
+  /** When true: blank product being created by the user. Shows editable name, keeps Snap Label available, requires name to log. */
+  isManualAdd?: boolean
 }
 
 type PortionChoice = 'full' | 'half' | 'custom'
@@ -83,9 +85,10 @@ function MacroCell({
   )
 }
 
-export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: BarcodeResultSheetProps) {
+export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, isManualAdd = false }: BarcodeResultSheetProps) {
   const [portionChoice, setPortionChoice] = useState<PortionChoice>('full')
   const [customGrams, setCustomGrams] = useState('')
+  const [editName, setEditName] = useState<string>(initialProduct?.name ?? '')
 
   // Mutable product state (Snap Label or manual edits overwrite this)
   const [product, setProduct] = useState<ResolvedScannedProduct | null>(initialProduct)
@@ -142,7 +145,9 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
       portionChoice === 'half' ? defaultGrams / 2 :
         parseFloat(customGrams) || 0
 
-  const canLog = !isNaN(calNum) && calNum > 0 && effectiveGrams > 0
+  const canLog =
+    !isNaN(calNum) && calNum > 0 && effectiveGrams > 0 &&
+    (!isManualAdd || editName.trim().length > 0)
 
   const ratio = effectiveGrams / 100
   const portion = {
@@ -245,6 +250,7 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
     if (!canLog || !product) return
     const logProduct: ResolvedScannedProduct = {
       ...product,
+      name: isManualAdd ? editName.trim() : product.name,
       per100g: effectiveP100g,
       unknownFields,
     }
@@ -296,7 +302,20 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
                         {tier === 'ai_estimate' && product.trust?.confidence === 'low' && ' · Low Confidence'}
                       </span>
                     </div>
-                    <h2 className="text-lg font-bold text-white leading-tight">{product.name}</h2>
+                    {isManualAdd ? (
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        placeholder="Product name"
+                        maxLength={80}
+                        autoFocus
+                        aria-label="Product name"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-lg font-bold text-white placeholder:text-white/30 focus:outline-none focus:border-accent transition-all"
+                      />
+                    ) : (
+                      <h2 className="text-lg font-bold text-white leading-tight">{product.name}</h2>
+                    )}
                     {product.brand && (
                       <p className="text-sm text-white/40 mt-0.5">{product.brand}</p>
                     )}
@@ -330,7 +349,7 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
                 )}
 
                 {/* Snap Nutrition Label button (hidden for label/manual tiers) */}
-                {(tier === 'ai_estimate' || tier === 'database') && (
+                {(isManualAdd || tier === 'ai_estimate' || tier === 'database') && (
                   <>
                     <input
                       ref={fileInputRef}
@@ -463,7 +482,11 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
                   className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-base disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all bg-accent text-black"
                 >
                   <CheckCircle size={18} />
-                  {canLog ? `Log ${effectiveGrams}g` : 'Enter calories to log'}
+                  {canLog
+                    ? `Log ${effectiveGrams}g`
+                    : isManualAdd && editName.trim().length === 0
+                      ? 'Enter a name to log'
+                      : 'Enter calories to log'}
                 </button>
               </div>
             </div>
