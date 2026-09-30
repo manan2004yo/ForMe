@@ -18,7 +18,8 @@ interface BarcodeScannerOverlayProps {
   isOpen: boolean
   onClose: () => void
   onProductFound: (product: ResolvedScannedProduct) => void
-  onSearchManually?: () => void
+  /** Called when the user chooses to enter the product by hand. Carries the scanned barcode and any known product name. */
+  onSearchManually?: (ctx: { barcode: string; name: string }) => void
 }
 
 type ScannerState =
@@ -382,7 +383,7 @@ export function BarcodeScannerOverlay({
                     <button
                       onClick={() => {
                         stopCamera()
-                        if (onSearchManually) onSearchManually()
+                        if (onSearchManually) onSearchManually({ barcode: notFoundBarcode, name: '' })
                         else onClose()
                       }}
                       className="w-full py-3.5 rounded-2xl bg-accent text-black font-semibold transition-all active:scale-[0.98]"
@@ -414,7 +415,11 @@ export function BarcodeScannerOverlay({
                   </p>
                   <div className="w-full space-y-3">
                     <button
-                      onClick={() => { stopCamera(); onClose() }}
+                      onClick={() => {
+                        stopCamera()
+                        if (onSearchManually) onSearchManually({ barcode: lastBarcode ?? '', name: missingNutritionName })
+                        else onClose()
+                      }}
                       className="w-full py-3.5 rounded-2xl bg-accent text-black font-semibold transition-all active:scale-[0.98]"
                     >
                       Enter Nutrition Manually
