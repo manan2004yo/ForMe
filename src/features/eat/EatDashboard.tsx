@@ -414,6 +414,7 @@ export function EatDashboard() {
       />
 
       <BarcodeResultSheet
+        key={scannedProduct ? scannedProduct.barcode : 'empty'}
         product={scannedProduct}
         onLog={(product, grams) => {
           const nutrition = calculateNutritionForGrams(product, grams)
