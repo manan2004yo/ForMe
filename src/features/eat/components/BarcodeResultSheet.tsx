@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Package, CheckCircle, Camera, Loader2, Pencil } from 'lucide-react'
@@ -105,6 +105,16 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
     initialProduct ? (initialProduct.unknownFields.includes('fat') ? '' : String(initialProduct.per100g.fat)) : ''
   )
 
+  // Sync state when parent passes a new product
+  useEffect(() => {
+    setProduct(initialProduct)
+    setUnknownFields(initialProduct?.unknownFields ?? [])
+    setEditCalories(initialProduct ? (initialProduct.unknownFields.includes('calories') ? '' : String(initialProduct.per100g.calories)) : '')
+    setEditProtein(initialProduct ? (initialProduct.unknownFields.includes('protein') ? '' : String(initialProduct.per100g.protein)) : '')
+    setEditCarbs(initialProduct ? (initialProduct.unknownFields.includes('carbs') ? '' : String(initialProduct.per100g.carbs)) : '')
+    setEditFat(initialProduct ? (initialProduct.unknownFields.includes('fat') ? '' : String(initialProduct.per100g.fat)) : '')
+  }, [initialProduct])
+
   // Snap Label state
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [snapLoading, setSnapLoading] = useState(false)
@@ -120,26 +130,26 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
 
   const effectiveP100g = {
     calories: isNaN(calNum) ? 0 : calNum,
-    protein:  isNaN(proNum) ? 0 : proNum,
-    carbs:    isNaN(carbNum) ? 0 : carbNum,
-    fat:      isNaN(fatNum) ? 0 : fatNum,
-    fiber:    product.per100g.fiber,
+    protein: isNaN(proNum) ? 0 : proNum,
+    carbs: isNaN(carbNum) ? 0 : carbNum,
+    fat: isNaN(fatNum) ? 0 : fatNum,
+    fiber: product.per100g.fiber,
   }
 
   const defaultGrams = product.servingSizeG ?? 100
   const effectiveGrams: number =
-    portionChoice === 'full'   ? defaultGrams :
-    portionChoice === 'half'   ? defaultGrams / 2 :
-    parseFloat(customGrams) || 0
+    portionChoice === 'full' ? defaultGrams :
+      portionChoice === 'half' ? defaultGrams / 2 :
+        parseFloat(customGrams) || 0
 
   const canLog = !isNaN(calNum) && calNum > 0 && effectiveGrams > 0
 
   const ratio = effectiveGrams / 100
   const portion = {
     calories: Math.round(effectiveP100g.calories * ratio),
-    protein:  parseFloat((effectiveP100g.protein  * ratio).toFixed(1)),
-    carbs:    parseFloat((effectiveP100g.carbs    * ratio).toFixed(1)),
-    fat:      parseFloat((effectiveP100g.fat      * ratio).toFixed(1)),
+    protein: parseFloat((effectiveP100g.protein * ratio).toFixed(1)),
+    carbs: parseFloat((effectiveP100g.carbs * ratio).toFixed(1)),
+    fat: parseFloat((effectiveP100g.fat * ratio).toFixed(1)),
   }
 
   const tier = product.trust?.tier ?? 'ai_estimate'
@@ -149,9 +159,9 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
   function applyManualEdit(field: MacroField, value: string) {
     const setters: Record<string, (v: string) => void> = {
       calories: setEditCalories,
-      protein:  setEditProtein,
-      carbs:    setEditCarbs,
-      fat:      setEditFat,
+      protein: setEditProtein,
+      carbs: setEditCarbs,
+      fat: setEditFat,
     }
     setters[field](value)
 
@@ -206,14 +216,14 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
       }
 
       const newCal = safeNum(p.calories, 'calories')
-      const newPro = safeNum(p.protein,  'protein')
-      const newCarb = safeNum(p.carbs,   'carbs')
-      const newFat = safeNum(p.fat,      'fat')
+      const newPro = safeNum(p.protein, 'protein')
+      const newCarb = safeNum(p.carbs, 'carbs')
+      const newFat = safeNum(p.fat, 'fat')
 
       setEditCalories(newUnknown.includes('calories') ? '' : String(newCal))
-      setEditProtein( newUnknown.includes('protein')  ? '' : String(newPro))
-      setEditCarbs(   newUnknown.includes('carbs')    ? '' : String(newCarb))
-      setEditFat(     newUnknown.includes('fat')      ? '' : String(newFat))
+      setEditProtein(newUnknown.includes('protein') ? '' : String(newPro))
+      setEditCarbs(newUnknown.includes('carbs') ? '' : String(newCarb))
+      setEditFat(newUnknown.includes('fat') ? '' : String(newFat))
       setUnknownFields(newUnknown)
 
       setProduct(prev => prev ? {
@@ -351,10 +361,10 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
                     <p className="text-[10px] text-white/20">tap to edit</p>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
-                    <MacroCell label="Kcal"    field="calories" value={editCalories} color="var(--accent,#2DD4BF)" onChange={applyManualEdit} />
-                    <MacroCell label="Protein" field="protein"  value={editProtein}  color="#34D399" onChange={applyManualEdit} />
-                    <MacroCell label="Carbs"   field="carbs"    value={editCarbs}    color="#60A5FA" onChange={applyManualEdit} />
-                    <MacroCell label="Fat"     field="fat"      value={editFat}      color="#C084FC" onChange={applyManualEdit} />
+                    <MacroCell label="Kcal" field="calories" value={editCalories} color="var(--accent,#2DD4BF)" onChange={applyManualEdit} />
+                    <MacroCell label="Protein" field="protein" value={editProtein} color="#34D399" onChange={applyManualEdit} />
+                    <MacroCell label="Carbs" field="carbs" value={editCarbs} color="#60A5FA" onChange={applyManualEdit} />
+                    <MacroCell label="Fat" field="fat" value={editFat} color="#C084FC" onChange={applyManualEdit} />
                   </div>
                 </div>
 
@@ -432,10 +442,10 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose }: 
                     </p>
                     <div className="grid grid-cols-4 gap-2">
                       {[
-                        { label: 'Kcal',    value: fmtPortion(portion.calories, 'calories', unknownFields), color: 'var(--accent,#2DD4BF)' },
-                        { label: 'Protein', value: fmtPortion(portion.protein,  'protein',  unknownFields), color: '#34D399' },
-                        { label: 'Carbs',   value: fmtPortion(portion.carbs,    'carbs',    unknownFields), color: '#60A5FA' },
-                        { label: 'Fat',     value: fmtPortion(portion.fat,      'fat',      unknownFields), color: '#C084FC' },
+                        { label: 'Kcal', value: fmtPortion(portion.calories, 'calories', unknownFields), color: 'var(--accent,#2DD4BF)' },
+                        { label: 'Protein', value: fmtPortion(portion.protein, 'protein', unknownFields), color: '#34D399' },
+                        { label: 'Carbs', value: fmtPortion(portion.carbs, 'carbs', unknownFields), color: '#60A5FA' },
+                        { label: 'Fat', value: fmtPortion(portion.fat, 'fat', unknownFields), color: '#C084FC' },
                       ].map(({ label, value, color }) => (
                         <div key={label} className="text-center">
                           <p className="text-sm font-bold tabular-nums" style={{ color }}>{value}</p>
