@@ -688,3 +688,18 @@ export async function getLibraryProduct(uid: string, barcode: string): Promise<L
     return getLocalLibrary(uid)[barcode] ?? null
   }
 }
+
+export async function deleteLibraryProduct(uid: string, barcode: string): Promise<void> {
+  if (!BARCODE_PATTERN.test(barcode)) return
+  const local = getLocalLibrary(uid)
+  delete local[barcode]
+  localStorage.setItem(`forme_library_${uid}`, JSON.stringify(local))
+  
+  if (navigator.onLine) {
+    try {
+      await deleteDoc(doc(db, 'users', uid, 'productLibrary', barcode))
+    } catch (error) {
+      console.warn('Firestore write error (deleteLibraryProduct):', error)
+    }
+  }
+}
