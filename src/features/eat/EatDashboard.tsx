@@ -25,6 +25,7 @@ import { MicronutrientSheet } from './components/MicronutrientSheet'
 import { AddFoodSheet } from './components/AddFoodSheet'
 import type { ResolvedScannedProduct } from '@/lib/services/barcodeProductService'
 import { calculateNutritionForGrams } from '@/lib/services/barcodeProductService'
+import { saveLibraryProduct } from '@/lib/firebase/dataService'
 
 /** Blank product for the Manual Add flow. Every nutrient starts unknown ("—"). */
 function buildBlankManualProduct(barcode: string, name: string): ResolvedScannedProduct {
@@ -454,6 +455,33 @@ export function EatDashboard() {
             'gram',
             grams
           )
+
+          // Save user-confirmed products (label-verified or manually entered) to the personal library.
+          // Database and AI-estimate products are never saved here.
+          const libUid = user?.uid
+          const libTier = product.trust.tier
+          if (libUid && (libTier === 'label' || libTier === 'manual')) {
+            const isUnknown = (field: string) => product.unknownFields.includes(field)
+            saveLibraryProduct(libUid, {
+              barcode: product.barcode,
+              name: product.name,
+              brand: product.brand,
+              per100g: {
+                calories: isUnknown('calories') ? null : product.per100g.calories,
+                protein: isUnknown('protein') ? null : product.per100g.protein,
+                carbs: isUnknown('carbs') ? null : product.per100g.carbs,
+                fat: isUnknown('fat') ? null : product.per100g.fat,
+                // Fiber is not captured by the sheet yet: keep it unknown rather than a false 0
+                fiber: null,
+              },
+              servingSizeG: product.servingSizeG,
+              trust: libTier,
+              updatedAt: new Date().toISOString(),
+            }).catch(() => {
+              // Already saved on this device; cloud write failure is logged inside saveLibraryProduct
+            })
+          }
+
           setScannedProduct(null)
           setIsManualScan(false)
         }}
