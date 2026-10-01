@@ -640,6 +640,8 @@ export interface LibraryProduct {
     carbs: number | null
     fat: number | null
     fiber: number | null
+    sugar?: number | null
+    sodium?: number | null
   }
   servingSizeG: number | null
   /** How the user's values were confirmed */

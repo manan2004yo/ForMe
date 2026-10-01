@@ -19,6 +19,9 @@ export interface ScannedProduct {
     carbs: number
     fat: number
     fiber: number
+    /** Optional extras. Absent means unknown (never 0). */
+    sugar?: number
+    sodium?: number
   }
   servingSizeG: number | null
   /** 'manufacturer' = real barcode DB data, 'estimated' = fallback, 'local' = prebuilt DB, 'custom' = user added */
@@ -143,6 +146,8 @@ export function calculateNutritionForGrams(
     carbs:    parseFloat((product.per100g.carbs   * ratio).toFixed(1)),
     fat:      parseFloat((product.per100g.fat     * ratio).toFixed(1)),
     fiber:    parseFloat((product.per100g.fiber   * ratio).toFixed(1)),
+    ...(product.per100g.sugar !== undefined && { sugar: parseFloat((product.per100g.sugar * ratio).toFixed(1)) }),
+    ...(product.per100g.sodium !== undefined && { sodium: Math.round(product.per100g.sodium * ratio) }),
   }
 }
 
@@ -270,6 +275,8 @@ export function libraryProductToResolved(p: LibraryProduct): ResolvedScannedProd
     name: p.name,
     brand: p.brand,
     per100g: {
+      ...(p.per100g.sugar != null && { sugar: p.per100g.sugar }),
+      ...(p.per100g.sodium != null && { sodium: p.per100g.sodium }),
       calories: num(p.per100g.calories, 'calories'),
       protein: num(p.per100g.protein, 'protein'),
       carbs: num(p.per100g.carbs, 'carbs'),
