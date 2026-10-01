@@ -434,7 +434,7 @@ function getLocalDietPlan(uid: string): DailyDietPlan | null {
 
 export async function deleteUserData(uid: string): Promise<void> {
   if (!navigator.onLine) throw new Error('offline')
-  const subcollections = ['foodLogs', 'weightHistory', 'waistHistory', 'workoutLogs', 'savedMeals', 'familyRecipes', 'cns']
+  const subcollections = ['foodLogs', 'weightHistory', 'waistHistory', 'workoutLogs', 'savedMeals', 'familyRecipes', 'cns', 'productLibrary']
   
   // Delete subcollection documents
   for (const col of subcollections) {
@@ -624,4 +624,67 @@ export async function getAchievements(uid: string): Promise<any[]> {
 function getLocalAchievements(uid: string): any[] {
   const raw = localStorage.getItem(`forme_achievements_${uid}`)
   return raw ? JSON.parse(raw) : []
+}
+
+// ─── Personal Product Library ─────────────────────────────────
+// User-owned products (label-verified or manually entered), keyed by barcode.
+// Never written to the shared KV cache. Checked BEFORE the resolution engine.
+export interface LibraryProduct {
+  barcode: string
+  name: string
+  brand: string | null
+  /** Per 100g. null = unknown (never 0 for unknown). */
+  per100g: {
+    calories: number | null
+    protein: number | null
+    carbs: number | null
+    fat: number | null
+    fiber: number | null
+  }
+  servingSizeG: number | null
+  /** How the user's values were confirmed */
+  trust: 'label' | 'manual'
+  updatedAt: string
+}
+
+const BARCODE_PATTERN = /^[0-9]{8,14}$/
+
+function getLocalLibrary(uid: string): Record<string, LibraryProduct> {
+  try {
+    const raw = localStorage.getItem(`forme_library_${uid}`)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+export async function saveLibraryProduct(uid: string, product: LibraryProduct): Promise<void> {
+  if (!BARCODE_PATTERN.test(product.barcode)) return
+  const local = getLocalLibrary(uid)
+  local[product.barcode] = product
+  localStorage.setItem(`forme_library_${uid}`, JSON.stringify(local))
+  if (!navigator.onLine) throw new Error('offline')
+  try {
+    await setDoc(doc(db, 'users', uid, 'productLibrary', product.barcode), sanitizeForFirestore(product))
+  } catch (error) {
+    console.warn('Firestore write error (saveLibraryProduct):', error)
+    throw error
+  }
+}
+
+export async function getLibraryProduct(uid: string, barcode: string): Promise<LibraryProduct | null> {
+  if (!BARCODE_PATTERN.test(barcode)) return null
+  try {
+    const snap = await getDoc(doc(db, 'users', uid, 'productLibrary', barcode))
+    if (snap.exists()) {
+      const data = snap.data() as LibraryProduct
+      const local = getLocalLibrary(uid)
+      local[barcode] = data
+      localStorage.setItem(`forme_library_${uid}`, JSON.stringify(local))
+      return data
+    }
+    return getLocalLibrary(uid)[barcode] ?? null
+  } catch {
+    return getLocalLibrary(uid)[barcode] ?? null
+  }
 }
