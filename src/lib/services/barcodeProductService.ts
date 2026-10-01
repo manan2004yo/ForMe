@@ -6,6 +6,8 @@
 // map its response to ScannedProduct. Nothing else changes.
 // ============================================================
 
+import type { LibraryProduct } from '@/lib/firebase/dataService'
+
 export interface ScannedProduct {
   barcode: string
   name: string
@@ -250,5 +252,36 @@ export async function resolveBarcodeProduct(barcode: string): Promise<ResolveBar
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     return { status: 'network_error', message }
+  }
+}
+
+/**
+ * Converts a personal-library product into the shape the result sheet expects.
+ * null nutrients stay unknown (shown as "—"), never silently become real zeros.
+ */
+export function libraryProductToResolved(p: LibraryProduct): ResolvedScannedProduct {
+  const unknownFields: string[] = []
+  const num = (v: number | null, field: string): number => {
+    if (v === null) { unknownFields.push(field); return 0 }
+    return v
+  }
+  return {
+    barcode: p.barcode,
+    name: p.name,
+    brand: p.brand,
+    per100g: {
+      calories: num(p.per100g.calories, 'calories'),
+      protein: num(p.per100g.protein, 'protein'),
+      carbs: num(p.per100g.carbs, 'carbs'),
+      fat: num(p.per100g.fat, 'fat'),
+      fiber: num(p.per100g.fiber, 'fiber'),
+    },
+    servingSizeG: p.servingSizeG,
+    dataSource: 'custom',
+    imageUrl: null,
+    trust: p.trust === 'label'
+      ? { tier: 'label', label: 'Verified from Label' }
+      : { tier: 'manual', label: 'Entered by you' },
+    unknownFields,
   }
 }

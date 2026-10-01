@@ -11,7 +11,9 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Zap, AlertCircle, Camera } from 'lucide-react'
 import type { ScannedProduct, ResolvedScannedProduct } from '@/lib/services/barcodeProductService'
-import { resolveBarcodeProduct } from '@/lib/services/barcodeProductService'
+import { resolveBarcodeProduct, libraryProductToResolved } from '@/lib/services/barcodeProductService'
+import { getLibraryProduct } from '@/lib/firebase/dataService'
+import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 
 interface BarcodeScannerOverlayProps {
@@ -73,6 +75,17 @@ export function BarcodeScannerOverlay({
     stopCamera()
 
     if (navigator.vibrate) navigator.vibrate(60)
+
+    // Personal library first: the user's own confirmed products win over any external source
+    const uid = useAuthStore.getState().user?.uid
+    if (uid) {
+      const libraryHit = await getLibraryProduct(uid, barcode)
+      if (libraryHit) {
+        onProductFound(libraryProductToResolved(libraryHit))
+        onClose()
+        return
+      }
+    }
 
     const result = await resolveBarcodeProduct(barcode)
 
