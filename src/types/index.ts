@@ -117,6 +117,11 @@ export interface NutritionInfo {
   vitaminD?: number // IU
   b12?: number     // mcg
   sodium?: number  // mg
+  sugar?: number   // g (total sugars)
+  potassium?: number // mg
+  magnesium?: number // mg
+  zinc?: number    // mg
+  vitaminA?: number // mcg
 }
 
 export interface FoodItem {
