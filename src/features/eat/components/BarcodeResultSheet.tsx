@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Package, CheckCircle, Camera, Loader2, Pencil, Trash2 } from 'lucide-react'
+import { X, Package, CheckCircle, Camera, Loader2, Pencil } from 'lucide-react'
 import type { ResolvedScannedProduct } from '@/lib/services/barcodeProductService'
 import { clsx } from 'clsx'
 
@@ -346,32 +346,12 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
                       <p className="text-sm text-white/40 mt-0.5">{product.brand}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {product.dataSource === 'custom' && (
-                      <button
-                        onClick={async () => {
-                          const { useAuthStore } = await import('@/store/authStore')
-                          const uid = useAuthStore.getState().user?.uid
-                          if (uid) {
-                            const { deleteLibraryProduct } = await import('@/lib/firebase/dataService')
-                            await deleteLibraryProduct(uid, product.barcode)
-                            onClose()
-                          }
-                        }}
-                        className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
-                        aria-label="Remove from My Library"
-                        title="Remove from My Library"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    )}
-                    <button
-                      onClick={onClose}
-                      className="p-2 rounded-xl bg-white/5 text-white/40 hover:text-white transition-all"
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
+                  <button
+                    onClick={onClose}
+                    className="p-2 rounded-xl bg-white/5 text-white/40 hover:text-white transition-all shrink-0"
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
 
                 {/* AI low-confidence warning */}
