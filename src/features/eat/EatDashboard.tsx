@@ -73,6 +73,16 @@ function snapConfidence(c: 'high' | 'medium' | 'low' | undefined): 'high' | 'mod
   return c === 'high' ? 'high' : c === 'medium' ? 'moderate' : 'lower'
 }
 
+/** Scales every known nutrient by ratio. null stays null (unknown), absent stays absent. */
+function scaleNutrition(n: NutritionInfo, ratio: number): NutritionInfo {
+  const out: Record<string, number | null> = {}
+  for (const [key, value] of Object.entries(n)) {
+    if (typeof value === 'number') out[key] = value * ratio
+    else if (value === null) out[key] = null
+  }
+  return out as unknown as NutritionInfo
+}
+
 const MEAL_CONFIG: { slot: MealSlot; label: string; icon: any; time: string }[] = [
   { slot: 'breakfast', label: 'Breakfast', icon: Sun, time: 'Morning' },
   { slot: 'lunch', label: 'Lunch', icon: Sun, time: 'Afternoon' },
@@ -377,13 +387,7 @@ export function EatDashboard() {
                 ...food,
                 quantity: newQty,
                 gramsConsumed: food.gramsConsumed * ratio,
-                nutrition: {
-                  calories: food.nutrition.calories * ratio,
-                  protein: food.nutrition.protein * ratio,
-                  carbs: food.nutrition.carbs * ratio,
-                  fat: food.nutrition.fat * ratio,
-                  fiber: food.nutrition.fiber == null ? null : food.nutrition.fiber * ratio,
-                }
+                nutrition: scaleNutrition(food.nutrition, ratio),
               }
               updateEntry(user?.uid || "demo", editingEntry.id, {
                 ...editingEntry,
