@@ -209,6 +209,7 @@ export function BarcodeScannerOverlay({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    stopCamera()
     setScannerState('analyzing_image')
     try {
       const { BrowserMultiFormatReader } = await import('@zxing/browser')
@@ -340,6 +341,21 @@ export function BarcodeScannerOverlay({
               </div>
             )}
 
+            {/* Photo scan action — packaged-food photo follows the same barcode resolution chain */}
+            {scannerState === 'scanning' && (
+              <label className="absolute left-1/2 bottom-8 -translate-x-1/2 z-20 min-h-[44px] px-5 py-3 rounded-2xl bg-black/70 border border-white/15 backdrop-blur-md text-white flex items-center justify-center gap-2 font-semibold text-sm cursor-pointer active:scale-[0.98] transition-transform">
+                <Camera size={18} />
+                <span>Scan a Photo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </label>
+            )}
+
             {/* Fetching state */}
             {scannerState === 'fetching' && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm">
@@ -366,8 +382,8 @@ export function BarcodeScannerOverlay({
                   >
                     <Camera size={36} style={{ color: 'var(--accent, #2DD4BF)' }} />
                   </motion.div>
-                  <p className="text-white font-semibold text-base">Scanning Image...</p>
-                  <p className="text-white/40 text-xs">Detecting barcode...</p>
+                  <p className="text-white font-semibold text-base">Scanning Photo...</p>
+                  <p className="text-white/40 text-xs">Detecting packaged-food barcode...</p>
                 </div>
               </div>
             )}
@@ -550,6 +566,9 @@ export function BarcodeScannerOverlay({
           <div className="px-5 py-4 text-center bg-gradient-to-t from-black/80 to-transparent">
             <p className="text-xs text-white/30">
               Supports EAN-13, UPC-A, EAN-8 and most packaged food barcodes
+            </p>
+            <p className="text-[10px] text-white/20 mt-1">
+              Photo scans detect the barcode first, then use the same product resolution flow.
             </p>
           </div>
         </motion.div>
