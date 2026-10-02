@@ -85,14 +85,14 @@ Status markers: [DONE], [IN PROGRESS], [NEXT], [LATER].
 3. [DONE in code, phone-untested] Dead "Enter Nutrition Manually" button fixed (687c276, 728c646).
 4. Personal library.
    - [DONE] 4a data layer + deleteUserData (3eedde8). 4b scanner checks library before engine (c3ce850).
-   - [IN PROGRESS] 4c save label/manual products on log. Prompt issued; awaiting AG report and the six phone checks.
-   - [NEXT] 4d Essentials + canonical Food Record (CLAUDE AG): extend the nutrition type (sugar, potassium, magnesium, zinc, vitamin A); make fiber, sugar, sodium editable; unknown saved as null, never 0; fix the label read forgetting fiber; replace duplicate food shapes (FoodItem/LoggedFoodItem, ScannedProduct/ResolvedScannedProduct, LibraryProduct) with ONE canonical Food Record, migration-safe for existing logs.
-5. [LATER] Snap AI rebuild.
-   - Packaged photo: barcode detection, then Product Resolution. AI only as fallback for label OCR. No AI just because food was photographed.
-   - Meal photo: vision, food identification, portion estimate, macro estimate, confirmation. Always an estimate, always editable, deep micros, unknown is null.
-   - Ends at the SAME confirmation/edit screen as barcode and search. All AI via the orchestrator; deterministic math local.
-6. [LATER] Pillar 2 text entry. Local INDIAN_FOODS first, AI for unmatched text (see O2; decide first).
-7. [LATER] Food Log completion. Repeat Meal, Repeat Yesterday's Dinner, Saved Meals next to Recent Foods. Every input (Barcode, Search, Snap, Voice) converges on one confirm/edit screen and one Food Record. Micronutrient sheet reads real logged values.
+   - [DONE] 4c save label/manual products on log. Label/manual products are persisted to the user's personal product library and are not written to shared KV cache.
+   - [DONE] 4d Essentials + canonical Food Record: extended nutrition support, editable fiber/sugar/sodium, unknown nutrition preserved as null/undefined rather than fabricated zero values, fixed label-read fiber handling, and established the canonical Food Record layer with migration-safe compatibility for existing logs.
+5. [DONE] Snap AI rebuild.
+   - Packaged photo: barcode detection, then Product Resolution, with AI nutrition/label handling only through the approved fallback paths.
+   - Meal photo: vision, food identification, portion estimate, macro estimate, confirmation. AI estimates are editable and unknown nutrition remains unknown.
+   - Converges on the SAME confirmation/edit workflow as barcode and search. AI calls use the orchestrator and deterministic portion math remains local.
+6. [DONE] Pillar 2 text entry. Local INDIAN_FOODS/custom foods are the instant first pass; AI meal estimation is used only when the local search returns no matches. Text results converge on the SAME confirmation/edit screen as barcode and Snap.
+7. [DONE] Food Log completion. Repeat Meal, Repeat Yesterday's Dinner, Saved Meals next to Recent Foods. Every input (Barcode, Search, Snap, Voice) converges on one confirm/edit screen and one Food Record. Micronutrient sheet reads real logged values.
 8. [LATER] Workout rebuild. Four separate concepts: Exercise, Workout Plan, Weekly Program, Active Session. Plan-first and train-first entry. Train home: Today's Workout, Weekly Program, Saved Plans, Exercise Library, History, Recovery. Dedicated mobile-first Active Session (large targets, rest timer, undo, no empty canvas; fixes the black "Active Workout" screen). Finish summary (duration, sets, volume, PRs, muscles, recovery impact). Full exercise database with GIFs (ExerciseDB).
 9. [LATER] Recovery + Readiness (CNS rebuild). The muscle map stays as a visual layer. Readiness is a separate overall score with a "why" and a "what to do". Real signals only (sleep, soreness, training load, nutrition). No invented numbers or formulas. Achievements wired to real events.
 10. [LATER] Vybe rebuild. States: Idle, Listening, Transcribing, Thinking, Response, Suggested action, Confirmation, Completed. Local-first voice parser (simple commands run locally, AI only for ambiguous or contextual requests). Cross-system context from real data via the orchestrator. Confirm before action; never claim an action that did not execute. Currently returns UNKNOWN for most speech (see O4 for the orchestrator unlock).
@@ -144,3 +144,5 @@ Entry, purpose, primary workflow, secondary workflow, persistence, loading state
 ## 11. Change log
 
 - 2026-10-01: v2 created. Merged the original master plan, the Visual Audit addendum, the Final Technical Directive, the old chat's plan and the work through commit c3ce850. Added step 4d (essentials + canonical Food Record). Parked O1 to O7.
+- 2026-10-03: Roadmap reconciliation. Marked 4c Personal Library save, 4d Essentials + canonical Food Record, Step 5 Snap AI rebuild, and Step 6 Pillar 2 text entry as [DONE] to reflect the implementation already present in main. Step 6 uses the locked O2 decision: local INDIAN_FOODS/custom foods first, AI only for unmatched text. The six-input UX consolidation remains assigned to Step 15, and meal splitting/remaining-target integration remains assigned to Step 12.
+- 2026-10-03: Completed Step 7 (Food Log completion). Implemented quick repeats and saved meals in AddFoodSheet.tsx, and updated MicronutrientSheet.tsx to read actual logged nutrition instead of legacy aggregate totals.
