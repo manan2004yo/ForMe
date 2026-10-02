@@ -351,7 +351,7 @@ export function EatDashboard() {
                   protein: food.nutrition.protein * ratio,
                   carbs: food.nutrition.carbs * ratio,
                   fat: food.nutrition.fat * ratio,
-                  fiber: (food.nutrition.fiber ?? 0) * ratio,
+                  fiber: food.nutrition.fiber == null ? null : food.nutrition.fiber * ratio,
                 }
               }
               updateEntry(user?.uid || "demo", editingEntry.id, {
@@ -384,7 +384,7 @@ export function EatDashboard() {
                 unit: 'serving',
                 gramsConsumed: 200 * data.servings,
                 confidence: 'high',
-                nutrition: { calories: data.calories, protein: data.protein, carbs: data.carbs, fat: data.fat, fiber: 0 }
+                nutrition: { calories: data.calories, protein: data.protein, carbs: data.carbs, fat: data.fat, fiber: null }
               }])
               setSnappingSlot(null)
             }}
@@ -437,7 +437,11 @@ export function EatDashboard() {
         product={scannedProduct}
         isManualAdd={isManualScan}
         onLog={(product, grams) => {
-          const nutrition = calculateNutritionForGrams(product, grams)
+          const baseNutrition = calculateNutritionForGrams(product, grams)
+          // Unknown fiber is logged as null, never a false 0
+          const nutrition = product.unknownFields.includes('fiber')
+            ? { ...baseNutrition, fiber: null }
+            : baseNutrition
           addFoodEntry(
             user?.uid || 'demo',
             pendingScanSlot,
