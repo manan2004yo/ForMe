@@ -96,8 +96,59 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
   const [editedFoodName, setEditedFoodName] = useState('')
   const [isEditingName, setIsEditingName] = useState(false)
   const [servings, setServings] = useState(1)
+  const [editingField, setEditingField] = useState<NutrientKey | 'portionGrams' | null>(null)
+  const [editingValue, setEditingValue] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const toast = useToastStore()
+
+  const startEditingField = (field: NutrientKey | 'portionGrams') => {
+    if (!result) return
+    const value =
+      field === 'portionGrams'
+        ? result.portionGrams
+        : result.nutrients[field]
+
+    setEditingField(field)
+    setEditingValue(typeof value === 'number' ? String(value) : '')
+  }
+
+  const cancelEditingField = () => {
+    setEditingField(null)
+    setEditingValue('')
+  }
+
+  const confirmEditingField = () => {
+    if (!result || editingField === null) return
+
+    const trimmed = editingValue.trim()
+    if (trimmed === '') {
+      cancelEditingField()
+      return
+    }
+
+    const parsed = Number(trimmed)
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      toast.error('Enter a valid number.')
+      return
+    }
+
+    if (editingField === 'portionGrams') {
+      setResult({
+        ...result,
+        portionGrams: parsed / servings,
+      })
+    } else {
+      setResult({
+        ...result,
+        nutrients: {
+          ...result.nutrients,
+          [editingField]: parsed / servings,
+        },
+      })
+    }
+
+    cancelEditingField()
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -174,6 +225,65 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
   const canLog = result !== null && scaled.calories !== null
   const scaledGrams =
     result && result.portionGrams !== null ? Math.round(result.portionGrams * servings) : null
+
+  const renderEditableValue = (
+    field: NutrientKey | 'portionGrams',
+    value: number | null,
+    unit: string,
+    className: string
+  ) => {
+    if (editingField === field) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex items-center justify-center gap-2 min-h-[44px]"
+        >
+          <input
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="any"
+            autoFocus
+            value={editingValue}
+            onChange={e => setEditingValue(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') confirmEditingField()
+              if (e.key === 'Escape') cancelEditingField()
+            }}
+            className="w-24 min-h-[44px] rounded-xl bg-white/10 border border-accent px-3 text-center text-white font-bold focus:outline-none focus:ring-2 focus:ring-accent/40"
+            aria-label={`Edit ${field}`}
+          />
+          <button
+            type="button"
+            onClick={confirmEditingField}
+            className="min-h-[44px] min-w-[44px] rounded-xl bg-accent text-black font-bold text-sm"
+          >
+            ✓
+          </button>
+          <button
+            type="button"
+            onClick={cancelEditingField}
+            className="min-h-[44px] min-w-[44px] rounded-xl bg-white/10 text-white font-bold text-sm"
+          >
+            ×
+          </button>
+        </motion.div>
+      )
+    }
+
+    return (
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.97 }}
+        onClick={() => startEditingField(field)}
+        className={`${className} min-h-[44px] w-full rounded-xl px-2 flex items-center justify-center`}
+        aria-label={`Edit ${field}`}
+      >
+        {fmt(value, unit)}
+      </motion.button>
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex flex-col">
@@ -263,7 +373,7 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
                   AI Estimate
                 </p>
                 <p className="text-sm text-white/50">
-                  Photo-based nutrition is always an estimate. Check the food name and servings before logging.
+                  Photo-based nutrition is always an estimate. Tap any value to edit it before logging.
                 </p>
               </div>
 
@@ -332,9 +442,56 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
               {result.description && (
                 <p className="text-xs text-white/40 text-center mb-1">Detected: {result.description}</p>
               )}
-              <p className="text-xs text-white/40 text-center mb-4">
-                {scaledGrams !== null ? `Estimated portion: about ${scaledGrams} g` : 'Portion size unknown'}
-              </p>
+              <div className="flex justify-center mb-4">
+                {editingField === 'portionGrams' ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center justify-center gap-2 min-h-[44px]"
+                  >
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="1"
+                      autoFocus
+                      value={editingValue}
+                      onChange={e => setEditingValue(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') confirmEditingField()
+                        if (e.key === 'Escape') cancelEditingField()
+                      }}
+                      className="w-28 min-h-[44px] rounded-xl bg-white/10 border border-accent px-3 text-center text-white font-bold focus:outline-none focus:ring-2 focus:ring-accent/40"
+                      aria-label="Edit portion grams"
+                    />
+                    <span className="text-sm text-white/50">g</span>
+                    <button
+                      type="button"
+                      onClick={confirmEditingField}
+                      className="min-h-[44px] min-w-[44px] rounded-xl bg-accent text-black font-bold text-sm"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelEditingField}
+                      className="min-h-[44px] min-w-[44px] rounded-xl bg-white/10 text-white font-bold text-sm"
+                    >
+                      ×
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    type="button"
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => startEditingField('portionGrams')}
+                    className="min-h-[44px] px-4 rounded-xl text-xs text-white/50 hover:text-white transition-colors"
+                    aria-label="Edit portion grams"
+                  >
+                    {scaledGrams !== null ? `Estimated portion: about ${scaledGrams} g` : 'Portion size unknown'}
+                  </motion.button>
+                )}
+              </div>
 
               <div className="flex items-center justify-center gap-4 py-3">
                 <button
@@ -360,27 +517,27 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="bg-[#121212] p-4 rounded-2xl border border-white/5 text-center">
                   <div className="text-white/40 text-xs uppercase tracking-widest mb-1">Calories</div>
-                  <div className="text-2xl font-bold text-white">{scaled.calories === null ? '—' : scaled.calories}</div>
+                  {renderEditableValue('calories', scaled.calories, '', 'text-2xl font-bold text-white')}
                 </div>
                 <div className="bg-[#121212] p-4 rounded-2xl border border-white/5 text-center">
                   <div className="text-white/40 text-xs uppercase tracking-widest mb-1">Protein</div>
-                  <div className="text-2xl font-bold text-emerald-400">{fmt(scaled.protein, 'g')}</div>
+                  {renderEditableValue('protein', scaled.protein, 'g', 'text-2xl font-bold text-emerald-400')}
                 </div>
                 <div className="bg-[#121212] p-4 rounded-2xl border border-white/5 text-center">
                   <div className="text-white/40 text-xs uppercase tracking-widest mb-1">Carbs</div>
-                  <div className="text-2xl font-bold text-blue-400">{fmt(scaled.carbs, 'g')}</div>
+                  {renderEditableValue('carbs', scaled.carbs, 'g', 'text-2xl font-bold text-blue-400')}
                 </div>
                 <div className="bg-[#121212] p-4 rounded-2xl border border-white/5 text-center">
                   <div className="text-white/40 text-xs uppercase tracking-widest mb-1">Fat</div>
-                  <div className="text-2xl font-bold text-purple-400">{fmt(scaled.fat, 'g')}</div>
+                  {renderEditableValue('fat', scaled.fat, 'g', 'text-2xl font-bold text-purple-400')}
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {EXTRAS.map(({ key, label, unit }) => (
-                  <div key={key} className="bg-[#121212] p-3 rounded-xl border border-white/5 text-center">
+                  <div key={key} className="bg-[#121212] p-2 rounded-xl border border-white/5 text-center">
                     <div className="text-white/40 text-[10px] uppercase tracking-wider mb-1">{label}</div>
-                    <div className="text-sm font-bold text-white tabular-nums">{fmt(scaled[key], unit)}</div>
+                    {renderEditableValue(key, scaled[key], unit, 'text-sm font-bold text-white tabular-nums')}
                   </div>
                 ))}
               </div>
@@ -388,9 +545,9 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
               <p className="text-[10px] text-white/30 uppercase tracking-widest mb-2">Micronutrients (estimate)</p>
               <div className="grid grid-cols-3 gap-2 mb-6">
                 {MICROS.map(({ key, label, unit }) => (
-                  <div key={key} className="bg-[#121212] p-3 rounded-xl border border-white/5 text-center">
+                  <div key={key} className="bg-[#121212] p-2 rounded-xl border border-white/5 text-center">
                     <div className="text-white/40 text-[10px] uppercase tracking-wider mb-1">{label}</div>
-                    <div className="text-sm font-bold text-white tabular-nums">{fmt(scaled[key], unit)}</div>
+                    {renderEditableValue(key, scaled[key], unit, 'text-sm font-bold text-white tabular-nums')}
                   </div>
                 ))}
               </div>
