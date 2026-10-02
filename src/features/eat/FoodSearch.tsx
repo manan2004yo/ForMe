@@ -11,6 +11,7 @@ import { useFoodLogStore } from '@/store/foodLogStore'
 import type { LoggedFoodItem, MealSlot, NutritionInfo } from '@/types'
 import { Plus, Search, X, PlusCircle, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { v4 as uuidv4 } from 'uuid'
 import { CreateCustomFoodModal } from './CreateCustomFoodModal'
 import { BarcodeResultSheet } from './components/BarcodeResultSheet'
@@ -51,7 +52,7 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
 
     try {
       const results = await searchFoods(q)
-      setSearchResults(results)
+      setSearchResults(results.slice(0, 50)) // Prevent rendering thousands of DOM nodes on short queries
 
       if (q.trim() && results.length === 0) {
         setIsAiSearching(true)
@@ -263,12 +264,25 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
 
   return (
     <>
-      <div className="modal-backdrop" onClick={onClose}>
-        <div
-          className="modal-content"
-          style={{ maxHeight: '90vh' }}
-          onClick={e => e.stopPropagation()}
-        >
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="fixed bottom-0 left-0 right-0 z-[110] bg-bg-surface border-t border-border rounded-t-3xl flex flex-col"
+        style={{ 
+          maxHeight: '90dvh', // Use dvh to correctly handle the mobile keyboard
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)' 
+        }}
+        onClick={e => e.stopPropagation()}
+      >
           {/* Header */}
           <div className="flex items-center gap-3 p-4 border-b border-border sticky top-0 bg-bg-surface z-10 rounded-t-3xl">
             <div className="flex-1 relative">
@@ -442,8 +456,7 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
               + Add New Item
             </button>
           </div>
-        </div>
-      </div>
+        </motion.div>
 
       {showCreateModal && (
         <CreateCustomFoodModal
