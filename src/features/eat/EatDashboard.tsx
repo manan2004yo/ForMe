@@ -26,6 +26,7 @@ import { AddFoodSheet } from './components/AddFoodSheet'
 import type { ResolvedScannedProduct } from '@/lib/services/barcodeProductService'
 import { calculateNutritionForGrams } from '@/lib/services/barcodeProductService'
 import { saveLibraryProduct } from '@/lib/firebase/dataService'
+import { displayToProfile } from '@/lib/nutrition/nutrientProfile'
 
 /** Blank product for the Manual Add flow. Every nutrient starts unknown ("—"). */
 function buildBlankManualProduct(barcode: string, name: string): ResolvedScannedProduct {
@@ -465,21 +466,13 @@ export function EatDashboard() {
           const libUid = user?.uid
           const libTier = product.trust.tier
           if (libUid && (libTier === 'label' || libTier === 'manual')) {
-            const isUnknown = (field: string) => product.unknownFields.includes(field)
+
             saveLibraryProduct(libUid, {
               barcode: product.barcode,
               name: product.name,
               brand: product.brand,
               per100g: {
-                calories: isUnknown('calories') ? null : product.per100g.calories,
-                protein: isUnknown('protein') ? null : product.per100g.protein,
-                carbs: isUnknown('carbs') ? null : product.per100g.carbs,
-                fat: isUnknown('fat') ? null : product.per100g.fat,
-                // Unknown fiber is saved as null, never 0
-                fiber: isUnknown('fiber') ? null : product.per100g.fiber,
-                // Absent means unknown: saved as null, never 0
-                sugar: product.per100g.sugar ?? null,
-                sodium: product.per100g.sodium ?? null,
+                ...displayToProfile(product.per100g, product.unknownFields),
               },
               servingSizeG: product.servingSizeG,
               trust: libTier,

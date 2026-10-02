@@ -7,6 +7,7 @@
 // ============================================================
 
 import type { LibraryProduct } from '@/lib/firebase/dataService'
+import { profileToDisplay } from '@/lib/nutrition/nutrientProfile'
 
 export interface ScannedProduct {
   barcode: string
@@ -265,24 +266,12 @@ export async function resolveBarcodeProduct(barcode: string): Promise<ResolveBar
  * null nutrients stay unknown (shown as "—"), never silently become real zeros.
  */
 export function libraryProductToResolved(p: LibraryProduct): ResolvedScannedProduct {
-  const unknownFields: string[] = []
-  const num = (v: number | null, field: string): number => {
-    if (v === null) { unknownFields.push(field); return 0 }
-    return v
-  }
+  const { per100g, unknownFields } = profileToDisplay(p.per100g)
   return {
     barcode: p.barcode,
     name: p.name,
     brand: p.brand,
-    per100g: {
-      ...(p.per100g.sugar != null && { sugar: p.per100g.sugar }),
-      ...(p.per100g.sodium != null && { sodium: p.per100g.sodium }),
-      calories: num(p.per100g.calories, 'calories'),
-      protein: num(p.per100g.protein, 'protein'),
-      carbs: num(p.per100g.carbs, 'carbs'),
-      fat: num(p.per100g.fat, 'fat'),
-      fiber: num(p.per100g.fiber, 'fiber'),
-    },
+    per100g,
     servingSizeG: p.servingSizeG,
     dataSource: 'custom',
     imageUrl: null,
