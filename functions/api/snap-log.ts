@@ -84,6 +84,17 @@ export async function onRequestPost(context: any) {
     const e = est.estimate
     const confidence = lowerOf(toConfidence(identified.confidence), e.confidence)
     const n = e.nutrients
+    const normalizedNutrients = {
+      ...n,
+      potassium: n.potassium === 0 ? null : n.potassium,
+      magnesium: n.magnesium === 0 ? null : n.magnesium,
+      iron: n.iron === 0 ? null : n.iron,
+      calcium: n.calcium === 0 ? null : n.calcium,
+      zinc: n.zinc === 0 ? null : n.zinc,
+      vitaminA: n.vitaminA === 0 ? null : n.vitaminA,
+      vitaminC: n.vitaminC === 0 ? null : n.vitaminC,
+      vitaminD: n.vitaminD === 0 ? null : n.vitaminD,
+    }
 
     return new Response(
       JSON.stringify({
@@ -91,7 +102,7 @@ export async function onRequestPost(context: any) {
         foodName: foodName || description,
         description,
         portionGrams: e.portionGrams,
-        nutrients: n,
+        nutrients: normalizedNutrients,
         consistent: e.consistent,
         confidence,
         // Legacy fields for the current client (removed once the result screen is updated)
