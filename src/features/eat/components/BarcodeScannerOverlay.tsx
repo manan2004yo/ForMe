@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Zap, AlertCircle, Camera } from 'lucide-react'
+import { X, Zap, AlertCircle, Camera, Loader2 } from 'lucide-react'
 import type { ScannedProduct, ResolvedScannedProduct } from '@/lib/services/barcodeProductService'
 import { resolveBarcodeProduct, libraryProductToResolved } from '@/lib/services/barcodeProductService'
 import { getLibraryProduct } from '@/lib/firebase/dataService'
@@ -51,6 +51,8 @@ export function BarcodeScannerOverlay({
   const [lastBarcode,  setLastBarcode]  = useState<string | null>(null)
   const [notFoundBarcode, setNotFoundBarcode] = useState<string>('')
   const [missingNutritionName, setMissingNutritionName] = useState<string>('')
+  const [labelLoading, setLabelLoading] = useState(false)
+  const [labelError, setLabelError] = useState<string | null>(null)
   const toast = useToastStore()
 
   const stopCamera = useCallback(() => {
@@ -64,6 +66,114 @@ export function BarcodeScannerOverlay({
     }
     scanningRef.current = false
   }, [])
+
+  const resizeLabelImage = useCallback((dataUrl: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => {
+        const maxSize = 1600
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.max(1, Math.round(img.width * scale))
+        canvas.height = Math.max(1, Math.round(img.height * scale))
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('Could not prepare the label image.'))
+          return
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        resolve(canvas.toDataURL('image/jpeg', 0.85))
+      }
+      img.onerror = () => reject(new Error('Could not load the label image.'))
+      img.src = dataUrl
+    })
+  }, [])
+
+  const handleNutritionLabel = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setLabelLoading(true)
+    setLabelError(null)
+    stopCamera()
+
+    try {
+      const reader = new FileReader()
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result as string)
+        reader.onerror = () => reject(new Error('Could not read the selected photo.'))
+        reader.readAsDataURL(file)
+      })
+
+      const resized = await resizeLabelImage(dataUrl)
+
+      const response = await fetch('/api/read-nutrition-label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: resized }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || data.status !== 'ok' || !data.per100g) {
+        throw new Error("Couldn't read the nutrition label.")
+      }
+
+      const p = data.per100g
+      const unknownFields: string[] = []
+
+      const safeNumber = (value: unknown, field: string): number => {
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+          unknownFields.push(field)
+          return 0
+        }
+        return value
+      }
+
+      const calories = safeNumber(p.calories, 'calories')
+      const protein = safeNumber(p.protein, 'protein')
+      const carbs = safeNumber(p.carbs, 'carbs')
+      const fat = safeNumber(p.fat, 'fat')
+      const fiber = safeNumber(p.fiber, 'fiber')
+
+      if (p.sugar == null) unknownFields.push('sugar')
+      if (p.sodium == null) unknownFields.push('sodium')
+
+      // Label OCR is the highest-trust source. The existing BarcodeResultSheet will
+      // open from onProductFound and lets the user verify/edit every available value
+      // before logging.
+      const product: ResolvedScannedProduct = {
+        barcode: lastBarcode ?? '',
+        name: missingNutritionName,
+        brand: null,
+        per100g: {
+          calories,
+          protein,
+          carbs,
+          fat,
+          fiber,
+          ...(p.sugar != null && { sugar: p.sugar }),
+          ...(p.sodium != null && { sodium: p.sodium }),
+        },
+        servingSizeG: typeof data.servingSizeG === 'number' ? data.servingSizeG : null,
+        dataSource: 'custom',
+        imageUrl: null,
+        trust: {
+          tier: 'label',
+          label: 'Verified from Label',
+        },
+        unknownFields,
+      }
+
+      onProductFound(product)
+      onClose()
+    } catch {
+      setLabelError("Couldn't read the nutrition label. Try a clearer photo of the nutrition facts panel or enter the values manually.")
+    } finally {
+      setLabelLoading(false)
+      e.target.value = ''
+    }
+  }, [lastBarcode, missingNutritionName, onClose, onProductFound, resizeLabelImage, stopCamera])
 
   const handleBarcode = useCallback(async (barcode: string) => {
     // Only process if we haven't just scanned this one, AND we are currently in scanning state
@@ -248,6 +358,8 @@ export function BarcodeScannerOverlay({
   useEffect(() => {
     if (isOpen) {
       setLastBarcode(null)
+      setLabelLoading(false)
+      setLabelError(null)
       // Use requestAnimationFrame so <video ref={videoRef}> is fully mounted in DOM before accessing srcObject
       const raf = requestAnimationFrame(() => {
         startCamera()
@@ -436,29 +548,60 @@ export function BarcodeScannerOverlay({
                   <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-6">
                     <Zap size={32} className="text-blue-400" />
                   </div>
-                  <h3 className="text-xl text-white font-bold mb-2">Product Found</h3>
-                  <p className="text-white/70 text-center font-medium mb-2">{missingNutritionName}</p>
+                  <h3 className="text-xl text-white font-bold mb-2">We found {missingNutritionName} but need its nutrition.</h3>
                   <p className="text-white/40 text-center text-sm mb-6 leading-relaxed">
-                    This product exists but has no nutrition data in the database.
-                    You can enter the values from the packaging manually.
+                    Snap the nutrition facts panel on the back of the package and we’ll read the printed values for you to verify.
                   </p>
+
+                  {labelError && (
+                    <div className="w-full mb-3 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/20">
+                      <p className="text-xs text-red-300 text-center leading-relaxed">{labelError}</p>
+                    </div>
+                  )}
+
                   <div className="w-full space-y-3">
+                    <label className="relative w-full min-h-[48px] py-3.5 rounded-2xl bg-accent text-black font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer overflow-hidden">
+                      {labelLoading ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Reading Nutrition Label…
+                        </>
+                      ) : (
+                        <>
+                          <Camera size={18} />
+                          Snap Nutrition Label
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={handleNutritionLabel}
+                        disabled={labelLoading}
+                      />
+                    </label>
+
                     <button
                       onClick={() => {
                         stopCamera()
                         if (onSearchManually) onSearchManually({ barcode: lastBarcode ?? '', name: missingNutritionName })
                         else onClose()
                       }}
-                      className="w-full py-3.5 rounded-2xl bg-accent text-black font-semibold transition-all active:scale-[0.98]"
+                      disabled={labelLoading}
+                      className="w-full min-h-[48px] py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-all active:scale-[0.98] disabled:opacity-50"
                     >
-                      Enter Nutrition Manually
+                      Enter Manually
                     </button>
+
                     <button
                       onClick={() => {
+                        setLabelError(null)
                         setLastBarcode(null)
                         startCamera()
                       }}
-                      className="w-full py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-all active:scale-[0.98]"
+                      disabled={labelLoading}
+                      className="w-full min-h-[48px] py-3 text-white/40 hover:text-white/70 font-medium transition-all disabled:opacity-40"
                     >
                       Scan Different Product
                     </button>
