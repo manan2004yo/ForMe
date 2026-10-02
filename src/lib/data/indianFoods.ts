@@ -1364,6 +1364,6 @@ export function getNutritionForGrams(food: FoodItem, grams: number) {
     protein: parseFloat((food.nutrition.protein * factor).toFixed(1)),
     carbs: parseFloat((food.nutrition.carbs * factor).toFixed(1)),
     fat: parseFloat((food.nutrition.fat * factor).toFixed(1)),
-    fiber: parseFloat((food.nutrition.fiber * factor).toFixed(1)),
+    fiber: parseFloat(((food.nutrition.fiber ?? 0) * factor).toFixed(1)),
   }
 }

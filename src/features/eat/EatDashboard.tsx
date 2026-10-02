@@ -82,7 +82,7 @@ function MealSection({ config, entries, onDelete, onAddFood, onEdit }: {
       protein: acc.protein + t.protein,
       carbs: acc.carbs + t.carbs,
       fat: acc.fat + t.fat,
-      fiber: acc.fiber + t.fiber,
+      fiber: (acc.fiber ?? 0) + (t.fiber ?? 0),
     }
   }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
 
@@ -351,7 +351,7 @@ export function EatDashboard() {
                   protein: food.nutrition.protein * ratio,
                   carbs: food.nutrition.carbs * ratio,
                   fat: food.nutrition.fat * ratio,
-                  fiber: food.nutrition.fiber * ratio,
+                  fiber: (food.nutrition.fiber ?? 0) * ratio,
                 }
               }
               updateEntry(user?.uid || "demo", editingEntry.id, {

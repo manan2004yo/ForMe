@@ -108,7 +108,7 @@ export interface NutritionInfo {
   protein: number  // g
   carbs: number    // g
   fat: number      // g
-  fiber: number    // g
+  fiber?: number | null // g (null or absent = unknown, never 0)
   saturatedFat?: number
   addedSugar?: number
   calcium?: number // mg

@@ -24,7 +24,7 @@ function sumNutrition(items: LoggedFoodItem[]): NutritionInfo {
     protein: parseFloat((acc.protein + item.nutrition.protein).toFixed(1)),
     carbs: parseFloat((acc.carbs + item.nutrition.carbs).toFixed(1)),
     fat: parseFloat((acc.fat + item.nutrition.fat).toFixed(1)),
-    fiber: parseFloat((acc.fiber + item.nutrition.fiber).toFixed(1)),
+    fiber: parseFloat(((acc.fiber ?? 0) + (item.nutrition.fiber ?? 0)).toFixed(1)),
   }), emptyNutrition())
 }
 
@@ -69,7 +69,7 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
         protein: parseFloat((acc.protein + t.protein).toFixed(1)),
         carbs: parseFloat((acc.carbs + t.carbs).toFixed(1)),
         fat: parseFloat((acc.fat + t.fat).toFixed(1)),
-        fiber: parseFloat((acc.fiber + t.fiber).toFixed(1)),
+        fiber: parseFloat(((acc.fiber ?? 0) + (t.fiber ?? 0)).toFixed(1)),
       }
     }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
   },

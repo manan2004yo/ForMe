@@ -39,7 +39,7 @@ function MealSection({ slot, label, foods, onBrowse }: {
     protein: acc.protein + f.nutrition.protein,
     carbs: acc.carbs + f.nutrition.carbs,
     fat: acc.fat + f.nutrition.fat,
-    fiber: acc.fiber + f.nutrition.fiber,
+    fiber: (acc.fiber ?? 0) + (f.nutrition.fiber ?? 0),
   }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
 
   const hasFood = foods.length > 0
