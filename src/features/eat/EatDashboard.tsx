@@ -471,8 +471,8 @@ export function EatDashboard() {
                 protein: isUnknown('protein') ? null : product.per100g.protein,
                 carbs: isUnknown('carbs') ? null : product.per100g.carbs,
                 fat: isUnknown('fat') ? null : product.per100g.fat,
-                // Fiber is not captured by the sheet yet: keep it unknown rather than a false 0
-                fiber: null,
+                // Unknown fiber is saved as null, never 0
+                fiber: isUnknown('fiber') ? null : product.per100g.fiber,
                 // Absent means unknown: saved as null, never 0
                 sugar: product.per100g.sugar ?? null,
                 sodium: product.per100g.sodium ?? null,
