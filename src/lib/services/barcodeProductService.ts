@@ -7,7 +7,7 @@
 // ============================================================
 
 import type { LibraryProduct } from '@/lib/firebase/dataService'
-import { profileToDisplay } from '@/lib/nutrition/nutrientProfile'
+import { profileToDisplay, scalePer100g } from '@/lib/nutrition/nutrientProfile'
 
 export interface ScannedProduct {
   barcode: string
@@ -140,16 +140,7 @@ export function calculateNutritionForGrams(
   product: ScannedProduct,
   grams: number
 ): ScannedProduct['per100g'] {
-  const ratio = grams / 100
-  return {
-    calories: Math.round(product.per100g.calories * ratio),
-    protein:  parseFloat((product.per100g.protein * ratio).toFixed(1)),
-    carbs:    parseFloat((product.per100g.carbs   * ratio).toFixed(1)),
-    fat:      parseFloat((product.per100g.fat     * ratio).toFixed(1)),
-    fiber:    parseFloat((product.per100g.fiber   * ratio).toFixed(1)),
-    ...(product.per100g.sugar !== undefined && { sugar: parseFloat((product.per100g.sugar * ratio).toFixed(1)) }),
-    ...(product.per100g.sodium !== undefined && { sodium: Math.round(product.per100g.sodium * ratio) }),
-  }
+  return scalePer100g(product.per100g, grams)
 }
 
 // ============================================================
