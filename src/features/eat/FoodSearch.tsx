@@ -5,14 +5,15 @@
 
 import { searchFoods } from '@/lib/services/foodSearchService'
 import { deleteCustomFood } from '@/lib/services/customFoodService'
-import type { ScannedProduct } from '@/lib/services/barcodeProductService'
+import type { ResolvedScannedProduct, ScannedProduct } from '@/lib/services/barcodeProductService'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
-import type { LoggedFoodItem, MealSlot } from '@/types'
+import type { LoggedFoodItem, MealSlot, NutritionInfo } from '@/types'
 import { Plus, Search, X, PlusCircle, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { CreateCustomFoodModal } from './CreateCustomFoodModal'
+import { BarcodeResultSheet } from './components/BarcodeResultSheet'
 
 
 interface FoodSearchProps {
@@ -36,17 +37,127 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
   const [quickAdd, setQuickAdd] = useState<QuickAddState | null>(null)
   const [isAdding, setIsAdding] = useState(false)
   const [addedId, setAddedId] = useState<string | null>(null)
-  
+  const [selectedProduct, setSelectedProduct] = useState<ResolvedScannedProduct | null>(null)
+  const [isAiSearching, setIsAiSearching] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+
   const inputRef = useRef<HTMLInputElement>(null)
   const { user } = useAuthStore()
   const { addFoodEntry } = useFoodLogStore()
 
   const loadFoods = async (q: string) => {
     setIsSearching(true)
-    const results = await searchFoods(q)
-    setSearchResults(results)
-    setIsSearching(false)
-    setIsInitialLoad(false)
+    setAiError(null)
+
+    try {
+      const results = await searchFoods(q)
+      setSearchResults(results)
+
+      if (q.trim() && results.length === 0) {
+        setIsAiSearching(true)
+
+        try {
+          const response = await fetch('/api/estimate-nutrition', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: q.trim(),
+              mode: 'meal',
+            }),
+          })
+
+          const data = await response.json()
+
+          if (!response.ok || data.status !== 'ok' || !data.estimate) {
+            setAiError(data?.message || 'AI estimate unavailable')
+            return
+          }
+
+          const estimate = data.estimate
+          const portionGrams =
+            typeof estimate.portionGrams === 'number' && estimate.portionGrams > 0
+              ? estimate.portionGrams
+              : null
+
+          if (!portionGrams) {
+            setAiError('AI estimate did not include a usable portion size')
+            return
+          }
+
+          const n = estimate.nutrients
+
+          const per100g = {
+            calories:
+              typeof n.calories === 'number'
+                ? (n.calories / portionGrams) * 100
+                : 0,
+            protein:
+              typeof n.protein === 'number'
+                ? (n.protein / portionGrams) * 100
+                : 0,
+            carbs:
+              typeof n.carbs === 'number'
+                ? (n.carbs / portionGrams) * 100
+                : 0,
+            fat:
+              typeof n.fat === 'number'
+                ? (n.fat / portionGrams) * 100
+                : 0,
+            fiber:
+              typeof n.fiber === 'number'
+                ? (n.fiber / portionGrams) * 100
+                : 0,
+            ...(typeof n.sugar === 'number'
+              ? { sugar: (n.sugar / portionGrams) * 100 }
+              : {}),
+            ...(typeof n.sodium === 'number'
+              ? { sodium: (n.sodium / portionGrams) * 100 }
+              : {}),
+          }
+
+          const unknownFields: string[] = []
+
+          if (n.calories === null) unknownFields.push('calories')
+          if (n.protein === null) unknownFields.push('protein')
+          if (n.carbs === null) unknownFields.push('carbs')
+          if (n.fat === null) unknownFields.push('fat')
+          if (n.fiber === null) unknownFields.push('fiber')
+          if (n.sugar === null) unknownFields.push('sugar')
+          if (n.sodium === null) unknownFields.push('sodium')
+
+          // ProductTrust only accepts medium | low.
+          // The estimator may return high | medium | low, so normalize high to medium.
+          const trustConfidence: 'medium' | 'low' =
+            estimate.confidence === 'low' ? 'low' : 'medium'
+
+          const product: ResolvedScannedProduct = {
+            barcode: `ai_text_${Date.now()}`,
+            name: estimate.name || q.trim(),
+            brand: null,
+            per100g,
+            servingSizeG: portionGrams,
+            dataSource: 'estimated',
+            imageUrl: null,
+            trust: {
+              tier: 'ai_estimate',
+              label: 'AI Estimate',
+              confidence: trustConfidence,
+              consistent: estimate.consistent,
+            },
+            unknownFields,
+          }
+
+          setSelectedProduct(product)
+        } catch {
+          setAiError('AI estimate unavailable')
+        } finally {
+          setIsAiSearching(false)
+        }
+      }
+    } finally {
+      setIsSearching(false)
+      setIsInitialLoad(false)
+    }
   }
 
   useEffect(() => {
@@ -62,13 +173,72 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
     return () => clearTimeout(timeout)
   }, [query])
 
-  const handleAdd = async (product: ScannedProduct, qtyGrams: number) => {
+  const toResolvedProduct = (product: ScannedProduct): ResolvedScannedProduct => {
+    const unknownFields: string[] = []
+
+    if (product.per100g.fiber === undefined) unknownFields.push('fiber')
+    if (product.per100g.sugar === undefined) unknownFields.push('sugar')
+    if (product.per100g.sodium === undefined) unknownFields.push('sodium')
+
+    return {
+      ...product,
+      trust: {
+        tier: product.dataSource === 'custom' ? 'manual' : 'database',
+        label: product.dataSource === 'custom' ? 'Entered by you' : 'Database',
+      },
+      unknownFields,
+    }
+  }
+
+  const handleLogConfirmed = async (
+    product: ResolvedScannedProduct,
+    qtyGrams: number
+  ) => {
     if (!user) return
 
     setIsAdding(true)
+
     try {
       const multiplier = qtyGrams / 100
-      
+
+      const nutrition: NutritionInfo = {
+        calories: product.unknownFields.includes('calories')
+          ? 0
+          : product.per100g.calories * multiplier,
+        protein: product.unknownFields.includes('protein')
+          ? 0
+          : product.per100g.protein * multiplier,
+        carbs: product.unknownFields.includes('carbs')
+          ? 0
+          : product.per100g.carbs * multiplier,
+        fat: product.unknownFields.includes('fat')
+          ? 0
+          : product.per100g.fat * multiplier,
+        fiber: product.unknownFields.includes('fiber')
+          ? null
+          : product.per100g.fiber * multiplier,
+        ...(product.unknownFields.includes('sugar')
+          ? {}
+          : product.per100g.sugar !== undefined
+            ? { sugar: product.per100g.sugar * multiplier }
+            : {}),
+        ...(product.unknownFields.includes('sodium')
+          ? {}
+          : product.per100g.sodium !== undefined
+            ? { sodium: product.per100g.sodium * multiplier }
+            : {}),
+      }
+
+      // ProductTrust confidence is only medium | low.
+      // Normalize both the estimator's high and medium states to moderate
+      // for LoggedFoodItem; low becomes lower.
+      const confidence =
+        product.trust.tier === 'ai_estimate'
+          ? product.trust.confidence === 'low'
+            ? 'lower'
+            : 'moderate'
+          : 'high'
+
       const item: LoggedFoodItem = {
         id: uuidv4(),
         foodItemId: product.barcode,
@@ -76,19 +246,15 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
         quantity: qtyGrams,
         unit: 'gram',
         gramsConsumed: Math.round(qtyGrams),
-        nutrition: {
-          calories: product.per100g.calories * multiplier,
-          protein: product.per100g.protein * multiplier,
-          carbs: product.per100g.carbs * multiplier,
-          fat: product.per100g.fat * multiplier,
-          fiber: product.per100g.fiber * multiplier
-        },
-        confidence: 'high',
+        nutrition,
+        confidence,
       }
-      
+
       await addFoodEntry(user.uid, slot, [item])
+
       setAddedId(product.barcode)
       setTimeout(() => setAddedId(null), 1500)
+      setSelectedProduct(null)
       setQuickAdd(null)
     } finally {
       setIsAdding(false)
@@ -148,18 +314,51 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
                </div>
             ) : searchResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                <div className="text-4xl mb-3">🔍</div>
-                <div className="font-medium text-text-primary mb-1">"{query}" not found</div>
-                <p className="text-xs text-text-tertiary max-w-xs mb-4">
-                  Can't find this item? You can easily add it to your local database with custom macros!
-                </p>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="btn btn-accent px-4 py-2 text-xs font-semibold flex items-center gap-2 rounded-xl"
-                >
-                  <PlusCircle size={15} />
-                  Add "{query}" to Database
-                </button>
+                {isAiSearching ? (
+                  <>
+                    <div className="w-6 h-6 border-2 border-accent/40 border-t-accent rounded-full animate-spin mx-auto mb-3" />
+                    <div className="text-sm text-text-primary font-medium">
+                      Estimating "{query}"…
+                    </div>
+                    <p className="text-xs text-text-tertiary mt-1">
+                      AI Estimate
+                    </p>
+                  </>
+                ) : aiError ? (
+                  <>
+                    <div className="text-4xl mb-3">🔍</div>
+                    <div className="font-medium text-text-primary mb-1">
+                      "{query}" needs a manual entry
+                    </div>
+                    <p className="text-xs text-text-tertiary max-w-xs mb-4">
+                      {aiError}
+                    </p>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="btn btn-accent px-4 py-2 text-xs font-semibold flex items-center gap-2 rounded-xl"
+                    >
+                      <PlusCircle size={15} />
+                      Enter Manually
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-4xl mb-3">🔍</div>
+                    <div className="font-medium text-text-primary mb-1">
+                      "{query}" not found locally
+                    </div>
+                    <p className="text-xs text-text-tertiary max-w-xs mb-4">
+                      We couldn't produce an AI estimate. You can enter the food manually.
+                    </p>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="btn btn-accent px-4 py-2 text-xs font-semibold flex items-center gap-2 rounded-xl"
+                    >
+                      <PlusCircle size={15} />
+                      Enter Manually
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex flex-col">
@@ -196,29 +395,6 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
                           <div className="w-8 h-8 rounded-xl bg-success flex items-center justify-center flex-shrink-0">
                             <span className="text-white text-xs">✓</span>
                           </div>
-                        ) : quickAdd?.foodId === product.barcode ? (
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => setQuickAdd(q => q ? { ...q, quantity: Math.max(10, q.quantity - 10) } : null)}
-                                className="w-6 h-6 rounded-lg bg-bg-surface2 flex items-center justify-center text-xs"
-                              >−</button>
-                              <span className="text-sm font-medium w-10 text-center">{quickAdd.quantity}</span>
-                              <button
-                                onClick={() => setQuickAdd(q => q ? { ...q, quantity: q.quantity + 10 } : null)}
-                                className="w-6 h-6 rounded-lg bg-bg-surface2 flex items-center justify-center text-xs"
-                              >+</button>
-                            </div>
-                            <span className="text-xs text-text-tertiary">grams</span>
-                            
-                            <button
-                              onClick={() => handleAdd(product, quickAdd.quantity)}
-                              disabled={isAdding}
-                              className="ml-2 w-8 h-8 rounded-xl bg-accent text-bg-surface font-semibold flex items-center justify-center"
-                            >
-                              {isAdding ? '…' : '✓'}
-                            </button>
-                          </div>
                         ) : (
                           <div className="flex items-center gap-1.5 flex-shrink-0">
                             {isCustom && (
@@ -234,7 +410,10 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
                               </button>
                             )}
                             <button
-                              onClick={() => setQuickAdd({ foodId: product.barcode, quantity: 100, unit: 'gram' })}
+                              onClick={() => {
+                                setSelectedProduct(toResolvedProduct(product))
+                                setQuickAdd(null)
+                              }}
                               className="w-8 h-8 rounded-xl bg-bg-surface2 flex items-center justify-center hover:bg-bg-surface3"
                             >
                               <Plus size={16} className="text-text-secondary" />
@@ -272,11 +451,16 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
           onClose={() => setShowCreateModal(false)}
           onCreated={(newFood) => {
             setShowCreateModal(false)
-            setQuery(newFood.name)
-            loadFoods(newFood.name)
+            setSelectedProduct(toResolvedProduct(newFood))
           }}
         />
       )}
+
+      <BarcodeResultSheet
+        product={selectedProduct}
+        onLog={handleLogConfirmed}
+        onClose={() => setSelectedProduct(null)}
+      />
     </>
   )
 }
