@@ -473,6 +473,9 @@ export function EatDashboard() {
                 fat: isUnknown('fat') ? null : product.per100g.fat,
                 // Fiber is not captured by the sheet yet: keep it unknown rather than a false 0
                 fiber: null,
+                // Absent means unknown: saved as null, never 0
+                sugar: product.per100g.sugar ?? null,
+                sodium: product.per100g.sodium ?? null,
               },
               servingSizeG: product.servingSizeG,
               trust: libTier,
