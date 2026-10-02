@@ -19,6 +19,7 @@ import { EditFoodModal } from './EditFoodModal'
 import { FamilyRecipeSplitter } from './FamilyRecipeSplitter'
 import { FoodSearch } from './FoodSearch'
 import { SnapAndLogModal } from './SnapAndLogModal'
+import type { SnapNutrients } from './SnapAndLogModal'
 import { BarcodeScannerOverlay } from './components/BarcodeScannerOverlay'
 import { BarcodeResultSheet } from './components/BarcodeResultSheet'
 import { MicronutrientSheet } from './components/MicronutrientSheet'
@@ -41,6 +42,35 @@ function buildBlankManualProduct(barcode: string, name: string): ResolvedScanned
     trust: { tier: 'manual', label: 'Entered by you' },
     unknownFields: ['calories', 'protein', 'carbs', 'fat', 'fiber'],
   }
+}
+
+/** Builds the logged nutrition for a Snap photo meal. Unknown stays unknown; only known extras are included. */
+function buildSnapNutrition(
+  core: { calories: number; protein: number; carbs: number; fat: number },
+  n: SnapNutrients | undefined
+): NutritionInfo {
+  return {
+    calories: core.calories,
+    protein: core.protein,
+    carbs: core.carbs,
+    fat: core.fat,
+    fiber: n?.fiber ?? null,
+    ...(n?.sugar != null && { sugar: n.sugar }),
+    ...(n?.sodium != null && { sodium: n.sodium }),
+    ...(n?.potassium != null && { potassium: n.potassium }),
+    ...(n?.magnesium != null && { magnesium: n.magnesium }),
+    ...(n?.iron != null && { iron: n.iron }),
+    ...(n?.calcium != null && { calcium: n.calcium }),
+    ...(n?.zinc != null && { zinc: n.zinc }),
+    ...(n?.vitaminA != null && { vitaminA: n.vitaminA }),
+    ...(n?.vitaminC != null && { vitaminC: n.vitaminC }),
+    ...(n?.vitaminD != null && { vitaminD: n.vitaminD }),
+  }
+}
+
+/** Maps the Snap confidence words to the logged-item confidence type. */
+function snapConfidence(c: 'high' | 'medium' | 'low' | undefined): 'high' | 'moderate' | 'lower' {
+  return c === 'high' ? 'high' : c === 'medium' ? 'moderate' : 'lower'
 }
 
 const MEAL_CONFIG: { slot: MealSlot; label: string; icon: any; time: string }[] = [
@@ -383,9 +413,9 @@ export function EatDashboard() {
                 foodName: data.foodName,
                 quantity: data.servings,
                 unit: 'serving',
-                gramsConsumed: 200 * data.servings,
-                confidence: 'high',
-                nutrition: { calories: data.calories, protein: data.protein, carbs: data.carbs, fat: data.fat, fiber: null }
+                gramsConsumed: data.portionGrams ?? 0,
+                confidence: snapConfidence(data.confidence),
+                nutrition: buildSnapNutrition({ calories: data.calories, protein: data.protein, carbs: data.carbs, fat: data.fat }, data.nutrients)
               }])
               setSnappingSlot(null)
             }}
