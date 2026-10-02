@@ -4,19 +4,22 @@
 // ============================================================
 
 import { parseNaturalLanguageFoodEntry, convertToLoggedItems } from '@/lib/engines/nlpParser'
+import { getFoodLogsByDate, getSavedMeals, saveSavedMeal } from '@/lib/firebase/dataService'
 import { getAllPortionMemories } from '@/lib/services/portionMemoryService'
 import { startVybeListening } from '@/components/vybe/VYBEMicButton'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useToastStore } from '@/store/toastStore'
 import { useVybeStore } from '@/store/vybeStore'
-import type { LoggedFoodItem, MealSlot } from '@/types'
+import type { LoggedFoodItem, MealSlot, SavedMeal } from '@/types'
 import { clsx } from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Barcode,
+  Bookmark,
   ChevronRight,
   Clock,
+  Copy,
   PenLine,
   Search,
   SplitSquareHorizontal,
@@ -26,7 +29,8 @@ import {
   Check,
   AlertCircle,
 } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { format, subDays } from 'date-fns'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { createPortal } from 'react-dom'
 
@@ -39,6 +43,13 @@ const MEAL_LABELS: Record<MealSlot, string> = {
   dinner: 'Dinner',
   pre_workout: 'Pre-Workout',
   post_workout: 'Post-Workout',
+}
+
+function cloneLoggedItems(items: LoggedFoodItem[]): LoggedFoodItem[] {
+  return items.map(item => ({
+    ...item,
+    id: uuidv4(),
+  }))
 }
 
 // ─── NLP Type-it-out sub-view ─────────────────────────────────
@@ -225,13 +236,170 @@ export interface AddFoodSheetProps {
 
 export function AddFoodSheet({ slot, onClose, callbacks }: AddFoodSheetProps) {
   const { user } = useAuthStore()
-  const { addFoodEntry } = useFoodLogStore()
+  const { addFoodEntry, entries, selectedDate } = useFoodLogStore()
   const toast = useToastStore()
   const { startListening, setProcessing, setResult, setError, reset } = useVybeStore()
 
   const [showNlp, setShowNlp] = useState(false)
+  const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([])
+  const [yesterdayDinner, setYesterdayDinner] = useState<LoggedFoodItem[]>([])
+  const [isLoadingSavedMeals, setIsLoadingSavedMeals] = useState(false)
+  const [isLoadingYesterdayDinner, setIsLoadingYesterdayDinner] = useState(false)
+  const [showSaveMeal, setShowSaveMeal] = useState(false)
+  const [saveMealName, setSaveMealName] = useState('')
+  const [isSavingMeal, setIsSavingMeal] = useState(false)
 
   const mealLabel = MEAL_LABELS[slot]
+
+  const currentMealEntries = useMemo(
+    () => entries.filter(entry => entry.date === selectedDate && entry.meal === slot),
+    [entries, selectedDate, slot]
+  )
+
+  const currentMealItems = useMemo(
+    () => currentMealEntries.flatMap(entry => entry.foods),
+    [currentMealEntries]
+  )
+
+  useEffect(() => {
+    let cancelled = false
+
+    if (!user || user.uid === 'demo') {
+      setSavedMeals([])
+      return
+    }
+
+    setIsLoadingSavedMeals(true)
+    getSavedMeals(user.uid)
+      .then(meals => {
+        if (!cancelled) {
+          setSavedMeals(
+            [...meals].sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )
+          )
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingSavedMeals(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [user?.uid])
+
+  useEffect(() => {
+    let cancelled = false
+
+    if (!user || user.uid === 'demo') {
+      setYesterdayDinner([])
+      return
+    }
+
+    const yesterdayDate = format(
+      subDays(new Date(`${selectedDate}T12:00:00`), 1),
+      'yyyy-MM-dd'
+    )
+
+    setIsLoadingYesterdayDinner(true)
+    getFoodLogsByDate(user.uid, yesterdayDate)
+      .then(logs => {
+        if (!cancelled) {
+          setYesterdayDinner(
+            logs
+              .filter(entry => entry.meal === 'dinner')
+              .flatMap(entry => entry.foods)
+          )
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingYesterdayDinner(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [user?.uid, selectedDate])
+
+  const handleRepeatMeal = async () => {
+    if (!user || currentMealItems.length === 0) return
+    await addFoodEntry(user.uid, slot, cloneLoggedItems(currentMealItems))
+    toast.success(`${mealLabel} repeated!`)
+    onClose()
+  }
+
+  const handleRepeatYesterdayDinner = async () => {
+    if (!user || yesterdayDinner.length === 0) return
+    await addFoodEntry(user.uid, slot, cloneLoggedItems(yesterdayDinner))
+    toast.success("Yesterday's dinner added!")
+    onClose()
+  }
+
+  const handleSavedMealLog = async (meal: SavedMeal) => {
+    if (!user || meal.foods.length === 0) return
+    await addFoodEntry(user.uid, slot, cloneLoggedItems(meal.foods))
+    toast.success(`${meal.name} added!`)
+    onClose()
+  }
+
+  const handleSaveCurrentMeal = async () => {
+    if (!user || currentMealItems.length === 0) return
+
+    const name = saveMealName.trim()
+    if (!name) {
+      toast.error('Give this meal a name first.')
+      return
+    }
+
+    const totals = currentMealEntries.reduce(
+      (acc, entry) => ({
+        calories: acc.calories + entry.totals.calories,
+        protein: acc.protein + entry.totals.protein,
+        carbs: acc.carbs + entry.totals.carbs,
+        fat: acc.fat + entry.totals.fat,
+        fiber:
+          acc.fiber === null || entry.totals.fiber === null || entry.totals.fiber === undefined
+            ? null
+            : (acc.fiber ?? 0) + entry.totals.fiber,
+      }),
+      {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        fiber: 0 as number | null,
+      }
+    )
+
+    const meal: SavedMeal = {
+      id: uuidv4(),
+      userId: user.uid,
+      name,
+      foods: cloneLoggedItems(currentMealItems),
+      totals,
+      meal: slot,
+      tags: [],
+      createdAt: new Date().toISOString(),
+    }
+
+    setIsSavingMeal(true)
+    try {
+      await saveSavedMeal(user.uid, meal)
+      setSavedMeals(prev => [meal, ...prev])
+      setSaveMealName('')
+      setShowSaveMeal(false)
+      toast.success(`"${name}" saved!`)
+    } catch {
+      // saveSavedMeal writes the local copy before attempting Firestore.
+      setSavedMeals(prev => [meal, ...prev])
+      setSaveMealName('')
+      setShowSaveMeal(false)
+      toast.success(`"${name}" saved on this device.`)
+    } finally {
+      setIsSavingMeal(false)
+    }
+  }
 
   const handleVybe = () => {
     // Call startVybeListening DIRECTLY and SYNCHRONOUSLY inside this click handler.
@@ -409,9 +577,140 @@ export function AddFoodSheet({ slot, onClose, callbacks }: AddFoodSheetProps) {
                   })}
                 </div>
 
-                {/* Recent foods */}
+                {/* Step 7 quick repeats */}
                 {user && user.uid !== 'demo' && (
-                  <RecentFoods uid={user.uid} onLog={handleRecentLog} />
+                  <div className="flex flex-col gap-3">
+                    {(currentMealItems.length > 0 || yesterdayDinner.length > 0) && (
+                      <div className="flex flex-col gap-2">
+                        <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">
+                          Quick Repeat
+                        </p>
+
+                        {currentMealItems.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleRepeatMeal}
+                            className="min-h-[44px] w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 text-left active:scale-[0.98] transition-all"
+                          >
+                            <div className="w-9 h-9 rounded-xl bg-accent/15 text-accent flex items-center justify-center shrink-0">
+                              <Copy size={16} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-white">Repeat this meal</p>
+                              <p className="text-xs text-white/40 truncate">
+                                {currentMealItems.length} item{currentMealItems.length === 1 ? '' : 's'} from {mealLabel}
+                              </p>
+                            </div>
+                            <ChevronRight size={16} className="text-white/20 shrink-0" />
+                          </button>
+                        )}
+
+                        {yesterdayDinner.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleRepeatYesterdayDinner}
+                            disabled={isLoadingYesterdayDinner}
+                            className="min-h-[44px] w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 text-left active:scale-[0.98] transition-all disabled:opacity-50"
+                          >
+                            <div className="w-9 h-9 rounded-xl bg-white/10 text-white/70 flex items-center justify-center shrink-0">
+                              <Clock size={16} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-white">Repeat Yesterday's Dinner</p>
+                              <p className="text-xs text-white/40 truncate">
+                                {yesterdayDinner.length} item{yesterdayDinner.length === 1 ? '' : 's'} into {mealLabel}
+                              </p>
+                            </div>
+                            <ChevronRight size={16} className="text-white/20 shrink-0" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {currentMealItems.length > 0 && (
+                      <div className="rounded-2xl bg-white/5 border border-white/5 p-3">
+                        {!showSaveMeal ? (
+                          <button
+                            type="button"
+                            onClick={() => setShowSaveMeal(true)}
+                            className="min-h-[44px] w-full flex items-center gap-3 text-left"
+                          >
+                            <div className="w-9 h-9 rounded-xl bg-white/10 text-white/70 flex items-center justify-center shrink-0">
+                              <Bookmark size={16} />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold text-white">Save this meal</p>
+                              <p className="text-xs text-white/40">Keep this combination for one-tap reuse</p>
+                            </div>
+                            <ChevronRight size={16} className="text-white/20 shrink-0" />
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <input
+                              value={saveMealName}
+                              onChange={event => setSaveMealName(event.target.value)}
+                              placeholder="e.g. Usual Dinner"
+                              maxLength={50}
+                              autoFocus
+                              className="min-h-[44px] flex-1 min-w-0 bg-black/20 border border-white/10 rounded-xl px-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-accent/50"
+                              onKeyDown={event => {
+                                if (event.key === 'Enter') {
+                                  event.preventDefault()
+                                  void handleSaveCurrentMeal()
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => void handleSaveCurrentMeal()}
+                              disabled={isSavingMeal || !saveMealName.trim()}
+                              className="min-h-[44px] px-4 rounded-xl bg-accent text-black text-sm font-bold disabled:opacity-40 active:scale-95 transition-all"
+                            >
+                              {isSavingMeal ? 'Saving…' : 'Save'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <RecentFoods uid={user.uid} onLog={handleRecentLog} />
+
+                    <div className="flex flex-col gap-3">
+                      <p className="text-xs text-white/40 uppercase tracking-wider font-semibold flex items-center gap-2">
+                        <Bookmark size={11} /> Saved Meals
+                      </p>
+
+                      {isLoadingSavedMeals ? (
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                          {[0, 1, 2].map(index => (
+                            <div
+                              key={index}
+                              className="h-10 w-32 shrink-0 rounded-full bg-white/5 animate-pulse"
+                            />
+                          ))}
+                        </div>
+                      ) : savedMeals.length === 0 ? (
+                        <div className="rounded-2xl bg-white/5 border border-white/5 px-4 py-3">
+                          <p className="text-xs text-white/40">
+                            Save a logged meal above and it will appear here for one-tap reuse.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                          {savedMeals.map(meal => (
+                            <button
+                              key={meal.id}
+                              type="button"
+                              onClick={() => void handleSavedMealLog(meal)}
+                              className="min-h-[44px] shrink-0 px-4 rounded-full bg-white/5 border border-white/10 text-white/80 text-xs font-semibold hover:bg-white/10 active:scale-95 transition-all"
+                            >
+                              {meal.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </motion.div>
             )}
