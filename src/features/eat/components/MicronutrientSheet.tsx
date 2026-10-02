@@ -9,7 +9,8 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Leaf } from 'lucide-react'
-import { useUserStore } from '@/store/userStore'
+import { useMemo } from 'react'
+import type { NutritionInfo } from '@/types'
 import { useFoodLogStore } from '@/store/foodLogStore'
 
 interface MicronutrientSheetProps {
@@ -18,14 +19,13 @@ interface MicronutrientSheetProps {
 }
 
 interface MicroTarget {
-  key: string
+  key: keyof NutritionInfo
   label: string
   unit: string
-  dailyTarget: number
+  dailyTarget?: number
   color: string
 }
 
-// Only track micros where the Indian food database has reliable data
 const MICRO_TARGETS: MicroTarget[] = [
   { key: 'fiber', label: 'Fiber', unit: 'g', dailyTarget: 30, color: 'var(--macro-fiber)' },
   { key: 'calcium', label: 'Calcium', unit: 'mg', dailyTarget: 1000, color: '#60A5FA' },
@@ -33,11 +33,44 @@ const MICRO_TARGETS: MicroTarget[] = [
   { key: 'sodium', label: 'Sodium', unit: 'mg', dailyTarget: 2300, color: '#FBBF24' },
   { key: 'potassium', label: 'Potassium', unit: 'mg', dailyTarget: 3500, color: '#A78BFA' },
   { key: 'vitaminC', label: 'Vitamin C', unit: 'mg', dailyTarget: 90, color: '#34D399' },
+  { key: 'magnesium', label: 'Magnesium', unit: 'mg', color: '#C084FC' },
+  { key: 'zinc', label: 'Zinc', unit: 'mg', color: '#F59E0B' },
+  { key: 'vitaminA', label: 'Vitamin A', unit: 'mcg', color: '#FB7185' },
+  { key: 'vitaminD', label: 'Vitamin D', unit: 'IU', color: '#FDE047' },
+  { key: 'b12', label: 'Vitamin B12', unit: 'mcg', color: '#22D3EE' },
 ]
 
 export function MicronutrientSheet({ isOpen, onClose }: MicronutrientSheetProps) {
-  const { todayTotals } = useFoodLogStore()
-  const totals = todayTotals()
+  const { entries, selectedDate } = useFoodLogStore()
+
+  const totals = useMemo(() => {
+    const foods = entries
+      .filter(entry => entry.date === selectedDate)
+      .flatMap(entry => entry.foods)
+
+    return MICRO_TARGETS.reduce<Record<string, number | null>>((acc, micro) => {
+      if (foods.length === 0) {
+        acc[micro.key] = null
+        return acc
+      }
+
+      let total = 0
+
+      for (const food of foods) {
+        const value = food.nutrition[micro.key]
+
+        if (value === null || value === undefined) {
+          acc[micro.key] = null
+          return acc
+        }
+
+        total += value
+      }
+
+      acc[micro.key] = total
+      return acc
+    }, {})
+  }, [entries, selectedDate])
 
   return (
     <AnimatePresence>
@@ -90,10 +123,14 @@ export function MicronutrientSheet({ isOpen, onClose }: MicronutrientSheetProps)
               {/* Micronutrient bars */}
               <div className="flex-1 overflow-y-auto px-5 pb-8 space-y-4">
                 {MICRO_TARGETS.map((micro, index) => {
-                  const current = (totals as any)[micro.key] ?? 0
-                  const percent = Math.min(100, Math.round((current / micro.dailyTarget) * 100))
-                  const isAdequate = percent >= 70
-                  const isOver = percent > 120
+                  const current = totals[micro.key]
+                  const hasData = typeof current === 'number'
+                  const hasTarget = micro.dailyTarget !== undefined
+                  const percent = hasData && hasTarget
+                    ? Math.min(100, Math.round((current / micro.dailyTarget!) * 100))
+                    : null
+                  const isAdequate = percent !== null && percent >= 70
+                  const isOver = percent !== null && percent > 120
 
                   return (
                     <motion.div
@@ -108,12 +145,13 @@ export function MicronutrientSheet({ isOpen, onClose }: MicronutrientSheetProps)
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-white/40 tabular-nums">
-                            {current > 0
-                              ? `${Math.round(current)} / ${micro.dailyTarget}${micro.unit}`
-                              : `— / ${micro.dailyTarget}${micro.unit}`
-                            }
+                            {hasData
+                              ? hasTarget
+                                ? `${Math.round(current)} / ${micro.dailyTarget}${micro.unit}`
+                                : `${Math.round(current)}${micro.unit}`
+                              : '—'}
                           </span>
-                          {current > 0 && (
+                          {percent !== null && (
                             <span
                               className="text-xs font-bold tabular-nums"
                               style={{
@@ -130,25 +168,37 @@ export function MicronutrientSheet({ isOpen, onClose }: MicronutrientSheetProps)
                         </div>
                       </div>
 
-                      {/* Progress bar */}
-                      <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${percent}%` }}
-                          transition={{ duration: 0.8, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                          className="h-full rounded-full"
-                          style={{
-                            backgroundColor: isOver
-                              ? 'var(--status-warning)'
-                              : micro.color
-                          }}
-                        />
-                      </div>
+                      {hasTarget ? (
+                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percent ?? 0}%` }}
+                            transition={{ duration: 0.8, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                            className="h-full rounded-full"
+                            style={{
+                              backgroundColor: isOver
+                                ? 'var(--status-warning)'
+                                : micro.color
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                          {hasData && (
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: '100%' }}
+                              transition={{ duration: 0.5, delay: index * 0.05 }}
+                              className="h-full rounded-full"
+                              style={{ backgroundColor: micro.color, opacity: 0.55 }}
+                            />
+                          )}
+                        </div>
+                      )}
 
-                      {/* Status label */}
-                      {current === 0 && (
+                      {!hasData && (
                         <p className="text-[10px] text-white/20 mt-1">
-                          No data — log foods with {micro.label.toLowerCase()} to track this
+                          Unknown — at least one logged food has no reliable {micro.label.toLowerCase()} value
                         </p>
                       )}
                       {isOver && (
