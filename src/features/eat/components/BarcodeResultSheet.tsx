@@ -53,7 +53,7 @@ async function resizeDataUrl(dataUrl: string, maxDim = 1024): Promise<string> {
 
 // ─────────────────────────────────────────────────────────────
 
-type MacroField = 'calories' | 'protein' | 'carbs' | 'fat'
+type MacroField = 'calories' | 'protein' | 'carbs' | 'fat' | 'fiber' | 'sugar' | 'sodium'
 
 function MacroCell({
   label,
@@ -108,6 +108,15 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
   const [editFat, setEditFat] = useState<string>(
     initialProduct ? (initialProduct.unknownFields.includes('fat') ? '' : String(initialProduct.per100g.fat)) : ''
   )
+  const [editFiber, setEditFiber] = useState<string>(
+    initialProduct ? (initialProduct.unknownFields.includes('fiber') ? '' : String(initialProduct.per100g.fiber)) : ''
+  )
+  const [editSugar, setEditSugar] = useState<string>(
+    initialProduct?.per100g.sugar !== undefined ? String(initialProduct.per100g.sugar) : ''
+  )
+  const [editSodium, setEditSodium] = useState<string>(
+    initialProduct?.per100g.sodium !== undefined ? String(initialProduct.per100g.sodium) : ''
+  )
 
   // Sync state when parent passes a new product
   useEffect(() => {
@@ -117,6 +126,9 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
     setEditProtein(initialProduct ? (initialProduct.unknownFields.includes('protein') ? '' : String(initialProduct.per100g.protein)) : '')
     setEditCarbs(initialProduct ? (initialProduct.unknownFields.includes('carbs') ? '' : String(initialProduct.per100g.carbs)) : '')
     setEditFat(initialProduct ? (initialProduct.unknownFields.includes('fat') ? '' : String(initialProduct.per100g.fat)) : '')
+    setEditFiber(initialProduct ? (initialProduct.unknownFields.includes('fiber') ? '' : String(initialProduct.per100g.fiber)) : '')
+    setEditSugar(initialProduct?.per100g.sugar !== undefined ? String(initialProduct.per100g.sugar) : '')
+    setEditSodium(initialProduct?.per100g.sodium !== undefined ? String(initialProduct.per100g.sodium) : '')
   }, [initialProduct])
 
   // Snap Label state
@@ -131,13 +143,18 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
   const proNum = parseFloat(editProtein)
   const carbNum = parseFloat(editCarbs)
   const fatNum = parseFloat(editFat)
+  const fiberNum = parseFloat(editFiber)
+  const sugarNum = parseFloat(editSugar)
+  const sodiumNum = parseFloat(editSodium)
 
   const effectiveP100g = {
     calories: isNaN(calNum) ? 0 : calNum,
     protein: isNaN(proNum) ? 0 : proNum,
     carbs: isNaN(carbNum) ? 0 : carbNum,
     fat: isNaN(fatNum) ? 0 : fatNum,
-    fiber: product.per100g.fiber,
+    fiber: isNaN(fiberNum) ? 0 : fiberNum,
+    ...(isNaN(sugarNum) ? {} : { sugar: sugarNum }),
+    ...(isNaN(sodiumNum) ? {} : { sodium: sodiumNum }),
   }
 
   const defaultGrams = product.servingSizeG ?? 100
@@ -168,6 +185,9 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
       protein: setEditProtein,
       carbs: setEditCarbs,
       fat: setEditFat,
+      fiber: setEditFiber,
+      sugar: setEditSugar,
+      sodium: setEditSodium,
     }
     setters[field](value)
 
@@ -225,16 +245,22 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
       const newPro = safeNum(p.protein, 'protein')
       const newCarb = safeNum(p.carbs, 'carbs')
       const newFat = safeNum(p.fat, 'fat')
+      const newFiber = safeNum(p.fiber, 'fiber')
+      if (p.sugar == null) newUnknown.push('sugar')
+      if (p.sodium == null) newUnknown.push('sodium')
 
       setEditCalories(newUnknown.includes('calories') ? '' : String(newCal))
       setEditProtein(newUnknown.includes('protein') ? '' : String(newPro))
       setEditCarbs(newUnknown.includes('carbs') ? '' : String(newCarb))
       setEditFat(newUnknown.includes('fat') ? '' : String(newFat))
+      setEditFiber(newUnknown.includes('fiber') ? '' : String(newFiber))
+      setEditSugar(p.sugar == null ? '' : String(p.sugar))
+      setEditSodium(p.sodium == null ? '' : String(p.sodium))
       setUnknownFields(newUnknown)
 
       setProduct(prev => prev ? {
         ...prev,
-        per100g: { ...prev.per100g, calories: newCal, protein: newPro, carbs: newCarb, fat: newFat },
+        per100g: { ...prev.per100g, calories: newCal, protein: newPro, carbs: newCarb, fat: newFat, fiber: newFiber },
         servingSizeG: data.servingSizeG ?? prev.servingSizeG,
         trust: { tier: 'label', label: 'Verified from Label' },
       } : prev)
@@ -410,6 +436,11 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
                     <MacroCell label="Protein" field="protein" value={editProtein} color="#34D399" onChange={applyManualEdit} />
                     <MacroCell label="Carbs" field="carbs" value={editCarbs} color="#60A5FA" onChange={applyManualEdit} />
                     <MacroCell label="Fat" field="fat" value={editFat} color="#C084FC" onChange={applyManualEdit} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-white/5">
+                    <MacroCell label="Fiber (g)" field="fiber" value={editFiber} color="#FBBF24" onChange={applyManualEdit} />
+                    <MacroCell label="Sugar (g)" field="sugar" value={editSugar} color="#F472B6" onChange={applyManualEdit} />
+                    <MacroCell label="Sodium (mg)" field="sodium" value={editSodium} color="#94A3B8" onChange={applyManualEdit} />
                   </div>
                 </div>
 
