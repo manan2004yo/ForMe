@@ -246,7 +246,6 @@ export function EatDashboard() {
     }
   }, [user, loadLogs, selectedDate])
 
-  const { getCurrentStatus } = useCnsStore()
   const [addFoodSlot, setAddFoodSlot] = useState<MealSlot | null>(null)
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
   const [snappingSlot, setSnappingSlot] = useState<MealSlot | null>(null)
@@ -257,9 +256,6 @@ export function EatDashboard() {
   const [isManualScan, setIsManualScan] = useState(false)
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null)
   const [showMicronutrients, setShowMicronutrients] = useState(false)
-
-  const cnsStatus = getCurrentStatus()
-  const isFried = cnsStatus === 'Fried'
 
   const todayEntries = entries.filter(e => e.date === format(new Date(), 'yyyy-MM-dd'))
 
@@ -274,15 +270,9 @@ export function EatDashboard() {
 
   // Dynamic targets from User Profile
   const baseProtein = metrics?.proteinTarget || 150
-  let baseCarbs = metrics?.carbTarget || 250
+  const baseCarbs = metrics?.carbTarget || 250
   const baseFat = metrics?.fatTarget || 80
-  let baseCals = metrics?.caloricTarget || 2000
-
-  // CNS AI Engine adjustments
-  if (isFried) {
-    baseCarbs += 50 // +50g carbs for recovery (~200 kcal)
-    baseCals += 200
-  }
+  const baseCals = metrics?.caloricTarget || 2000
 
   return (
     <>
@@ -316,13 +306,9 @@ export function EatDashboard() {
           <>
         {/* Daily Summary */}
         <div className="glass-panel-intense p-6 mb-8 relative overflow-hidden">
-          {isFried && (
-            <div className="absolute top-0 left-0 w-full bg-accent/20 border-b border-accent/20 p-2 text-center text-[10px] font-bold text-accent tracking-widest uppercase flex items-center justify-center gap-2">
-              <Sun size={12} /> AI Adjusted: +50g Carbs for CNS Recovery
-            </div>
-          )}
+
           
-          <h2 className={clsx("text-sm font-medium text-white/50 uppercase tracking-widest mb-6", isFried ? "mt-6" : "")}>Daily Totals</h2>
+          <h2 className="text-sm font-medium text-white/50 uppercase tracking-widest mb-6">Daily Totals</h2>
           <div className="flex justify-between items-end mb-6">
             <div className="flex items-baseline gap-2">
               <AnimatedNumber value={totals.calories} className="text-4xl font-heading font-bold text-white" />
@@ -341,7 +327,7 @@ export function EatDashboard() {
             </div>
             <div>
               <div className="text-xs text-white/50 mb-2 flex items-center gap-1">
-                Carbs {isFried && <span className="text-[10px] text-accent bg-accent/10 px-1 rounded">AI</span>}
+                Carbs
               </div>
               <div className="flex items-baseline gap-1 mb-2">
                 <span className="text-lg font-bold text-blue-400">{Math.round(totals.carbs)}</span>
