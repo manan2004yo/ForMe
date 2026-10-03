@@ -297,7 +297,8 @@ export function HomeDashboard() {
             </div>
 
             {todayRecoveryLog && (
-              <div className="space-y-2">
+              <>
+                <div className="space-y-2">
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-xl bg-white/5 px-3 py-3 text-center">
                     <p className="text-[11px] text-white/40 mb-1">Sleep</p>
@@ -343,7 +344,8 @@ export function HomeDashboard() {
                     ? "FORME has today's core recovery evidence."
                     : "More evidence is needed before FORME can interpret readiness."}
                 </p>
-              </div>
+                </div>
+              </>
             )}
           </div>
         )}
