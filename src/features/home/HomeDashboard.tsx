@@ -14,6 +14,7 @@ import { getRecentFoodLogs } from '@/lib/firebase/dataService'
 import { MacroHistorySheet } from '@/features/eat/components/MacroHistorySheet'
 import { DailyCheckInCard } from '@/features/cns/DailyCheckInCard'
 import { useCnsStore } from '@/store/cnsStore'
+import { useProgressStore } from '@/store/progressStore'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -100,6 +101,7 @@ export function HomeDashboard() {
   const { profile, metrics, loadProfile } = useUserStore()
   const { todayTotals, loadLogs } = useFoodLogStore()
   const { getTodayLog, fetchLogs: loadCnsLogs } = useCnsStore()
+  const { workoutLogs, loadAll: loadProgress } = useProgressStore()
   const [showMacroHistory, setShowMacroHistory] = useState(false)
   const [yesterdayCalories, setYesterdayCalories] = useState<number | null>(null)
 
@@ -108,6 +110,7 @@ export function HomeDashboard() {
       loadProfile(user.uid)
       loadLogs(user.uid)
       loadCnsLogs(user.uid)
+      loadProgress(user.uid)
       getRecentFoodLogs(user.uid, 2).then(logs => {
         const yesterday = new Date()
         yesterday.setDate(yesterday.getDate() - 1)
@@ -117,7 +120,7 @@ export function HomeDashboard() {
         setYesterdayCalories(yCals)
       })
     }
-  }, [user, loadProfile, loadLogs])
+  }, [user, loadProfile, loadLogs, loadCnsLogs, loadProgress])
 
   if (!profile || !metrics) {
     return (
@@ -154,6 +157,25 @@ export function HomeDashboard() {
   const todayString = format(new Date(), 'yyyy-MM-dd')
   const todayRecoveryLog = getTodayLog()
   const hasCheckedInToday = todayRecoveryLog !== null
+  const todaysWorkouts = workoutLogs.filter(log => log.date === todayString && log.completed)
+  const todaysSets = todaysWorkouts.reduce(
+    (total, workout) => total + workout.exercises.reduce((exerciseTotal, exercise) => exerciseTotal + exercise.sets.length, 0),
+    0
+  )
+  const todaysVolumeKg = todaysWorkouts.reduce(
+    (total, workout) => total + workout.exercises.reduce(
+      (exerciseTotal, exercise) => exerciseTotal + exercise.sets.reduce(
+        (setTotal, set) => setTotal + ((set.weight ?? 0) * set.reps),
+        0
+      ),
+      0
+    ),
+    0
+  )
+  const nutritionLogged = totals.calories > 0 || totals.protein > 0 || totals.carbs > 0 || totals.fat > 0
+  const nutritionPercent = metrics.caloricTarget > 0
+    ? Math.round((totals.calories / metrics.caloricTarget) * 100)
+    : null
 
   return (
     <PageTransition>
@@ -250,25 +272,50 @@ export function HomeDashboard() {
                 <div className="w-2 h-2 rounded-full bg-green-400" style={{ boxShadow: '0 0 6px #10B981' }} />
                 <div>
                   <p className="text-sm font-semibold text-white">Recovery Snapshot</p>
-                  <p className="text-xs text-white/40">Today's real recovery signals</p>
+                  <p className="text-xs text-white/40">Today's recovery evidence</p>
                 </div>
               </div>
               <span className="text-xs text-green-400 font-medium">Logged</span>
             </div>
 
             {todayRecoveryLog && (
-              <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-xl bg-white/5 px-3 py-3 text-center">
-                  <p className="text-[11px] text-white/40 mb-1">Sleep</p>
-                  <p className="text-sm font-semibold text-white">{todayRecoveryLog.sleepHours}h</p>
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-white/5 px-3 py-3 text-center">
+                    <p className="text-[11px] text-white/40 mb-1">Sleep</p>
+                    <p className="text-sm font-semibold text-white">{todayRecoveryLog.sleepHours}h</p>
+                  </div>
+                  <div className="rounded-xl bg-white/5 px-3 py-3 text-center">
+                    <p className="text-[11px] text-white/40 mb-1">Fatigue</p>
+                    <p className="text-sm font-semibold text-white">{todayRecoveryLog.fatigueLevel}/10</p>
+                  </div>
+                  <div className="rounded-xl bg-white/5 px-3 py-3 text-center">
+                    <p className="text-[11px] text-white/40 mb-1">Soreness</p>
+                    <p className="text-sm font-semibold text-white">{todayRecoveryLog.sorenessLevel}/10</p>
+                  </div>
                 </div>
-                <div className="rounded-xl bg-white/5 px-3 py-3 text-center">
-                  <p className="text-[11px] text-white/40 mb-1">Fatigue</p>
-                  <p className="text-sm font-semibold text-white">{todayRecoveryLog.fatigueLevel}/10</p>
-                </div>
-                <div className="rounded-xl bg-white/5 px-3 py-3 text-center">
-                  <p className="text-[11px] text-white/40 mb-1">Soreness</p>
-                  <p className="text-sm font-semibold text-white">{todayRecoveryLog.sorenessLevel}/10</p>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-white/5 px-3 py-3">
+                    <p className="text-[11px] text-white/40 mb-1">Training</p>
+                    {todaysWorkouts.length > 0 ? (
+                      <p className="text-sm font-semibold text-white">
+                        {todaysSets} sets · {Math.round(todaysVolumeKg).toLocaleString()} kg
+                      </p>
+                    ) : (
+                      <p className="text-sm font-semibold text-white/50">No workout logged</p>
+                    )}
+                  </div>
+                  <div className="rounded-xl bg-white/5 px-3 py-3">
+                    <p className="text-[11px] text-white/40 mb-1">Nutrition</p>
+                    {nutritionLogged ? (
+                      <p className="text-sm font-semibold text-white">
+                        {nutritionPercent !== null ? `${nutritionPercent}% of calorie target` : 'Logged today'}
+                      </p>
+                    ) : (
+                      <p className="text-sm font-semibold text-white/50">No food logged</p>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
