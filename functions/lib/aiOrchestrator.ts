@@ -18,6 +18,9 @@ export interface AIProviderConfig {
   modelId: string
   apiKeyEnvVar: string
   baseUrl: string
+  capabilities: {
+    audio: boolean
+  }
 }
 
 // ── Registered providers — order = fallback priority ───────
@@ -27,6 +30,9 @@ const PROVIDERS: AIProviderConfig[] = [
     modelId: 'gemini-3.1-flash-lite',
     apiKeyEnvVar: 'GEMINI_API_KEY',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
+    capabilities: {
+      audio: true,
+    },
   },
 ]
 
@@ -192,6 +198,66 @@ export async function generateStructuredOutput<T = any>(
       }
     } catch (err: any) {
       console.error(`[Orchestrator] ${provider.name} network error:`, err?.message)
+    }
+  }
+
+  return { success: false, error: 'No AI provider currently available' }
+}
+
+/**
+ * Process an audio input with an accompanying text prompt.
+ * Providers are checked for explicit audio capability before attempting
+ * the request. Provider failures fall through to the next capable provider.
+ */
+export async function processAudio(
+  env: any,
+  prompt: string,
+  audioBase64: string,
+  mimeType: string
+): Promise<OrchestratorResult<string>> {
+  for (const provider of PROVIDERS) {
+    if (!provider.capabilities.audio) continue
+
+    const apiKey = getApiKey(env, provider)
+    if (!apiKey) continue
+
+    try {
+      const url = buildGeminiUrl(provider, apiKey, 'generateContent')
+
+      const requestBody = {
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: mimeType, data: audioBase64 } },
+            ],
+          },
+        ],
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      })
+
+      const data = await response.json() as any
+
+      if (!response.ok) {
+        console.error(`[Orchestrator] ${provider.name} audio error (${response.status}):`, data?.error?.message)
+        continue
+      }
+
+      const text = extractGeminiText(data)
+      if (text === null) {
+        console.error(`[Orchestrator] ${provider.name} audio returned no text content`)
+        continue
+      }
+
+      return { success: true, data: text, providerUsed: provider.name }
+    } catch (err: any) {
+      console.error(`[Orchestrator] ${provider.name} audio network error:`, err?.message)
     }
   }
 
