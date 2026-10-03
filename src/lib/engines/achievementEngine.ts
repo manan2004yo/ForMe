@@ -43,9 +43,24 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     icon: '🔥',
     color: 'from-orange-400 to-red-500',
     evaluate: (ctx) => {
-      // Very basic streak logic: just check if they have at least 3 unique days logged
       const uniqueDates = new Set(ctx.foodLogs.map(l => l.date))
-      return uniqueDates.size >= 3
+      const sortedDates = Array.from(uniqueDates).sort()
+
+      for (let i = 2; i < sortedDates.length; i++) {
+        const first = new Date(`${sortedDates[i - 2]}T00:00:00`)
+        const second = new Date(`${sortedDates[i - 1]}T00:00:00`)
+        const third = new Date(`${sortedDates[i]}T00:00:00`)
+
+        const oneDay = 24 * 60 * 60 * 1000
+        if (
+          second.getTime() - first.getTime() === oneDay &&
+          third.getTime() - second.getTime() === oneDay
+        ) {
+          return true
+        }
+      }
+
+      return false
     }
   },
   {
@@ -64,12 +79,5 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     color: 'from-purple-400 to-fuchsia-500',
     evaluate: (ctx) => ctx.workoutLogs.length >= 5
   },
-  {
-    id: 'hydration_hero',
-    title: 'Hydration Hero',
-    description: 'Connect an integration or log enough data.',
-    icon: '💧',
-    color: 'from-cyan-400 to-blue-500',
-    evaluate: (ctx) => ctx.foodLogs.length >= 10 // placeholder logic for now
-  }
+
 ]
