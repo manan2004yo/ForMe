@@ -177,6 +177,17 @@ export function HomeDashboard() {
     ? Math.round((totals.calories / metrics.caloricTarget) * 100)
     : null
 
+  const readinessEvidence = {
+    sleep: todayRecoveryLog !== null,
+    fatigue: todayRecoveryLog !== null,
+    soreness: todayRecoveryLog !== null,
+    training: todaysWorkouts.length > 0,
+    nutrition: nutritionLogged,
+  }
+
+  const recoveryEvidenceCount = Object.values(readinessEvidence).filter(Boolean).length
+  const hasCompleteReadinessEvidence = recoveryEvidenceCount === Object.keys(readinessEvidence).length
+
   return (
     <PageTransition>
       <div className="space-y-6">
@@ -275,7 +286,14 @@ export function HomeDashboard() {
                   <p className="text-xs text-white/40">Today's recovery evidence</p>
                 </div>
               </div>
-              <span className="text-xs text-green-400 font-medium">Logged</span>
+              <span className={clsx(
+                "text-xs font-medium",
+                hasCompleteReadinessEvidence ? "text-green-400" : "text-white/40"
+              )}>
+                {hasCompleteReadinessEvidence
+                  ? "Evidence complete"
+                  : `${recoveryEvidenceCount}/5 signals`}
+              </span>
             </div>
 
             {todayRecoveryLog && (
@@ -317,6 +335,14 @@ export function HomeDashboard() {
                     )}
                   </div>
                 </div>
+              </div>
+
+              <div className="pt-1">
+                <p className="text-[11px] text-white/30">
+                  {hasCompleteReadinessEvidence
+                    ? "FORME has today's core recovery evidence."
+                    : "More evidence is needed before FORME can interpret readiness."}
+                </p>
               </div>
             )}
           </div>
