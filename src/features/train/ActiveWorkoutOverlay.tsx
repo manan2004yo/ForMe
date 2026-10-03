@@ -118,14 +118,14 @@ export function ActiveWorkoutOverlay() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 280 }}
-            className="fixed inset-0 z-50 bg-[#080808] flex flex-col"
+            className="fixed inset-0 z-50 bg-background flex flex-col"
             style={{
               paddingTop: 'env(safe-area-inset-top, 0px)',
               paddingBottom: 'env(safe-area-inset-bottom, 0px)',
             }}
           >
             {/* Compact workout header */}
-            <header className="shrink-0 px-4 pt-3 pb-3 border-b border-white/5 bg-[#080808]/95 backdrop-blur-xl">
+            <header className="shrink-0 px-4 pt-3 pb-3 border-b border-white/5 bg-background/95 backdrop-blur-xl">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.18em] text-accent/60 font-bold">
@@ -208,31 +208,29 @@ export function ActiveWorkoutOverlay() {
             {/* Session body */}
             <main className="flex-1 flex flex-col min-h-0 overflow-y-auto overscroll-contain">
               {session.exercises.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center px-5 py-6">
-                  <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.03] p-7 text-center">
-                    <div className="w-14 h-14 mx-auto rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
-                      <Dumbbell size={26} className="text-accent" />
-                    </div>
-                    <h2 className="text-lg font-heading font-bold text-white">
-                      Start your session
-                    </h2>
-                    <p className="text-sm text-white/40 mt-2 leading-relaxed">
-                      Add your first exercise. Your active session will persist if you lock your phone or leave the app.
-                    </p>
-                    <button
-                      onClick={() => setShowAddExercise(true)}
-                      className="w-full min-h-12 mt-6 rounded-2xl bg-accent text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.99] transition-all"
-                    >
-                      <Plus size={19} />
-                      Add first exercise
-                    </button>
-                    <button
-                      onClick={() => discardSession()}
-                      className="w-full min-h-12 mt-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 font-semibold text-sm active:scale-[0.99] transition-all"
-                    >
-                      Cancel & Exit
-                    </button>
+                <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
+                  <div className="w-16 h-16 rounded-3xl bg-accent/10 flex items-center justify-center mb-6">
+                    <Dumbbell size={32} className="text-accent" />
                   </div>
+                  <h2 className="text-2xl font-heading font-bold text-white mb-3">
+                    Start your session
+                  </h2>
+                  <p className="text-base text-white/50 text-center leading-relaxed mb-8 max-w-[280px]">
+                    Add your first exercise. Your active session will persist if you lock your phone or leave the app.
+                  </p>
+                  <button
+                    onClick={() => setShowAddExercise(true)}
+                    className="w-full max-w-[320px] min-h-14 rounded-2xl bg-accent text-black font-bold text-lg flex items-center justify-center gap-2 active:scale-[0.99] transition-all"
+                  >
+                    <Plus size={22} />
+                    Add first exercise
+                  </button>
+                  <button
+                    onClick={() => discardSession()}
+                    className="w-full max-w-[320px] min-h-14 mt-4 rounded-2xl bg-white/5 border border-white/10 text-white/70 font-semibold text-base active:scale-[0.99] transition-all"
+                  >
+                    Cancel & Exit
+                  </button>
                 </div>
               ) : activeExercise ? (
                 <AnimatePresence initial={false} custom={direction} mode="wait">
@@ -284,7 +282,7 @@ export function ActiveWorkoutOverlay() {
             <RestTimer />
 
             {/* Bottom session controls */}
-            <footer className="shrink-0 px-3 pt-2 pb-3 border-t border-white/5 bg-[#080808]/98 backdrop-blur-xl">
+            <footer className="shrink-0 px-3 pt-2 pb-3 border-t border-white/5 bg-background/98 backdrop-blur-xl">
               {session.exercises.length > 1 && (
                 <div className="flex items-center gap-2 mb-2">
                   <button
