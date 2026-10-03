@@ -48,6 +48,7 @@ export function ActiveWorkoutOverlay() {
     setCurrentExerciseIndex,
     addExercise,
     addSet,
+    undoLastAction,
   } = useWorkoutSessionStore()
 
   const { weightUnit, toggleWeightUnit } = useUserStore()
@@ -56,6 +57,7 @@ export function ActiveWorkoutOverlay() {
   const [showEndWorkout, setShowEndWorkout] = useState(false)
   const [pendingExerciseForPicker, setPendingExerciseForPicker] = useState<ExerciseEntry | null>(null)
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummaryData | null>(null)
+  const [showUndoConfirmation, setShowUndoConfirmation] = useState(false)
 
   const isPaused = session?.pausedAt !== null && session?.pausedAt !== undefined
   const timer = useElapsedTimer(isActive, isPaused)
@@ -71,6 +73,17 @@ export function ActiveWorkoutOverlay() {
     (total, exercise) => total + exercise.sets.length,
     0
   ) ?? 0
+
+  function handleUndo() {
+    const undone = undoLastAction()
+    if (!undone) return
+
+    setShowUndoConfirmation(true)
+
+    window.setTimeout(() => {
+      setShowUndoConfirmation(false)
+    }, 1800)
+  }
 
   return (
     <>
@@ -147,6 +160,15 @@ export function ActiveWorkoutOverlay() {
                       </button>
                     ))}
                   </div>
+
+                  <button
+                    onClick={handleUndo}
+                    aria-label="Undo last workout action"
+                    title="Undo last workout action"
+                    className="min-h-11 min-w-11 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-white/60 active:scale-95 transition-all"
+                  >
+                    <RotateCcw size={17} />
+                  </button>
 
                   <button
                     onClick={isPaused ? resumeSession : pauseSession}
@@ -252,13 +274,22 @@ export function ActiveWorkoutOverlay() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
                 <button
                   onClick={() => setShowAddExercise(true)}
                   className="flex-1 min-h-12 rounded-2xl bg-white/5 border border-white/10 text-white font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.99] transition-all"
                 >
                   <Plus size={18} />
                   Add Exercise
+                </button>
+
+                <button
+                  onClick={handleUndo}
+                  className="min-h-12 min-w-12 px-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 active:scale-[0.99] transition-all"
+                  aria-label="Undo last workout action"
+                  title="Undo last workout action"
+                >
+                  <RotateCcw size={18} />
                 </button>
 
                 <button
@@ -311,6 +342,26 @@ export function ActiveWorkoutOverlay() {
               onClose={() => setShowEndWorkout(false)}
               onFinish={(summary) => setWorkoutSummary(summary)}
             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showUndoConfirmation && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+            className="fixed left-1/2 bottom-28 z-[70] -translate-x-1/2"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-[#171717]/95 backdrop-blur-xl px-4 py-2.5 shadow-2xl">
+              <RotateCcw size={15} className="text-accent" />
+              <span className="text-sm font-semibold text-white">
+                Last action undone
+              </span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
