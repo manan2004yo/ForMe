@@ -188,6 +188,10 @@ export function HomeDashboard() {
   const recoveryEvidenceCount = Object.values(readinessEvidence).filter(Boolean).length
   const hasCompleteReadinessEvidence = recoveryEvidenceCount === Object.keys(readinessEvidence).length
 
+  const readinessState = hasCompleteReadinessEvidence
+    ? 'Evidence Complete'
+    : 'Insufficient Evidence'
+
   const readinessWhy = todayRecoveryLog
     ? `Sleep ${todayRecoveryLog.sleepHours}h · Fatigue ${todayRecoveryLog.fatigueLevel}/10 · Soreness ${todayRecoveryLog.sorenessLevel}/10`
     : 'Sleep, fatigue, and soreness have not been logged yet.'
@@ -198,7 +202,7 @@ export function HomeDashboard() {
       ? 'Log today’s workout if you trained so FORME has real training evidence.'
       : !readinessEvidence.nutrition
         ? 'Log today’s food so FORME has real nutrition evidence.'
-        : 'All five core signals are available. FORME has the evidence needed for the next readiness interpretation layer.'
+        : 'All five core signals are available. FORME can report an evidence-complete readiness state without inventing a score or formula.'
 
   return (
     <PageTransition>
