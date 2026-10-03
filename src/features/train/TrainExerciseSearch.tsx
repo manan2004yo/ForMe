@@ -112,7 +112,7 @@ export function TrainExerciseSearch({ dayIndex, onClose }: TrainExerciseSearchPr
           <div key={ex.id} className="bg-[#121212] border border-white/5 p-4 rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 shrink-0 rounded-xl overflow-hidden bg-white/5 border border-white/5 flex items-center justify-center">
-                <MuscleExerciseVisual canonicalId={ex.id} exerciseName={ex.name} />
+                <MuscleExerciseVisual canonicalId={ex.id} exerciseName={ex.name} isAnimating={quickAdd?.exerciseId === ex.id} />
               </div>
               <div>
                 <h3 className="text-white font-medium">{ex.name}</h3>

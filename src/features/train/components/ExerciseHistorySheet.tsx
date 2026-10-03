@@ -7,6 +7,7 @@ import { useUserStore, toDisplayWeight } from '@/store/userStore'
 import { format, parseISO } from 'date-fns'
 import clsx from 'clsx'
 import type { LoggedSet } from '@/types'
+import { MuscleExerciseVisual } from '../MuscleExerciseVisual'
 
 interface SessionHistory {
   date: string
@@ -97,11 +98,16 @@ export function ExerciseHistorySheet({
 
               {/* Header */}
               <div className="flex items-start justify-between px-5 py-3 shrink-0">
-                <div>
-                  <h2 className="text-lg font-bold text-white">{exerciseName}</h2>
-                  <p className="text-xs text-white/40 mt-0.5">
-                    {history.length} session{history.length !== 1 ? 's' : ''} in last 90 days
-                  </p>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-white/5 border border-white/5 flex items-center justify-center">
+                    <MuscleExerciseVisual canonicalId={exerciseId} exerciseName={exerciseName} isAnimating={true} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white leading-tight">{exerciseName}</h2>
+                    <p className="text-xs text-white/40 mt-1">
+                      {history.length} session{history.length !== 1 ? 's' : ''} in last 90 days
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={onClose}

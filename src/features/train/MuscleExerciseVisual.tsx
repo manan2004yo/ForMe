@@ -5,14 +5,20 @@ interface MuscleExerciseVisualProps {
   canonicalId: string;
   exerciseName?: string;
   className?: string;
+  isAnimating?: boolean;
 }
 
-export function MuscleExerciseVisual({ canonicalId, exerciseName, className }: MuscleExerciseVisualProps) {
+export function MuscleExerciseVisual({ canonicalId, exerciseName, className, isAnimating = true }: MuscleExerciseVisualProps) {
   const [frame, setFrame] = useState<number>(1);
 
   // We have exactly 3 frames: frame-1.svg, frame-2.svg, frame-3.svg
   // We'll cycle through them 1 -> 2 -> 3 -> 2 -> 1 to simulate a smooth rep
   useEffect(() => {
+    if (!isAnimating) {
+      setFrame(1);
+      return;
+    }
+
     let direction = 1;
     let currentFrame = 1;
 
@@ -31,7 +37,7 @@ export function MuscleExerciseVisual({ canonicalId, exerciseName, className }: M
     }, 400); // 400ms per frame = 1.6s per rep cycle
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isAnimating]);
 
   const imagePath = `/exercises/${canonicalId}/frame-${frame}.svg`;
 

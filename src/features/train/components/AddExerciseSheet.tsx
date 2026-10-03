@@ -106,7 +106,7 @@ export function AddExerciseSheet({ isOpen, onClose, onSelect }: AddExerciseSheet
                             className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-accent/5 border border-accent/10 hover:bg-accent/10 active:bg-accent/15 transition-all text-left"
                           >
                             <div className="w-14 h-14 shrink-0 rounded-xl overflow-hidden bg-white/5 border border-white/5 flex items-center justify-center">
-                              <MuscleExerciseVisual canonicalId={exercise.id} exerciseName={exercise.name} />
+                              <MuscleExerciseVisual canonicalId={exercise.id} exerciseName={exercise.name} isAnimating={false} />
                             </div>
 
                             <div className="min-w-0 flex-1">
@@ -134,7 +134,7 @@ export function AddExerciseSheet({ isOpen, onClose, onSelect }: AddExerciseSheet
                       className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 transition-all text-left"
                     >
                       <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-white/5 border border-white/5 flex items-center justify-center">
-                        <MuscleExerciseVisual canonicalId={exercise.id} exerciseName={exercise.name} />
+                        <MuscleExerciseVisual canonicalId={exercise.id} exerciseName={exercise.name} isAnimating={false} />
                       </div>
 
                       <div className="min-w-0 flex-1">
