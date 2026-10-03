@@ -42,6 +42,7 @@ export function startVybeListening(
       setError('No speech detected.')
       return
     }
+    useVybeStore.getState().setStage('transcribing')
     setProcessing(true)
     try {
       const response = await fetch('/api/parse-voice', {

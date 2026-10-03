@@ -3,7 +3,7 @@ import { Mic, X, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
 import { useEffect, useRef } from 'react';
-import { useFoodLogStore } from '@/store/foodLogStore';
+
 
 /**
  * Global VYBE overlay handling voice input, processing, and confirmation.
@@ -13,12 +13,13 @@ export function VYBEOverlay() {
   const {
     listening,
     processing,
+    stage,
     result,
     error,
     context,
-    setProcessing,
-    setResult,
     setError,
+    setStage,
+    markCompleted,
     reset,
   } = useVybeStore();
 
@@ -27,49 +28,51 @@ export function VYBEOverlay() {
 
   // Handle Confirm actions based on intent
   const handleConfirm = async () => {
-    if (!result) return;
-    if (result.intent === 'LOG_FOOD' && context?.mealSlot) {
-      const { useAuthStore } = await import('@/store/authStore');
-      const uid = useAuthStore.getState().user?.uid || 'demo';
-      const item = {
-        id: crypto.randomUUID(),
-        foodItemId: 'vybe',
-        foodName: result.foodName ?? 'Unknown',
-        quantity: result.quantity ?? 1,
-        unit: (result.unit ?? 'serving') as import('@/types').PortionUnit,
-        gramsConsumed: 0,
-        confidence: 'high' as const,
-        nutrition: {
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0,
-          fiber: 0,
-        },
-      };
-      await useFoodLogStore.getState().addFoodEntry(uid, context.mealSlot, [item]);
-    } else if (result.intent === 'LOG_WORKOUT') {
-      const { useWorkoutSessionStore } = await import('@/store/workoutSessionStore');
-      const ws = useWorkoutSessionStore.getState();
-      const session = ws.session;
-      if (session && session.exercises.length > ws.currentExerciseIndex) {
-        const exercise = session.exercises[ws.currentExerciseIndex];
-        // Add a set then update it with parsed values
-        ws.addSet(exercise.instanceId);
-        const setId = exercise.sets[exercise.sets.length - 1]?.setId;
-        if (setId) {
-          ws.updateSet(exercise.instanceId, setId, {
-            weightKg: result.weight,
-            reps: result.reps,
-          });
-          ws.completeSet(exercise.instanceId, setId);
-        }
-      }
-    }
-    reset();
-  };
+    if (!result) return
 
-  if (!listening && !processing && !result && !error) return null;
+    setStage('confirmation')
+
+    try {
+      if (result.intent === 'LOG_FOOD') {
+        throw new Error(
+          'Food nutrition is not resolved yet. VYBE will not log unknown nutrition as zero.'
+        )
+      }
+
+      if (result.intent === 'LOG_WORKOUT') {
+        const { useWorkoutSessionStore } = await import('@/store/workoutSessionStore')
+        const ws = useWorkoutSessionStore.getState()
+        const session = ws.session
+
+        if (!session || session.exercises.length <= ws.currentExerciseIndex) {
+          throw new Error('No active workout exercise is available for this voice action.')
+        }
+
+        const exercise = session.exercises[ws.currentExerciseIndex]
+        ws.addSet(exercise.instanceId)
+
+        const setId = exercise.sets[exercise.sets.length - 1]?.setId
+        if (!setId) {
+          throw new Error('Unable to create the workout set.')
+        }
+
+        ws.updateSet(exercise.instanceId, setId, {
+          weightKg: result.weight,
+          reps: result.reps,
+        })
+        ws.completeSet(exercise.instanceId, setId)
+
+        markCompleted()
+        return
+      }
+
+      throw new Error('This voice command is not actionable yet.')
+    } catch (error: any) {
+      setError(error?.message ?? 'The action could not be completed.')
+    }
+  }
+
+  if (stage === 'idle' && !error) return null;
 
   return (
     <AnimatePresence>
@@ -93,13 +96,16 @@ export function VYBEOverlay() {
             {error && (
               <p className="text-red-400 mb-4">{error}</p>
             )}
-            {processing && (
+            {(stage === 'transcribing' || stage === 'thinking') && (
               <div className="flex items-center gap-2">
                 <Loader2 className="animate-spin text-white" />
-                <span className="text-white">Processing…</span>
+                <span className="text-white">
+                  {stage === 'transcribing' ? 'Transcribing…' : 'Thinking…'}
+                </span>
               </div>
             )}
-            {listening && !processing && !result && !error && (
+
+            {stage === 'listening' && !error && (
               <div className="flex flex-col items-center gap-3">
                 <div className="w-16 h-16 flex items-center justify-center rounded-full bg-accent text-black animate-pulse">
                   <Mic size={32} />
@@ -107,8 +113,27 @@ export function VYBEOverlay() {
                 <p className="text-white">Listening… Speak now</p>
               </div>
             )}
-            {result && (
+
+            {stage === 'response' && !result && (
+              <div className="flex items-center gap-2">
+                <Loader2 className="animate-spin text-white" />
+                <span className="text-white">Preparing response…</span>
+              </div>
+            )}
+
+            {stage === 'completed' && (
+              <div className="flex flex-col items-center gap-2 py-4">
+                <Check size={32} className="text-accent" />
+                <p className="text-white font-medium">Completed</p>
+                <p className="text-white/60 text-sm">Your action was saved successfully.</p>
+              </div>
+            )}
+            {result && stage !== 'completed' && (
               <>
+                <div className="mb-3">
+                  <p className="text-xs uppercase tracking-wider text-white/40">Suggested action</p>
+                  <p className="text-white font-medium">Review before confirming</p>
+                </div>
                 {result.intent === 'LOG_FOOD' && !context?.mealSlot && (
                   <div className="space-y-2 mb-4">
                     <label className="text-white">Select Meal Slot:</label>
@@ -154,7 +179,7 @@ export function VYBEOverlay() {
                       onClick={handleConfirm}
                       className="px-4 py-2 bg-accent text-black rounded hover:bg-accent/90 transition"
                     >
-                      <Check size={16} className="inline mr-1" /> Confirm
+                      <Check size={16} className="inline mr-1" /> Confirm Action
                     </button>
                   </div>
                 </div>
