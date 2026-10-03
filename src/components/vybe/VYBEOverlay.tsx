@@ -128,7 +128,25 @@ export function VYBEOverlay() {
                 <p className="text-white/60 text-sm">Your action was saved successfully.</p>
               </div>
             )}
-            {result && stage !== 'completed' && (
+            {result && stage !== 'completed' && result.intent === 'UNKNOWN' ? (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center gap-4 text-center"
+              >
+                <p className="text-lg font-medium text-white">I didn't catch that</p>
+                <p className="text-sm text-white/60">
+                  Try saying what you want to log, such as a food or workout.
+                </p>
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="min-h-11 rounded-full bg-white/10 px-6 text-sm font-medium text-white transition-colors hover:bg-white/15"
+                >
+                  Try Again
+                </button>
+              </motion.div>
+            ) : result && stage !== 'completed' ? (
               <>
                 <div className="mb-3">
                   <p className="text-xs uppercase tracking-wider text-white/40">Suggested action</p>
@@ -184,7 +202,7 @@ export function VYBEOverlay() {
                   </div>
                 </div>
               </>
-            )}
+            ) : null}
           </div>
         </motion.div>
       )}
