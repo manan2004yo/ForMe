@@ -12,8 +12,9 @@ import { useFoodLogStore } from '@/store/foodLogStore'
 import { useCnsStore } from '@/store/cnsStore'
 import { AnimatePresence } from 'framer-motion'
 import { useEffect } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ActiveWorkoutOverlay } from '@/features/train/ActiveWorkoutOverlay'
+import { PostWorkoutSummary } from '@/features/train/components/PostWorkoutSummary'
 
 // Feature imports
 import { AppShell } from '@/components/layout/AppShell'
@@ -31,7 +32,6 @@ import { IntegrationsPage } from '@/features/profile/IntegrationsPage'
 import { ProfilePage } from '@/features/profile/ProfilePage'
 import { ProgressDashboard } from '@/features/progress/ProgressDashboard'
 import { TrainDashboard } from '@/features/train/TrainDashboard'
-import { useToastStore } from '@/store/toastStore'
 
 
 function AuthenticatedApp() {
@@ -113,6 +113,8 @@ function AuthenticatedApp() {
           <Route path="/eat" element={<EatDashboard />} />
           <Route path="/plan" element={<PlanDashboard />} />
           <Route path="/train" element={<TrainDashboard />} />
+          <Route path="/train/active" element={<ActiveWorkoutOverlay />} />
+          <Route path="/train/review" element={<PostWorkoutSummary />} />
           <Route path="/progress" element={<ProgressDashboard />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/integrations" element={<IntegrationsPage />} />
@@ -177,9 +179,8 @@ export default function App() {
       <BrowserRouter>
         <AppRoutes />
         <ToastContainer />
+        <VYBEOverlay />
       </BrowserRouter>
-      <ActiveWorkoutOverlay />
-      <VYBEOverlay />
     </>
   )
 }

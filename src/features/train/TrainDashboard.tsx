@@ -4,6 +4,7 @@
 // ============================================================
 
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Bookmark,
@@ -210,6 +211,7 @@ function DaySection({ dayIndex, isRestDay, exercises, isToday, onBrowse, onStart
 }
 
 export function TrainDashboard() {
+  const navigate = useNavigate()
   const { currentPlan, templates, loadTemplate, clearPlan, loadAll } = useTrainStore()
   const { user } = useAuthStore()
   const { workoutLogs } = useProgressStore()
@@ -258,15 +260,16 @@ export function TrainDashboard() {
 
   function startTodayWorkout() {
     if (!todayWorkout || todayWorkout.isRestDay || todayWorkout.exercises.length === 0) return
-
     useWorkoutSessionStore.getState().startSessionFromPlan(
       todayWorkout.dayLabel || DAY_NAMES[todayIndex],
       todayWorkout.exercises
     )
+    navigate('/train/active')
   }
 
   function startFreestyleWorkout() {
     useWorkoutSessionStore.getState().startSession('Freestyle Session')
+    navigate('/train/active')
   }
 
   return (
@@ -420,6 +423,7 @@ export function TrainDashboard() {
                       day.dayLabel || DAY_NAMES[day.dayIndex],
                       day.exercises
                     )
+                    navigate('/train/active')
                   }}
                 />
               ))}
