@@ -99,7 +99,7 @@ export function HomeDashboard() {
   const { user } = useAuthStore()
   const { profile, metrics, loadProfile } = useUserStore()
   const { todayTotals, loadLogs } = useFoodLogStore()
-  const { logs: cnsLogs, fetchLogs: loadCnsLogs } = useCnsStore()
+  const { getTodayLog, fetchLogs: loadCnsLogs } = useCnsStore()
   const [showMacroHistory, setShowMacroHistory] = useState(false)
   const [yesterdayCalories, setYesterdayCalories] = useState<number | null>(null)
 
@@ -152,7 +152,8 @@ export function HomeDashboard() {
   const proteinRemaining = metrics.proteinTarget - totals.protein
 
   const todayString = format(new Date(), 'yyyy-MM-dd')
-  const hasCheckedInToday = Object.values(cnsLogs).some(log => log.date === todayString)
+  const todayRecoveryLog = getTodayLog()
+  const hasCheckedInToday = todayRecoveryLog !== null
 
   return (
     <PageTransition>
@@ -239,13 +240,38 @@ export function HomeDashboard() {
           </button>
         </section>
 
-        {/* Daily Check-In */}
+        {/* Recovery Snapshot */}
         {!hasCheckedInToday ? (
           <DailyCheckInCard />
         ) : (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/3 border border-white/5 mb-6">
-            <div className="w-2 h-2 rounded-full bg-green-400" style={{ boxShadow: '0 0 6px #10B981' }} />
-            <p className="text-sm text-white/40 font-medium">Daily check-in complete</p>
+          <div className="bg-white/3 border border-white/5 rounded-2xl p-4 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-green-400" style={{ boxShadow: '0 0 6px #10B981' }} />
+                <div>
+                  <p className="text-sm font-semibold text-white">Recovery Snapshot</p>
+                  <p className="text-xs text-white/40">Today's real recovery signals</p>
+                </div>
+              </div>
+              <span className="text-xs text-green-400 font-medium">Logged</span>
+            </div>
+
+            {todayRecoveryLog && (
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl bg-white/5 px-3 py-3 text-center">
+                  <p className="text-[11px] text-white/40 mb-1">Sleep</p>
+                  <p className="text-sm font-semibold text-white">{todayRecoveryLog.sleepHours}h</p>
+                </div>
+                <div className="rounded-xl bg-white/5 px-3 py-3 text-center">
+                  <p className="text-[11px] text-white/40 mb-1">Fatigue</p>
+                  <p className="text-sm font-semibold text-white">{todayRecoveryLog.fatigueLevel}/10</p>
+                </div>
+                <div className="rounded-xl bg-white/5 px-3 py-3 text-center">
+                  <p className="text-[11px] text-white/40 mb-1">Soreness</p>
+                  <p className="text-sm font-semibold text-white">{todayRecoveryLog.sorenessLevel}/10</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
