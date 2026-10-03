@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Dumbbell,
-  Maximize2,
   Pause,
   Play,
   Plus,
@@ -13,14 +12,16 @@ import {
 } from 'lucide-react'
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore'
 import { useUserStore } from '@/store/userStore'
-import { ExerciseCard } from './components/ExerciseCard'
 import { AddExerciseSheet } from './components/AddExerciseSheet'
 import { EndWorkoutSheet } from './components/EndWorkoutSheet'
 import { RestTimer } from './components/RestTimer'
 import { SetCountPicker } from './components/SetCountPicker'
 import { PostWorkoutSummary, type WorkoutSummaryData } from './components/PostWorkoutSummary'
+import { SetTable } from './components/SetTable'
+import { MuscleExerciseVisual } from './MuscleExerciseVisual'
 import type { ExerciseEntry } from '@/lib/data/exerciseDatabase'
 import { VYBEMicButton } from '@/components/vybe/VYBEMicButton'
+import { usePreviousPerformance } from './hooks/usePreviousPerformance'
 import clsx from 'clsx'
 
 function useElapsedTimer(isActive: boolean, isPaused: boolean) {
@@ -31,7 +32,7 @@ function useElapsedTimer(isActive: boolean, isPaused: boolean) {
     if (!isActive || isPaused) return
     const id = setInterval(() => setElapsed(getElapsedSeconds()), 1000)
     return () => clearInterval(id)
-  }, [isActive, isPaused])
+  }, [isActive, isPaused, getElapsedSeconds])
 
   const m = Math.floor(elapsed / 60).toString().padStart(2, '0')
   const s = (elapsed % 60).toString().padStart(2, '0')
@@ -49,6 +50,7 @@ export function ActiveWorkoutOverlay() {
     addExercise,
     addSet,
     undoLastAction,
+    discardSession,
   } = useWorkoutSessionStore()
 
   const { weightUnit, toggleWeightUnit } = useUserStore()
@@ -58,6 +60,13 @@ export function ActiveWorkoutOverlay() {
   const [pendingExerciseForPicker, setPendingExerciseForPicker] = useState<ExerciseEntry | null>(null)
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummaryData | null>(null)
   const [showUndoConfirmation, setShowUndoConfirmation] = useState(false)
+
+  // Empty session discard persistence check
+  useEffect(() => {
+    if (isActive && session && session.exercises.length === 0) {
+      discardSession()
+    }
+  }, [isActive, session, discardSession])
 
   const isPaused = session?.pausedAt !== null && session?.pausedAt !== undefined
   const timer = useElapsedTimer(isActive, isPaused)
@@ -74,6 +83,8 @@ export function ActiveWorkoutOverlay() {
     0
   ) ?? 0
 
+  const previousPerformance = usePreviousPerformance(activeExercise?.exerciseId ?? '')
+
   function handleUndo() {
     const undone = undoLastAction()
     if (!undone) return
@@ -84,6 +95,22 @@ export function ActiveWorkoutOverlay() {
       setShowUndoConfirmation(false)
     }, 1800)
   }
+
+  // Handle slide directions
+  const slideVariants = {
+    initial: (dir: number) => ({ x: dir > 0 ? 100 : -100, opacity: 0 }),
+    animate: { x: 0, opacity: 1 },
+    exit: (dir: number) => ({ x: dir < 0 ? 100 : -100, opacity: 0 })
+  }
+  const [[page, direction], setPage] = useState([currentExerciseIndex, 0])
+  
+  useEffect(() => {
+    if (currentExerciseIndex > page) {
+      setPage([currentExerciseIndex, 1])
+    } else if (currentExerciseIndex < page) {
+      setPage([currentExerciseIndex, -1])
+    }
+  }, [currentExerciseIndex, page])
 
   return (
     <>
@@ -182,9 +209,9 @@ export function ActiveWorkoutOverlay() {
             </header>
 
             {/* Session body */}
-            <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3">
+            <main className="flex-1 flex flex-col min-h-0 overflow-y-auto overscroll-contain">
               {session.exercises.length === 0 ? (
-                <div className="min-h-full flex items-center justify-center px-5">
+                <div className="flex-1 flex items-center justify-center px-5 py-6">
                   <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.03] p-7 text-center">
                     <div className="w-14 h-14 mx-auto rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
                       <Dumbbell size={26} className="text-accent" />
@@ -202,40 +229,58 @@ export function ActiveWorkoutOverlay() {
                       <Plus size={19} />
                       Add first exercise
                     </button>
+                    <button
+                      onClick={() => discardSession()}
+                      className="w-full min-h-12 mt-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 font-semibold text-sm active:scale-[0.99] transition-all"
+                    >
+                      Cancel & Exit
+                    </button>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between px-1 mb-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-[11px] uppercase tracking-[0.16em] text-white/30 font-bold">
-                        Exercise
-                      </span>
-                      <span className="text-xs text-white/25">
-                        {currentExerciseIndex + 1} / {session.exercises.length}
-                      </span>
+              ) : activeExercise ? (
+                <AnimatePresence initial={false} custom={direction} mode="wait">
+                  <motion.div 
+                    key={activeExercise.instanceId}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="flex-1 flex flex-col min-h-0"
+                  >
+                    {/* Visual & Title */}
+                    <div className="relative pt-8 pb-6 px-4 shrink-0 flex flex-col items-center">
+                      <div className="w-full max-w-sm aspect-square max-h-[30vh] flex items-center justify-center relative">
+                        {/* Background glow */}
+                        <div className="absolute inset-0 bg-accent/5 rounded-full blur-3xl" />
+                        <MuscleExerciseVisual
+                          canonicalId={activeExercise.exerciseId}
+                          exerciseName={activeExercise.exerciseName}
+                          isAnimating={!isPaused}
+                          className="w-full h-full object-contain relative z-10"
+                        />
+                      </div>
+                      <div className="mt-6 text-center max-w-[85%]">
+                         <h2 className="text-2xl font-heading font-bold text-white leading-tight">
+                           {activeExercise.exerciseName}
+                         </h2>
+                         <p className="text-xs text-accent uppercase tracking-[0.2em] mt-2 font-bold">
+                           {activeExercise.primaryMuscle.replace('_', ' ')}
+                         </p>
+                      </div>
                     </div>
 
-                    {activeExercise && (
-                      <span className="text-xs text-white/30 truncate max-w-[48%]">
-                        {activeExercise.exerciseName}
-                      </span>
-                    )}
-                  </div>
-
-                  <AnimatePresence initial={false}>
-                    {session.exercises.map((exercise, index) => (
-                      <ExerciseCard
-                        key={exercise.instanceId}
-                        exercise={exercise}
-                        index={index}
-                        isActive={index === currentExerciseIndex}
-                        onClick={() => setCurrentExerciseIndex(index)}
+                    {/* Sets Table wrapped in scrollable container */}
+                    <div className="flex-1 bg-[#101010] rounded-t-[32px] border-t border-white/10 px-4 pt-6 pb-20 shadow-[0_-8px_30px_rgba(0,0,0,0.4)]">
+                      <SetTable 
+                        exercise={activeExercise} 
+                        previousPerformance={previousPerformance}
                       />
-                    ))}
-                  </AnimatePresence>
-                </>
-              )}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              ) : null}
             </main>
 
             {/* Existing real rest timer */}
@@ -281,15 +326,6 @@ export function ActiveWorkoutOverlay() {
                 >
                   <Plus size={18} />
                   Add Exercise
-                </button>
-
-                <button
-                  onClick={handleUndo}
-                  className="min-h-12 min-w-12 px-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 active:scale-[0.99] transition-all"
-                  aria-label="Undo last workout action"
-                  title="Undo last workout action"
-                >
-                  <RotateCcw size={18} />
                 </button>
 
                 <button
