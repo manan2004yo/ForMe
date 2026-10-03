@@ -1,92 +1,153 @@
 import { Mic, X } from 'lucide-react';
-import { useVybeStore, VybeContext, initRecognition, globalRecognition } from '@/store/vybeStore';
+import { useVybeStore, VybeContext, VybeState } from '@/store/vybeStore';
 import { clsx } from 'clsx';
 import React from 'react';
 
 // ─── Shared recognition startup logic ────────────────────────
 // Exported so call sites that have a direct user-gesture (e.g. AddFoodSheet)
-// can invoke recognition synchronously without indirection through DOM events,
-// which would break the browser's Speech API user-gesture requirement.
+// can invoke recognition synchronously without indirection through DOM events.
 
-export function startVybeListening(
+export async function startVybeListening(
   context: VybeContext | undefined,
-  store: {
-    startListening: (ctx?: VybeContext) => void
-    setProcessing: (p: boolean) => void
-    setResult: (r: import('@/store/vybeStore').VybeResult) => void
-    setError: (msg: string) => void
-    reset: () => void
-  }
+  store: Pick<VybeState, 'startListening' | 'setProcessing' | 'setResult' | 'setError' | 'reset'>
 ) {
   const { startListening, setProcessing, setResult, setError, reset } = store
 
-  const rec = initRecognition()
-  if (!rec) {
-    setError('Speech recognition not supported in this browser.')
+  if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+    setError('Voice recording is not supported on this browser.')
     return
   }
 
-  rec.onresult = null
-  rec.onerror = null
-  rec.onend = null
-  rec.onstart = null
-  rec.onaudiostart = null
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
 
-  rec.onstart = () => {}
-  rec.onaudiostart = () => {}
+    const preferredMimeTypes = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+    ]
+    const mimeType =
+      preferredMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || ''
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  rec.onresult = async (event: any) => {
-    const transcript = event.results[0][0].transcript.trim()
-    if (!transcript) {
-      setError('No speech detected.')
-      return
-    }
-    useVybeStore.getState().setStage('transcribing')
-    setProcessing(true)
-    try {
-      const response = await fetch('/api/parse-voice', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript }),
-      })
-      const text = await response.text()
-      if (!text) throw new Error('API returned an empty response.')
-      let data
-      try {
-        data = JSON.parse(text)
-      } catch {
-        throw new Error('API returned invalid data format.')
+    const recorder = mimeType
+      ? new MediaRecorder(stream, { mimeType })
+      : new MediaRecorder(stream)
+
+    const chunks: BlobPart[] = []
+
+    recorder.ondataavailable = event => {
+      if (event.data.size > 0) {
+        chunks.push(event.data)
       }
-      if (!response.ok) throw new Error(data.error ?? 'Parsing failed')
-      setResult(data)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message ?? 'Unexpected error')
     }
-  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  rec.onerror = (event: any) => {
-    if (event.error === 'not-allowed') {
+    recorder.onstop = async () => {
+      stream.getTracks().forEach(track => track.stop())
+
+      const audioBlob = new Blob(chunks, {
+        type: recorder.mimeType || mimeType || 'audio/webm',
+      })
+
+      if (audioBlob.size === 0) {
+        setError('No speech detected. Please try again.')
+        return
+      }
+
+      useVybeStore.getState().setStage('transcribing')
+      setProcessing(true)
+
+      try {
+        const audioBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            const result = reader.result
+            if (typeof result !== 'string') {
+              reject(new Error('Failed to read recorded audio.'))
+              return
+            }
+            const commaIndex = result.indexOf(',')
+            resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result)
+          }
+          reader.onerror = () => reject(new Error('Failed to read recorded audio.'))
+          reader.readAsDataURL(audioBlob)
+        })
+
+        const transcriptionResponse = await fetch('/api/transcribe-voice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            audioBase64,
+            mimeType: audioBlob.type || mimeType || 'audio/webm',
+          }),
+        })
+
+        const transcriptionText = await transcriptionResponse.text()
+        if (!transcriptionText) {
+          throw new Error('Transcription API returned an empty response.')
+        }
+
+        let transcriptionData: { transcript?: string; error?: string }
+        try {
+          transcriptionData = JSON.parse(transcriptionText)
+        } catch {
+          throw new Error('Transcription API returned invalid data format.')
+        }
+
+        if (!transcriptionResponse.ok) {
+          throw new Error(transcriptionData.error ?? 'Transcription failed.')
+        }
+
+        const transcript = transcriptionData.transcript?.trim()
+        if (!transcript) {
+          throw new Error('No speech detected. Please try again.')
+        }
+
+        useVybeStore.getState().setStage('thinking')
+
+        const parseResponse = await fetch('/api/parse-voice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript }),
+        })
+
+        const parseText = await parseResponse.text()
+        if (!parseText) {
+          throw new Error('Voice parser returned an empty response.')
+        }
+
+        let parseData
+        try {
+          parseData = JSON.parse(parseText)
+        } catch {
+          throw new Error('Voice parser returned invalid data format.')
+        }
+
+        if (!parseResponse.ok) {
+          throw new Error(parseData.error ?? 'Voice parsing failed.')
+        }
+
+        setResult(parseData)
+      } catch (error: any) {
+        setError(error?.message ?? 'Voice input failed. Please try again.')
+      } finally {
+        setProcessing(false)
+      }
+    }
+
+    recorder.onerror = () => {
+      stream.getTracks().forEach(track => track.stop())
+      setError('Voice recording failed. Please try again.')
+    }
+
+    startListening(context)
+    recorder.start()
+    ;(window as Window & { __formeVybeRecorder?: MediaRecorder }).__formeVybeRecorder = recorder
+  } catch (error: any) {
+    if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') {
       setError('Microphone access is blocked. Please allow microphone permissions in your browser settings.')
     } else {
-      setError(`Speech recognition error: ${event.error}`)
+      setError(error?.message ?? 'Failed to start microphone. Please try again.')
     }
-  }
-
-  rec.onend = () => {
-    const state = useVybeStore.getState()
-    if (!state.result && !state.processing && !state.error) {
-      reset()
-    }
-  }
-
-  try {
-    rec.start()
-    startListening(context)
-  } catch {
-    setError('Failed to start microphone. Please ensure permissions are granted.')
   }
 }
 
@@ -100,12 +161,17 @@ export function VYBEMicButton({ context }: { context?: VybeContext }) {
     e.stopPropagation()
 
     if (listening) {
-      if (globalRecognition) {
-        globalRecognition.stop()
+      const win = window as Window & { __formeVybeRecorder?: MediaRecorder }
+      if (win.__formeVybeRecorder) {
+        if (win.__formeVybeRecorder.state !== 'inactive') {
+          win.__formeVybeRecorder.stop()
+        }
+        win.__formeVybeRecorder = undefined
       }
       stopListening()
+      reset() // Reset explicitly clears out any error/result state when manual cancel is clicked
     } else {
-      startVybeListening(context, { startListening, setProcessing, setResult, setError, reset })
+      void startVybeListening(context, { startListening, setProcessing, setResult, setError, reset })
     }
   }
 

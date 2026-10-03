@@ -1,20 +1,6 @@
 import { create } from 'zustand';
 
-// Non-persisted global reference for the Speech API (browser requirement for sync start)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let globalRecognition: any = null;
-
-export const initRecognition = () => {
-  if (!globalRecognition && (('SpeechRecognition' in window) || ('webkitSpeechRecognition' in window))) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    globalRecognition = new SpeechRecognition();
-    globalRecognition.lang = 'en-US';
-    globalRecognition.interimResults = false;
-    globalRecognition.maxAlternatives = 1;
-  }
-  return globalRecognition;
-};
+// Speech API logic removed in favor of MediaRecorder flow.
 
 // Types for VYBE parsing results
 export type VybeIntent = 'LOG_FOOD' | 'LOG_WORKOUT' | 'UNKNOWN';
