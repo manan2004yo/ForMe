@@ -188,6 +188,18 @@ export function HomeDashboard() {
   const recoveryEvidenceCount = Object.values(readinessEvidence).filter(Boolean).length
   const hasCompleteReadinessEvidence = recoveryEvidenceCount === Object.keys(readinessEvidence).length
 
+  const readinessWhy = todayRecoveryLog
+    ? `Sleep ${todayRecoveryLog.sleepHours}h · Fatigue ${todayRecoveryLog.fatigueLevel}/10 · Soreness ${todayRecoveryLog.sorenessLevel}/10`
+    : 'Sleep, fatigue, and soreness have not been logged yet.'
+
+  const readinessAction = !todayRecoveryLog
+    ? 'Complete today’s recovery check-in so FORME can use your sleep, fatigue, and soreness.'
+    : !readinessEvidence.training
+      ? 'Log today’s workout if you trained so FORME has real training evidence.'
+      : !readinessEvidence.nutrition
+        ? 'Log today’s food so FORME has real nutrition evidence.'
+        : 'All five core signals are available. FORME has the evidence needed for the next readiness interpretation layer.'
+
   return (
     <PageTransition>
       <div className="space-y-6">
@@ -283,7 +295,7 @@ export function HomeDashboard() {
                 <div className="w-2 h-2 rounded-full bg-green-400" style={{ boxShadow: '0 0 6px #10B981' }} />
                 <div>
                   <p className="text-sm font-semibold text-white">Recovery Snapshot</p>
-                  <p className="text-xs text-white/40">Today's recovery evidence</p>
+                  <p className="text-xs text-white/40">Today's recovery evidence · interpretation stays separate</p>
                 </div>
               </div>
               <span className={clsx(
@@ -338,13 +350,17 @@ export function HomeDashboard() {
                 </div>
               </div>
 
-              <div className="pt-1">
-                <p className="text-[11px] text-white/30">
-                  {hasCompleteReadinessEvidence
-                    ? "FORME has today's core recovery evidence."
-                    : "More evidence is needed before FORME can interpret readiness."}
-                </p>
+              <div className="pt-2 border-t border-white/5 space-y-3">
+                <div>
+                  <p className="text-[11px] text-white/30 uppercase tracking-wider mb-1">Why</p>
+                  <p className="text-xs text-white/60 leading-relaxed">{readinessWhy}</p>
                 </div>
+
+                <div>
+                  <p className="text-[11px] text-white/30 uppercase tracking-wider mb-1">What to do</p>
+                  <p className="text-xs text-white/60 leading-relaxed">{readinessAction}</p>
+                </div>
+              </div>
               </>
             )}
           </div>
