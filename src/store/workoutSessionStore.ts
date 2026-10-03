@@ -91,6 +91,20 @@ interface WorkoutSessionState {
   session: WorkoutSession | null
   isActive: boolean
 
+  /**
+   * Snapshot of the session immediately before the latest reversible
+   * workout-state mutation. One-level undo is intentional: each new
+   * mutation replaces this snapshot.
+   */
+  previousSession: WorkoutSession | null
+
+  /**
+   * Reverts the latest reversible workout-state mutation exactly.
+   * Returns true when something was undone and false when there is
+   * nothing to undo.
+   */
+  undoLastAction: () => boolean
+
   // ── Session lifecycle ──
   startSession: (label?: string) => void
   startSessionFromPlan: (label: string, plannedExercises: PlannedExercise[]) => void
@@ -194,6 +208,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
     (set, get) => ({
       session: null,
       isActive: false,
+      previousSession: null,
       restTimer: null,
       currentExerciseIndex: 0,
       pendingSetCount: null,
@@ -202,6 +217,18 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
       setCurrentExerciseIndex: (index) => set({ currentExerciseIndex: index }),
       setPendingSetCount: (count) => set({ pendingSetCount: count }),
       setPendingExercise: (exercise) => set({ pendingExercise: exercise }),
+
+      undoLastAction: () => {
+        const { session, previousSession } = get()
+        if (!session || !previousSession) return false
+
+        set({
+          session: previousSession,
+          previousSession: null,
+        })
+
+        return true
+      },
 
       // ── Session lifecycle ────────────────────────────────────
 
@@ -214,7 +241,12 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
           label,
           exercises: [],
         }
-        set({ session, isActive: true, currentExerciseIndex: 0 })
+        set({
+          session,
+          isActive: true,
+          previousSession: null,
+          currentExerciseIndex: 0,
+        })
         requestWakeLock()
       },
 
@@ -227,7 +259,12 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
           label,
           exercises: [],
         }
-        set({ session, isActive: true, currentExerciseIndex: 0 })
+        set({
+          session,
+          isActive: true,
+          previousSession: null,
+          currentExerciseIndex: 0,
+        })
         requestWakeLock()
 
         // Add each planned exercise with its planned sets
@@ -326,12 +363,20 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
         }
 
         // Clear session state
-        set({ session: null, isActive: false })
+        set({
+          session: null,
+          isActive: false,
+          previousSession: null,
+        })
       },
 
       discardSession: () => {
         releaseWakeLock()
-        set({ session: null, isActive: false })
+        set({
+          session: null,
+          isActive: false,
+          previousSession: null,
+        })
       },
 
       // ── Exercise management ──────────────────────────────────
@@ -353,6 +398,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
 
         const newExercises = [...session.exercises, activeExercise]
         set({
+          previousSession: session,
           session: { ...session, exercises: newExercises },
           currentExerciseIndex: newExercises.length - 1,
         })
@@ -365,6 +411,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
         const { session } = get()
         if (!session) return
         set({
+          previousSession: session,
           session: {
             ...session,
             exercises: session.exercises.filter(e => e.instanceId !== instanceId),
@@ -378,7 +425,10 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
         const exercises = [...session.exercises]
         const [moved] = exercises.splice(fromIndex, 1)
         exercises.splice(toIndex, 0, moved)
-        set({ session: { ...session, exercises } })
+        set({
+          previousSession: session,
+          session: { ...session, exercises },
+        })
       },
 
       // ── Set management ───────────────────────────────────────
@@ -401,6 +451,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
         }
 
         set({
+          previousSession: session,
           session: {
             ...session,
             exercises: session.exercises.map(e =>
@@ -416,6 +467,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
         const { session } = get()
         if (!session) return
         set({
+          previousSession: session,
           session: {
             ...session,
             exercises: session.exercises.map(e =>
@@ -436,6 +488,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
         const { session } = get()
         if (!session) return
         set({
+          previousSession: session,
           session: {
             ...session,
             exercises: session.exercises.map(e =>
@@ -497,6 +550,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
         const { session } = get()
         if (!session) return
         set({
+          previousSession: session,
           session: {
             ...session,
             exercises: session.exercises.map(e =>
@@ -512,6 +566,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
         const { session } = get()
         if (!session) return
         set({
+          previousSession: session,
           session: {
             ...session,
             exercises: session.exercises.map(e => {
@@ -580,12 +635,16 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
     }),
     {
       name: 'forme-workout-session',
-      // Only persist the session data and isActive flag.
       // Wake lock state is module-level and not serialisable.
       // restTimer intentionally excluded — stale timers must not resume.
       partialize: (state) => ({
         session: state.session,
         isActive: state.isActive,
+        previousSession: state.previousSession,
+        restTimer: state.restTimer,
+        currentExerciseIndex: state.currentExerciseIndex,
+        pendingSetCount: state.pendingSetCount,
+        pendingExercise: state.pendingExercise,
       }),
     }
   )
