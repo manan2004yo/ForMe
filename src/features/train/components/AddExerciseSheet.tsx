@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Search } from 'lucide-react'
+import { Dumbbell, X, Search } from 'lucide-react'
 import { useTrainStore } from '@/store/trainStore'
-import { getExerciseById } from '@/lib/data/exerciseSearch'
+import { enrichExerciseWithMedia, getExerciseById } from '@/lib/data/exerciseSearch'
 import type { ExerciseEntry } from '@/lib/data/exerciseDatabase'
 
 interface AddExerciseSheetProps {
@@ -15,14 +15,82 @@ export function AddExerciseSheet({ isOpen, onClose, onSelect }: AddExerciseSheet
   const { searchExercises, recentExerciseIds, customExercises } = useTrainStore()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<ExerciseEntry[]>([])
+  const [mediaByExerciseId, setMediaByExerciseId] = useState<Record<string, string>>({})
+  const [mediaAttemptedIds, setMediaAttemptedIds] = useState<Set<string>>(new Set())
 
-  const recentExercises = recentExerciseIds
-    .map(id => getExerciseById(id, customExercises))
-    .filter(Boolean) as ExerciseEntry[]
+  const recentExercises = useMemo(
+    () => recentExerciseIds
+      .map(id => getExerciseById(id, customExercises))
+      .filter(Boolean) as ExerciseEntry[],
+    [recentExerciseIds, customExercises]
+  )
 
   useEffect(() => {
     setResults(searchExercises(query))
   }, [query])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const visibleExercises = [
+      ...recentExercises.slice(0, 5),
+      ...results.slice(0, 40),
+    ]
+
+    const uniqueExercises = visibleExercises.filter(
+      (exercise, index, all) =>
+        all.findIndex(candidate => candidate.id === exercise.id) === index
+    )
+
+    const unresolvedExercises = uniqueExercises.filter(
+      exercise =>
+        !exercise.gifUrl &&
+        !mediaByExerciseId[exercise.id] &&
+        !mediaAttemptedIds.has(exercise.id)
+    )
+
+    if (unresolvedExercises.length === 0) return
+
+    setMediaAttemptedIds(previous => {
+      const next = new Set(previous)
+      unresolvedExercises.forEach(exercise => next.add(exercise.id))
+      return next
+    })
+
+    async function enrichVisibleExercises() {
+      const enriched = await Promise.all(
+        unresolvedExercises.map(async exercise => ({
+          id: exercise.id,
+          result: await enrichExerciseWithMedia(exercise),
+        }))
+      )
+
+      if (cancelled) return
+
+      setMediaByExerciseId(previous => {
+        const next = { ...previous }
+
+        enriched.forEach(({ id, result }) => {
+          if (result.gifUrl) {
+            next[id] = result.gifUrl
+          }
+        })
+
+        return next
+      })
+    }
+
+    void enrichVisibleExercises()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    recentExercises,
+    results,
+    mediaByExerciseId,
+    mediaAttemptedIds,
+  ])
 
   function handleSelect(exercise: ExerciseEntry) {
     onSelect(exercise)
@@ -91,44 +159,83 @@ export function AddExerciseSheet({ isOpen, onClose, onSelect }: AddExerciseSheet
                       Recent
                     </p>
                     <div className="space-y-1">
-                      {recentExercises.slice(0, 5).map(exercise => (
-                        <button
-                          key={exercise.id}
-                          onClick={() => handleSelect(exercise)}
-                          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-accent/5 border border-accent/10 hover:bg-accent/10 active:bg-accent/15 transition-all text-left"
-                        >
-                          <div>
-                            <p className="text-sm font-semibold text-white">{exercise.name}</p>
-                            <p className="text-xs text-white/40 capitalize mt-0.5">
-                              {exercise.primaryMuscle.replace('_', ' ')} · {exercise.type}
-                            </p>
-                          </div>
-                          <span className="text-[10px] text-accent/50 font-medium ml-2 shrink-0">
-                            Recent
-                          </span>
-                        </button>
-                      ))}
+                      {recentExercises.slice(0, 5).map(exercise => {
+                        const gifUrl = exercise.gifUrl ?? mediaByExerciseId[exercise.id]
+
+                        return (
+                          <button
+                            key={exercise.id}
+                            onClick={() => handleSelect(exercise)}
+                            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-accent/5 border border-accent/10 hover:bg-accent/10 active:bg-accent/15 transition-all text-left"
+                          >
+                            <div className="w-14 h-14 shrink-0 rounded-xl overflow-hidden bg-white/5 border border-white/5 flex items-center justify-center">
+                              {gifUrl ? (
+                                <img
+                                  src={gifUrl}
+                                  alt={`${exercise.name} exercise demonstration`}
+                                  loading="lazy"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <Dumbbell size={19} className="text-white/20" />
+                              )}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-white truncate">
+                                {exercise.name}
+                              </p>
+                              <p className="text-xs text-white/40 capitalize mt-0.5">
+                                {exercise.primaryMuscle.replace('_', ' ')} · {exercise.type}
+                              </p>
+                            </div>
+
+                            <span className="text-[10px] text-accent/50 font-medium ml-2 shrink-0">
+                              Recent
+                            </span>
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
 
-                {results.slice(0, 40).map(exercise => (
-                  <button
-                    key={exercise.id}
-                    onClick={() => handleSelect(exercise)}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 transition-all text-left"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-white">{exercise.name}</p>
-                      <p className="text-xs text-white/40 capitalize mt-0.5">
-                        {exercise.primaryMuscle.replace('_', ' ')} · {exercise.type}
-                      </p>
-                    </div>
-                    <span className="text-xs text-white/20 font-medium ml-2 shrink-0 capitalize">
-                      {exercise.equipment[0]?.replace('_', ' ') ?? 'bodyweight'}
-                    </span>
-                  </button>
-                ))}
+                {results.slice(0, 40).map(exercise => {
+                  const gifUrl = exercise.gifUrl ?? mediaByExerciseId[exercise.id]
+
+                  return (
+                    <button
+                      key={exercise.id}
+                      onClick={() => handleSelect(exercise)}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 transition-all text-left"
+                    >
+                      <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-white/5 border border-white/5 flex items-center justify-center">
+                        {gifUrl ? (
+                          <img
+                            src={gifUrl}
+                            alt={`${exercise.name} exercise demonstration`}
+                            loading="lazy"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Dumbbell size={21} className="text-white/20" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-white truncate">
+                          {exercise.name}
+                        </p>
+                        <p className="text-xs text-white/40 capitalize mt-0.5">
+                          {exercise.primaryMuscle.replace('_', ' ')} · {exercise.type}
+                        </p>
+                        <p className="text-[11px] text-white/25 font-medium mt-1 truncate capitalize">
+                          {exercise.equipment[0]?.replace('_', ' ') ?? 'bodyweight'}
+                        </p>
+                      </div>
+                    </button>
+                  )
+                })}
 
                 {results.length === 0 && query.length > 0 && (
                   <div className="text-center py-12">

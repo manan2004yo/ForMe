@@ -1,6 +1,169 @@
 import { v4 as uuidv4 } from 'uuid'
 import { EXERCISE_DATABASE, type ExerciseEntry } from './exerciseDatabase'
 
+interface ExerciseDbRecord {
+  id?: string | number
+  name?: string
+  gifUrl?: string
+  gifURL?: string
+  imageUrl?: string
+}
+
+interface ExerciseDbMedia {
+  exerciseDbId: string
+  gifUrl: string
+}
+
+const EXERCISE_DB_V1_ENDPOINT = 'https://www.exercisedb.dev/api/v1/exercises'
+const exerciseDbMediaCache = new Map<string, ExerciseDbMedia | null>()
+let exerciseDbRequest: Promise<ExerciseDbRecord[]> | null = null
+
+function normalizeExerciseName(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+function buildExerciseMatchKeys(exercise: ExerciseEntry): string[] {
+  return [exercise.name, ...exercise.aliases]
+    .map(normalizeExerciseName)
+    .filter(Boolean)
+}
+
+async function loadExerciseDbRecords(): Promise<ExerciseDbRecord[]> {
+  if (exerciseDbRequest) return exerciseDbRequest
+
+  exerciseDbRequest = fetch(EXERCISE_DB_V1_ENDPOINT, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  })
+    .then(async response => {
+      if (!response.ok) {
+        throw new Error(`ExerciseDB request failed: ${response.status}`)
+      }
+
+      const payload: unknown = await response.json()
+
+      if (Array.isArray(payload)) {
+        return payload as ExerciseDbRecord[]
+      }
+
+      if (
+        typeof payload === 'object' &&
+        payload !== null &&
+        'data' in payload &&
+        Array.isArray((payload as { data?: unknown }).data)
+      ) {
+        return (payload as { data: ExerciseDbRecord[] }).data
+      }
+
+      return []
+    })
+    .catch(error => {
+      exerciseDbRequest = null
+      throw error
+    })
+
+  return exerciseDbRequest
+}
+
+function findExerciseDbMatch(
+  exercise: ExerciseEntry,
+  records: ExerciseDbRecord[]
+): ExerciseDbMedia | null {
+  const keys = buildExerciseMatchKeys(exercise)
+
+  let best: ExerciseDbRecord | null = null
+  let bestScore = 0
+
+  for (const record of records) {
+    if (!record.name) continue
+
+    const providerName = normalizeExerciseName(record.name)
+    if (!providerName) continue
+
+    let score = 0
+
+    if (keys.includes(providerName)) {
+      score = 100
+    } else if (
+      keys.some(key =>
+        providerName.includes(key) || key.includes(providerName)
+      )
+    ) {
+      score = 70
+    } else {
+      const providerTokens = new Set(providerName.split(' '))
+      const matchedTokenCount = keys
+        .flatMap(key => key.split(' '))
+        .filter(token => token.length >= 3 && providerTokens.has(token))
+        .length
+
+      if (matchedTokenCount >= 2) score = 45
+    }
+
+    if (score > bestScore) {
+      best = record
+      bestScore = score
+    }
+  }
+
+  if (!best || bestScore < 45) return null
+
+  const gifUrl =
+    (typeof best.gifUrl === 'string' && best.gifUrl) ||
+    (typeof best.gifURL === 'string' && best.gifURL) ||
+    (typeof best.imageUrl === 'string' && best.imageUrl) ||
+    ''
+
+  const exerciseDbId =
+    best.id === undefined || best.id === null
+      ? ''
+      : String(best.id)
+
+  if (!gifUrl || !exerciseDbId) return null
+
+  return {
+    exerciseDbId,
+    gifUrl,
+  }
+}
+
+export async function getExerciseDbMedia(
+  exercise: ExerciseEntry
+): Promise<ExerciseDbMedia | null> {
+  if (exerciseDbMediaCache.has(exercise.id)) {
+    return exerciseDbMediaCache.get(exercise.id) ?? null
+  }
+
+  try {
+    const records = await loadExerciseDbRecords()
+    const media = findExerciseDbMatch(exercise, records)
+    exerciseDbMediaCache.set(exercise.id, media)
+    return media
+  } catch {
+    exerciseDbMediaCache.set(exercise.id, null)
+    return null
+  }
+}
+
+export async function enrichExerciseWithMedia(
+  exercise: ExerciseEntry
+): Promise<ExerciseEntry> {
+  const media = await getExerciseDbMedia(exercise)
+
+  if (!media) return exercise
+
+  return {
+    ...exercise,
+    exerciseDbId: media.exerciseDbId,
+    gifUrl: media.gifUrl,
+  }
+}
+
 /**
  * Merges the canonical database with the user's custom exercises.
  * Custom exercises always take priority on ID collision.
