@@ -13,10 +13,6 @@ export interface ExerciseEntry {
   defaultRestSeconds: number
   instructions?: string[]
   tips?: string[]
-
-  /** Optional ExerciseDB media enrichment. Canonical identity remains `id`. */
-  exerciseDbId?: string
-  gifUrl?: string
 }
 
 export const EXERCISE_DATABASE: ExerciseEntry[] = [

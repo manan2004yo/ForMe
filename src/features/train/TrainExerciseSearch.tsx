@@ -4,6 +4,7 @@
 
 import { EXERCISE_DATABASE, type ExerciseEntry } from '@/lib/data/exerciseDatabase'
 import { useTrainStore } from '@/store/trainStore'
+import { MuscleExerciseVisual } from './MuscleExerciseVisual'
 import { Plus, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -109,9 +110,14 @@ export function TrainExerciseSearch({ dayIndex, onClose }: TrainExerciseSearchPr
       <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-32">
         {filteredExercises.map((ex: ExerciseEntry) => (
           <div key={ex.id} className="bg-[#121212] border border-white/5 p-4 rounded-xl flex items-center justify-between">
-            <div>
-              <h3 className="text-white font-medium">{ex.name}</h3>
-              <p className="text-xs text-white/50 capitalize">{ex.primaryMuscle.replace('_', ' ')} • {ex.equipment.join(', ')}</p>
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 shrink-0 rounded-xl overflow-hidden bg-white/5 border border-white/5 flex items-center justify-center">
+                <MuscleExerciseVisual canonicalId={ex.id} exerciseName={ex.name} />
+              </div>
+              <div>
+                <h3 className="text-white font-medium">{ex.name}</h3>
+                <p className="text-xs text-white/50 capitalize">{ex.primaryMuscle.replace('_', ' ')} • {ex.equipment.join(', ')}</p>
+              </div>
             </div>
 
             {quickAdd?.exerciseId === ex.id ? (
