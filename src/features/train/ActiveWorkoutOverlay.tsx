@@ -62,11 +62,8 @@ export function ActiveWorkoutOverlay() {
   const [showUndoConfirmation, setShowUndoConfirmation] = useState(false)
 
   // Empty session discard persistence check
-  useEffect(() => {
-    if (isActive && session && session.exercises.length === 0) {
-      discardSession()
-    }
-  }, [isActive, session, discardSession])
+  // (Removed: This was instantly deleting new empty sessions on mount, breaking the "Train now" buttons.
+  // The correct fix is handled in the workoutSessionStore's partialize function so they don't persist on reload.)
 
   const isPaused = session?.pausedAt !== null && session?.pausedAt !== undefined
   const timer = useElapsedTimer(isActive, isPaused)

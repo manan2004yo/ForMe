@@ -636,16 +636,18 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
     {
       name: 'forme-workout-session',
       // Wake lock state is module-level and not serialisable.
-      // restTimer intentionally excluded — stale timers must not resume.
-      partialize: (state) => ({
-        session: state.session,
-        isActive: state.isActive,
-        previousSession: state.previousSession,
-        restTimer: state.restTimer,
-        currentExerciseIndex: state.currentExerciseIndex,
-        pendingSetCount: state.pendingSetCount,
-        pendingExercise: state.pendingExercise,
-      }),
+      partialize: (state) => {
+        const hasExercises = state.session && state.session.exercises.length > 0
+        return {
+          session: hasExercises ? state.session : null,
+          isActive: hasExercises ? state.isActive : false,
+          previousSession: state.previousSession,
+          restTimer: state.restTimer,
+          currentExerciseIndex: state.currentExerciseIndex,
+          pendingSetCount: state.pendingSetCount,
+          pendingExercise: state.pendingExercise,
+        }
+      },
     }
   )
 )
