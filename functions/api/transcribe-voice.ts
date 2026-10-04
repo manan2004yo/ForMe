@@ -28,15 +28,15 @@ export async function onRequestPost(context: any) {
 
     const allowedMimeTypes = new Set([
       'audio/webm',
-      'audio/webm;codecs=opus',
       'audio/mp4',
       'audio/mpeg',
       'audio/wav',
       'audio/ogg',
-      'audio/ogg;codecs=opus',
     ])
 
-    if (!allowedMimeTypes.has(mimeType)) {
+    const baseMimeType = mimeType.split(';')[0].trim()
+
+    if (!allowedMimeTypes.has(baseMimeType)) {
       return new Response(JSON.stringify({ error: 'Unsupported audio format' }), {
         status: 415,
         headers: { 'Content-Type': 'application/json' },

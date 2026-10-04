@@ -22,9 +22,10 @@ export async function startVybeListening(
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
 
     const preferredMimeTypes = [
+      'audio/mp4',
+      'audio/mp4;codecs="mp4a.40.2"',
       'audio/webm;codecs=opus',
       'audio/webm',
-      'audio/mp4',
     ]
     const mimeType =
       preferredMimeTypes.find(type => MediaRecorder.isTypeSupported(type)) || ''
@@ -32,6 +33,8 @@ export async function startVybeListening(
     const recorder = mimeType
       ? new MediaRecorder(stream, { mimeType })
       : new MediaRecorder(stream)
+
+    const actualMimeType = recorder.mimeType || mimeType || ''
 
     const chunks: BlobPart[] = []
 
@@ -45,11 +48,11 @@ export async function startVybeListening(
       stream.getTracks().forEach(track => track.stop())
 
       const audioBlob = new Blob(chunks, {
-        type: recorder.mimeType || mimeType || 'audio/webm',
+        type: actualMimeType,
       })
 
       if (audioBlob.size === 0) {
-        setError('No speech detected. Please try again.')
+        setError('No audio captured. Please try again.')
         return
       }
 
@@ -77,7 +80,7 @@ export async function startVybeListening(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             audioBase64,
-            mimeType: audioBlob.type || mimeType || 'audio/webm',
+            mimeType: actualMimeType,
           }),
         })
 
@@ -169,7 +172,7 @@ export function VYBEMicButton({ context }: { context?: VybeContext }) {
         win.__formeVybeRecorder = undefined
       }
       stopListening()
-      reset() // Reset explicitly clears out any error/result state when manual cancel is clicked
+      // reset() is intentionally omitted here to preserve context for the async onstop handler.
     } else {
       void startVybeListening(context, { startListening, setProcessing, setResult, setError, reset })
     }
