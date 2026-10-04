@@ -312,7 +312,7 @@ export function PostWorkoutSummary() {
     }
   }, [isActive, session, savedSummary, navigate])
 
-  if (!session && !savedSummary) return null
+  if (!session && !savedSummary) return <div className="min-h-dvh bg-bg" aria-hidden="true" />
 
   async function handleSave() {
     if (isSaving) return

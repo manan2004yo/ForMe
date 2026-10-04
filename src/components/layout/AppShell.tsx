@@ -22,6 +22,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
   const { isIncognito } = useUserStore()
 
+  const isWorkoutRoute = location.pathname === '/train/active' || location.pathname === '/train/review'
+
+  if (isWorkoutRoute) {
+    return (
+      <div className="flex flex-col min-h-dvh bg-bg text-white selection:bg-accent/30 selection:text-white">
+        {isIncognito && (
+          <div className="bg-red-500/20 border-b border-red-500/30 px-4 py-2 flex items-center justify-center gap-2 text-red-400 z-50 sticky top-0">
+            <ShieldAlert size={16} />
+            <span className="text-xs font-semibold tracking-wide uppercase">Incognito Mode Active — Data syncing paused</span>
+          </div>
+        )}
+        {children}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-[#0a0a0a] text-white selection:bg-accent/30 selection:text-white">
       {isIncognito && (

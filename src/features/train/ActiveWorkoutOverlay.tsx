@@ -136,7 +136,7 @@ export function ActiveWorkoutOverlay() {
   }, [isActive, session, navigate])
 
   if (!isActive || !session) {
-    return null
+    return <div className="min-h-dvh bg-bg" aria-hidden="true" />
   }
 
   const hasPrevious = currentExerciseIndex > 0
