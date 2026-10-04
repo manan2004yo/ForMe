@@ -241,28 +241,34 @@ export function VYBEOverlay() {
               </motion.div>
             )}
 
-            {/* Suggested action — LOG_FOOD (feature parked, nutrition unresolved) */}
+            {/* Suggested action — LOG_FOOD */}
             {result && stage === 'suggested_action' && result.intent === 'LOG_FOOD' && (
-              <div className="flex flex-col gap-3">
-                <div className="mb-1">
-                  <p className="text-xs uppercase tracking-wider text-white/40">Detected: Food</p>
-                  <p className="text-white font-medium">{result.foodName}</p>
-                  {result.quantity != null && (
-                    <p className="text-white/60 text-sm">{result.quantity} {result.unit}</p>
-                  )}
+              <>
+                <div className="mb-3">
+                  <p className="text-xs uppercase tracking-wider text-white/40">Suggested action</p>
+                  <p className="text-white font-medium">Review before confirming</p>
                 </div>
-                <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3">
-                  <p className="text-amber-400 text-sm">
-                    Voice food logging is coming soon. To log this food, search or scan it instead so nutrition can be confirmed.
+                <div className="space-y-3">
+                  <p className="text-white">Food: <span className="font-medium">{result.foodName}</span></p>
+                  <p className="text-white">
+                    {result.quantity != null && <>Quantity: {result.quantity} {result.unit}</>}
                   </p>
+                  <div className="flex gap-4 mt-4 justify-end">
+                    <button
+                      onClick={cancelRecording}
+                      className="px-4 py-2 bg-white/5 text-white rounded hover:bg-white/10 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirm}
+                      className="px-4 py-2 bg-accent text-black rounded hover:bg-accent/90 transition"
+                    >
+                      <Check size={16} className="inline mr-1" /> Confirm Action
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={cancelRecording}
-                  className="min-h-11 rounded-full bg-white/10 px-6 text-sm font-medium text-white transition-colors hover:bg-white/15"
-                >
-                  Dismiss
-                </button>
-              </div>
+              </>
             )}
 
             {/* Suggested action — LOG_WORKOUT */}
