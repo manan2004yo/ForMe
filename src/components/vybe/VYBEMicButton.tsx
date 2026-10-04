@@ -114,7 +114,7 @@ export async function startRecording(context?: VybeContext): Promise<void> {
       ? new MediaRecorder(stream, { mimeType })
       : new MediaRecorder(stream)
 
-    const actualMimeType = recorder.mimeType || mimeType || ''
+    const actualMimeType = recorder.mimeType || mimeType || 'audio/mp4'
     console.log(`[VYBE-AUDIO] MediaRecorder constructed. mimeType: "${recorder.mimeType}", state: "${recorder.state}"`)
 
     const sessionId = newSessionId()
@@ -196,7 +196,7 @@ export async function startRecording(context?: VybeContext): Promise<void> {
 
         // Pass the normalised base MIME type to the backend so Gemini receives
         // a clean string (e.g. "audio/mp4" not "audio/mp4;codecs=mp4a.40.2").
-        const apiMimeType = normaliseMimeForApi(actualMimeType)
+        const apiMimeType = normaliseMimeForApi(actualMimeType || 'audio/mp4')
         const transcriptionResponse = await fetch('/api/transcribe-voice', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
