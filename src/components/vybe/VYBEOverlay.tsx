@@ -3,6 +3,7 @@ import { cancelRecording, stopRecording } from '@/components/vybe/VYBEMicButton'
 import { Mic, Square, X, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useRef } from 'react';
+import type { ResolvedScannedProduct } from '@/lib/services/barcodeProductService';
 
 /**
  * Global VYBE overlay — pure transaction / confirmation UI.
@@ -47,11 +48,71 @@ export function VYBEOverlay() {
 
     try {
       if (result.intent === 'LOG_FOOD') {
-        // Food nutrition is unresolved at this stage. Do not log zeros.
-        // This message is intentional per MASTER_PLAN data rule: unknown stays unknown.
-        throw new Error(
-          'Voice food logging is coming soon — nutrition must be resolved before logging. Try searching or scanning the food instead.'
-        )
+        const store = useVybeStore.getState()
+        store.setStage('thinking')
+
+        const q = `${result.quantity || ''} ${result.unit || ''} ${result.foodName || ''}`.trim()
+
+        const response = await fetch('/api/estimate-nutrition', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: q, mode: 'meal' }),
+        })
+        const data = await response.json()
+
+        if (!response.ok || data.status !== 'ok' || !data.estimate) {
+          throw new Error(data?.message || 'Could not estimate nutrition. Please log this manually.')
+        }
+
+        const estimate = data.estimate
+        const portionGrams = typeof estimate.portionGrams === 'number' && estimate.portionGrams > 0 ? estimate.portionGrams : null
+
+        if (!portionGrams) {
+          throw new Error('Could not estimate portion size. Please log this manually.')
+        }
+
+        const n = estimate.nutrients
+        const per100g = {
+          calories: typeof n.calories === 'number' ? (n.calories / portionGrams) * 100 : 0,
+          protein: typeof n.protein === 'number' ? (n.protein / portionGrams) * 100 : 0,
+          carbs: typeof n.carbs === 'number' ? (n.carbs / portionGrams) * 100 : 0,
+          fat: typeof n.fat === 'number' ? (n.fat / portionGrams) * 100 : 0,
+          fiber: typeof n.fiber === 'number' ? (n.fiber / portionGrams) * 100 : 0,
+          ...(typeof n.sugar === 'number' ? { sugar: (n.sugar / portionGrams) * 100 } : {}),
+          ...(typeof n.sodium === 'number' ? { sodium: (n.sodium / portionGrams) * 100 } : {}),
+        }
+
+        const unknownFields: string[] = []
+        if (n.calories === null) unknownFields.push('calories')
+        if (n.protein === null) unknownFields.push('protein')
+        if (n.carbs === null) unknownFields.push('carbs')
+        if (n.fat === null) unknownFields.push('fat')
+        if (n.fiber === null) unknownFields.push('fiber')
+        if (n.sugar === null) unknownFields.push('sugar')
+        if (n.sodium === null) unknownFields.push('sodium')
+
+        const trustConfidence: 'medium' | 'low' = estimate.confidence === 'low' ? 'low' : 'medium'
+
+        const product: ResolvedScannedProduct = {
+          barcode: `vybe_${Date.now()}`,
+          name: estimate.name || q,
+          brand: null,
+          per100g,
+          servingSizeG: portionGrams,
+          dataSource: 'estimated',
+          imageUrl: null,
+          trust: {
+            tier: 'ai_estimate',
+            label: 'AI Estimate',
+            confidence: trustConfidence,
+            consistent: estimate.consistent,
+          },
+          unknownFields,
+        }
+
+        // Handoff to EatDashboard -> BarcodeResultSheet
+        store.setResolvedFood(product)
+        return
       }
 
       if (result.intent === 'LOG_WORKOUT') {

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { ResolvedScannedProduct } from '@/lib/services/barcodeProductService';
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -47,7 +48,7 @@ export interface VybeState {
    * It is only cleared by reset() or setError() (audit fix C1).
    */
   context: VybeContext | null;
-
+  resolvedFood: ResolvedScannedProduct | null;
   // ── Actions ──────────────────────────────────────────────────
   startListening: (ctx?: VybeContext) => void;
   /**
@@ -60,6 +61,7 @@ export interface VybeState {
   setError: (msg: string) => void;
   markCompleted: () => void;
   reset: () => void;
+  setResolvedFood: (food: ResolvedScannedProduct | null) => void;
 }
 
 export const useVybeStore = create<VybeState>((set) => ({
@@ -67,6 +69,7 @@ export const useVybeStore = create<VybeState>((set) => ({
   result: null,
   error: null,
   context: null,
+  resolvedFood: null,
 
   startListening: (ctx) =>
     set({
@@ -74,6 +77,7 @@ export const useVybeStore = create<VybeState>((set) => ({
       error: null,
       result: null,
       context: ctx ?? null,
+      resolvedFood: null,
     }),
 
   // C1 fix: preserve context so the async pipeline can route the result correctly.
@@ -108,5 +112,8 @@ export const useVybeStore = create<VybeState>((set) => ({
       result: null,
       error: null,
       context: null,
+      resolvedFood: null,
     }),
+
+  setResolvedFood: (food) => set({ resolvedFood: food }),
 }));

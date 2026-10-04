@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useCnsStore } from '@/store/cnsStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useUserStore } from '@/store/userStore'
+import { useVybeStore } from '@/store/vybeStore'
 import type { FoodLogEntry, MealSlot, NutritionInfo } from '@/types'
 import { clsx } from 'clsx'
 import { format } from 'date-fns'
@@ -256,6 +257,23 @@ export function EatDashboard() {
   const [isManualScan, setIsManualScan] = useState(false)
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null)
   const [showMicronutrients, setShowMicronutrients] = useState(false)
+
+  // Listen for VYBE resolved food handoff
+  const vybeResolvedFood = useVybeStore(s => s.resolvedFood)
+  const vybeContext = useVybeStore(s => s.context)
+
+  useEffect(() => {
+    if (vybeResolvedFood) {
+      setScannedProduct(vybeResolvedFood)
+      setIsManualScan(false)
+      if (vybeContext?.mealSlot) {
+        setPendingScanSlot(vybeContext.mealSlot)
+      }
+      // Clear the handoff state so we don't reopen it endlessly
+      useVybeStore.getState().setResolvedFood(null)
+      useVybeStore.getState().reset()
+    }
+  }, [vybeResolvedFood, vybeContext])
 
   const todayEntries = entries.filter(e => e.date === format(new Date(), 'yyyy-MM-dd'))
 
