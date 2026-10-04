@@ -1,18 +1,19 @@
 import { create } from 'zustand';
 
-// Speech API logic removed in favor of MediaRecorder flow.
+// ── Types ─────────────────────────────────────────────────────
 
-// Types for VYBE parsing results
 export type VybeIntent = 'LOG_FOOD' | 'LOG_WORKOUT' | 'UNKNOWN';
 
+/**
+ * Clean 6-stage state machine.
+ * Removed dead 'response' and 'confirmation' stages (audit finding C5 / dead code J3).
+ */
 export type VybeStage =
   | 'idle'
   | 'listening'
   | 'transcribing'
   | 'thinking'
-  | 'response'
   | 'suggested_action'
-  | 'confirmation'
   | 'completed';
 
 export interface VybeResult {
@@ -31,25 +32,30 @@ export interface VybeResult {
   confidence?: number;
 }
 
-// Context tells VYBE where the parsed result should be stored
+/** Context tells VYBE where the parsed result should be routed. */
 export interface VybeContext {
-  // Meal slot for food logging (e.g., 'breakfast', 'lunch')
   mealSlot?: import('@/types').MealSlot;
-  // Optional label for workout sessions
   workoutLabel?: string;
 }
 
 export interface VybeState {
-  listening: boolean;
-  processing: boolean;
   stage: VybeStage;
   result: VybeResult | null;
   error: string | null;
+  /**
+   * Context is set on startListening and PRESERVED through stopListening.
+   * It is only cleared by reset() or setError() (audit fix C1).
+   */
   context: VybeContext | null;
+
+  // ── Actions ──────────────────────────────────────────────────
   startListening: (ctx?: VybeContext) => void;
+  /**
+   * Transitions the stage away from 'listening' without destroying context.
+   * The recording controller owns stopping the actual MediaRecorder.
+   */
   stopListening: () => void;
   setStage: (stage: VybeStage) => void;
-  setProcessing: (processing: boolean) => void;
   setResult: (result: VybeResult) => void;
   setError: (msg: string) => void;
   markCompleted: () => void;
@@ -57,8 +63,6 @@ export interface VybeState {
 }
 
 export const useVybeStore = create<VybeState>((set) => ({
-  listening: false,
-  processing: false,
   stage: 'idle',
   result: null,
   error: null,
@@ -66,64 +70,40 @@ export const useVybeStore = create<VybeState>((set) => ({
 
   startListening: (ctx) =>
     set({
-      listening: true,
-      processing: false,
       stage: 'listening',
       error: null,
       result: null,
       context: ctx ?? null,
     }),
 
+  // C1 fix: preserve context so the async pipeline can route the result correctly.
   stopListening: () =>
-    set({
-      listening: false,
-      processing: false,
-      stage: 'idle',
-      context: null,
-    }),
+    set((state) => ({
+      stage: state.stage === 'listening' ? 'transcribing' : state.stage,
+      // context intentionally NOT cleared here
+    })),
 
-  setStage: (stage) =>
-    set({
-      stage,
-      listening: stage === 'listening',
-      processing: stage === 'transcribing' || stage === 'thinking',
-    }),
+  setStage: (stage) => set({ stage }),
 
-  setProcessing: (processing) =>
-    set({
-      processing,
-      listening: false,
-      stage: processing ? 'thinking' : 'response',
-    }),
-
+  // C5 fix: setResult is the ONLY place that moves stage to 'suggested_action'.
+  // No finally-block setProcessing() can overwrite it (setProcessing is removed entirely).
   setResult: (result) =>
     set({
       result,
-      processing: false,
-      listening: false,
       stage: 'suggested_action',
     }),
 
   setError: (msg) =>
     set({
       error: msg,
-      processing: false,
-      listening: false,
       stage: 'idle',
       context: null,
     }),
 
-  markCompleted: () =>
-    set({
-      listening: false,
-      processing: false,
-      stage: 'completed',
-    }),
+  markCompleted: () => set({ stage: 'completed' }),
 
   reset: () =>
     set({
-      listening: false,
-      processing: false,
       stage: 'idle',
       result: null,
       error: null,

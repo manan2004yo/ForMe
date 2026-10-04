@@ -6,11 +6,11 @@
 import { parseNaturalLanguageFoodEntry, convertToLoggedItems } from '@/lib/engines/nlpParser'
 import { getFoodLogsByDate, getSavedMeals, saveSavedMeal } from '@/lib/firebase/dataService'
 import { getAllPortionMemories } from '@/lib/services/portionMemoryService'
-import { startVybeListening } from '@/components/vybe/VYBEMicButton'
+import { startRecording } from '@/components/vybe/VYBEMicButton'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useToastStore } from '@/store/toastStore'
-import { useVybeStore } from '@/store/vybeStore'
+// vybeStore is consumed only by the global VYBEOverlay; AddFoodSheet uses the shared recording controller directly.
 import type { LoggedFoodItem, MealSlot, SavedMeal } from '@/types'
 import { clsx } from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -238,7 +238,7 @@ export function AddFoodSheet({ slot, onClose, callbacks }: AddFoodSheetProps) {
   const { user } = useAuthStore()
   const { addFoodEntry, entries, selectedDate } = useFoodLogStore()
   const toast = useToastStore()
-  const { startListening, setProcessing, setResult, setError, reset } = useVybeStore()
+  // VYBE: no local store destructure needed — startRecording owns the full lifecycle.
 
   const [showNlp, setShowNlp] = useState(false)
   const [savedMeals, setSavedMeals] = useState<SavedMeal[]>([])
@@ -402,15 +402,11 @@ export function AddFoodSheet({ slot, onClose, callbacks }: AddFoodSheetProps) {
   }
 
   const handleVybe = () => {
-    // Call startVybeListening DIRECTLY and SYNCHRONOUSLY inside this click handler.
-    // rec.start() must fire as a direct result of the user gesture — any indirection
-    // (window events, programmatic .click() calls, async gaps) causes browsers to
-    // silently refuse to start Speech Recognition.
-    startVybeListening(
-      { mealSlot: slot },
-      { startListening, setProcessing, setResult, setError, reset }
-    )
-    // Close the sheet visually AFTER rec.start() has been invoked synchronously above.
+    // Start the shared recording controller directly from the user-gesture handler.
+    // The controller is module-level, so it survives this sheet unmounting (C2 fix).
+    // The global VYBEOverlay will show immediately and provide Stop/Cancel controls.
+    void startRecording({ mealSlot: slot })
+    // Close the sheet so the overlay is fully visible to the user.
     onClose()
   }
 
