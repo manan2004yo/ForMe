@@ -563,6 +563,8 @@ export function OnboardingFlow() {
           onboardingComplete: true,
         })
         navigate('/')
+      } catch (e: any) {
+        setValidationError(e.message || 'Failed to save profile. Please try again.')
       } finally {
         setIsSaving(false)
       }

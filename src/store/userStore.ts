@@ -104,6 +104,15 @@ export const useUserStore = create<UserState>()(
   },
 
   loadProfile: async (uid: string) => {
+    if (uid === 'demo' || get().isDemoMode) {
+      if (!get().profile || get().profile?.id !== 'demo') {
+        get().loadDemoProfile()
+      } else {
+        set({ isDemoMode: true })
+      }
+      return
+    }
+
     set({ isLoading: true, error: null })
     try {
       const profile = await getUserProfile(uid)
@@ -170,13 +179,14 @@ export const useUserStore = create<UserState>()(
     const metrics = calculateBodyMetrics(updated, activeContext)
     set({ profile: updated, metrics })
 
-    if (!isDemoMode) {
-      const targetId = profile.id || updates.id || (profile as any).uid
+    const targetId = profile.id || updates.id || (profile as any).uid
+    if (!isDemoMode && targetId !== 'demo') {
       if (targetId) {
         try {
           await saveUserProfile(targetId, updates)
-        } catch {
-          useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.')
+        } catch (e: any) {
+          useToastStore.getState().error('Failed to save profile: ' + (e.message || 'Unknown error'))
+          throw e
         }
       }
     }

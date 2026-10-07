@@ -9,7 +9,7 @@ import { useRef, useState } from 'react'
 
 export function CinematicProgressMorph({ onClose }: { onClose: () => void }) {
   const { user } = useAuthStore()
-  const { profile, loadProfile } = useUserStore()
+  const { profile, loadProfile, saveProfile } = useUserStore()
   const toast = useToastStore()
   
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -57,14 +57,15 @@ export function CinematicProgressMorph({ onClose }: { onClose: () => void }) {
     }
 
     try {
+      if (profile.id === 'demo' || user?.uid === 'demo') {
+        toast.error("Photo uploads are disabled in demo mode.")
+        return
+      }
       setIsUploading(true)
       const downloadURL = await uploadProgressPhoto(user.uid, file)
       
       const updatedPhotos = [...photos, downloadURL]
-      const updatedProfile = { ...profile, progressPhotos: updatedPhotos }
-      
-      await saveUserProfile(user.uid, updatedProfile)
-      await loadProfile(user.uid) // refresh local store
+      await saveProfile({ progressPhotos: updatedPhotos })
       
       toast.success("Progress photo saved successfully.")
       if (updatedPhotos.length >= 2) {
