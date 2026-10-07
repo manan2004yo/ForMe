@@ -11,21 +11,20 @@ import type { FoodLogEntry, LoggedFoodItem, MealSlot, NutritionInfo } from '@/ty
 import { format } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
 import { create } from 'zustand'
+import { getEmptyNutrition, sumNutrients } from '@/lib/nutrition/nutrientValue'
 
 const today = () => format(new Date(), 'yyyy-MM-dd')
 
-const emptyNutrition = (): NutritionInfo => ({
-  calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0
-})
+const emptyNutrition = (): NutritionInfo => getEmptyNutrition()
 
 function sumNutrition(items: LoggedFoodItem[]): NutritionInfo {
-  return items.reduce((acc, item) => ({
-    calories: Math.round(acc.calories + item.nutrition.calories),
-    protein: parseFloat((acc.protein + item.nutrition.protein).toFixed(1)),
-    carbs: parseFloat((acc.carbs + item.nutrition.carbs).toFixed(1)),
-    fat: parseFloat((acc.fat + item.nutrition.fat).toFixed(1)),
-    fiber: parseFloat(((acc.fiber ?? 0) + (item.nutrition.fiber ?? 0)).toFixed(1)),
-  }), emptyNutrition())
+  return {
+    calories: sumNutrients(items.map(i => i.nutrition.calories), 'kcal'),
+    protein: sumNutrients(items.map(i => i.nutrition.protein), 'g'),
+    carbs: sumNutrients(items.map(i => i.nutrition.carbs), 'g'),
+    fat: sumNutrients(items.map(i => i.nutrition.fat), 'g'),
+    fiber: sumNutrients(items.map(i => i.nutrition.fiber), 'g')
+  }
 }
 
 interface FoodLogState {
@@ -62,16 +61,13 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
   todayTotals: () => {
     const { entries, selectedDate } = get()
     const dayEntries = entries.filter(e => e.date === selectedDate)
-    return dayEntries.reduce((acc, e) => {
-      const t = e.totals || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
-      return {
-        calories: acc.calories + t.calories,
-        protein: parseFloat((acc.protein + t.protein).toFixed(1)),
-        carbs: parseFloat((acc.carbs + t.carbs).toFixed(1)),
-        fat: parseFloat((acc.fat + t.fat).toFixed(1)),
-        fiber: parseFloat(((acc.fiber ?? 0) + (t.fiber ?? 0)).toFixed(1)),
-      }
-    }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
+    return {
+      calories: sumNutrients(dayEntries.map(e => e.totals.calories), 'kcal'),
+      protein: sumNutrients(dayEntries.map(e => e.totals.protein), 'g'),
+      carbs: sumNutrients(dayEntries.map(e => e.totals.carbs), 'g'),
+      fat: sumNutrients(dayEntries.map(e => e.totals.fat), 'g'),
+      fiber: sumNutrients(dayEntries.map(e => e.totals.fiber), 'g'),
+    }
   },
 
   entriesForDate: (date: string) => {

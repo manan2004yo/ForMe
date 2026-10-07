@@ -1,3 +1,4 @@
+import { auth } from '@/lib/firebase/config'
 import { useToastStore } from '@/store/toastStore'
 import type { MealSlot } from '@/types'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -169,7 +170,9 @@ export function SnapAndLogModal({ slot, onClose, onLog }: SnapAndLogModalProps) 
       const resized = await resizeDataUrl(imagePreview)
       const res = await fetch('/api/snap-log', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+        'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+ 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: resized })
       })
       const data = await res.json().catch(() => null)

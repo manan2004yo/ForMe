@@ -11,6 +11,7 @@ import { useToastStore } from '@/store/toastStore'
 import { useUserStore } from '@/store/userStore'
 import { clsx } from 'clsx'
 import { format, subDays } from 'date-fns'
+import { sumNutrients } from '@/lib/nutrition/nutrientValue'
 import { Activity, BookOpen, Dumbbell, Plus, Save, TrendingDown, TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -88,7 +89,7 @@ export function ProgressDashboard() {
     const dayEntries = entriesForDate(d)
     if (dayEntries.length > 0) {
       daysLogged++
-      const cals = dayEntries.reduce((sum, e) => sum + e.foods.reduce((s, f) => s + f.nutrition.calories, 0), 0)
+      const cals = sumNutrients(dayEntries.flatMap(e => e.foods.map(f => f.nutrition.calories)), 'kcal').value ?? 0
       if (Math.abs(cals - targetCals) / targetCals <= 0.15) {
         daysHit++
       }

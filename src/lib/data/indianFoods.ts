@@ -3,9 +3,10 @@
 // 300+ Indian foods with nutrition data per 100g
 // ============================================================
 
-import type { FoodItem } from '@/types'
+import type { RawFoodItem, FoodItem, NutritionInfo, Provenance } from '@/types'
+import { createNutrient } from '@/lib/nutrition/nutrientValue'
 
-export const INDIAN_FOODS: FoodItem[] = [
+export const INDIAN_FOODS: RawFoodItem[] = [
   // ─── ROTIS & BREADS ────────────────────────────────────────
   {
     id: 'roti_wheat',
@@ -1331,14 +1332,30 @@ export const INDIAN_FOODS: FoodItem[] = [
 
 // ─── Food Database Lookup ─────────────────────────────────────
 
-export const FOOD_MAP: Record<string, FoodItem> = {}
+export const FOOD_MAP: Record<string, RawFoodItem> = {}
 INDIAN_FOODS.forEach(f => {
   FOOD_MAP[f.id] = f
 })
 
+export function hydrateRawFood(raw: RawFoodItem): FoodItem {
+  const prov: Provenance = { source: 'legacy_log', timestamp: new Date().toISOString() }
+  return {
+    ...raw,
+    nutrition: {
+      calories: createNutrient(raw.nutrition.calories, 'kcal', 'known', [prov]),
+      protein: createNutrient(raw.nutrition.protein, 'g', 'known', [prov]),
+      carbs: createNutrient(raw.nutrition.carbs, 'g', 'known', [prov]),
+      fat: createNutrient(raw.nutrition.fat, 'g', 'known', [prov]),
+      fiber: createNutrient(raw.nutrition.fiber ?? null, 'g', raw.nutrition.fiber != null ? 'known' : 'unknown', [prov]),
+      ...(raw.nutrition.sugar != null && { sugar: createNutrient(raw.nutrition.sugar, 'g', 'known', [prov]) }),
+      ...(raw.nutrition.sodium != null && { sodium: createNutrient(raw.nutrition.sodium, 'mg', 'known', [prov]) }),
+    }
+  }
+}
+
 export function searchFoods(query: string): FoodItem[] {
   const q = query.toLowerCase().trim()
-  if (!q) return INDIAN_FOODS.slice(0, 20)
+  if (!q) return INDIAN_FOODS.slice(0, 20).map(hydrateRawFood)
   
   return INDIAN_FOODS.filter(food => {
     return (
@@ -1347,23 +1364,28 @@ export function searchFoods(query: string): FoodItem[] {
       food.aliases.some(a => a.toLowerCase().includes(q)) ||
       food.tags.some(t => t.includes(q))
     )
-  })
+  }).map(hydrateRawFood)
 }
 
-export function getFoodById(id: string): FoodItem | undefined {
+export function getFoodById(id: string): RawFoodItem | undefined {
   return FOOD_MAP[id]
 }
 
-
 // ─── Nutrition per gram ───────────────────────────────────────
 
-export function getNutritionForGrams(food: FoodItem, grams: number) {
-  const factor = grams / 100
+export function hydrateNutrition(raw: import('@/types').RawNutritionInfo, factor: number): NutritionInfo {
+  const prov: Provenance = { source: 'verified_database', timestamp: new Date().toISOString() }
+  
   return {
-    calories: Math.round(food.nutrition.calories * factor),
-    protein: parseFloat((food.nutrition.protein * factor).toFixed(1)),
-    carbs: parseFloat((food.nutrition.carbs * factor).toFixed(1)),
-    fat: parseFloat((food.nutrition.fat * factor).toFixed(1)),
-    fiber: parseFloat(((food.nutrition.fiber ?? 0) * factor).toFixed(1)),
+    calories: createNutrient(Math.round(raw.calories * factor), 'kcal', 'known', [prov]),
+    protein: createNutrient(parseFloat((raw.protein * factor).toFixed(1)), 'g', 'known', [prov]),
+    carbs: createNutrient(parseFloat((raw.carbs * factor).toFixed(1)), 'g', 'known', [prov]),
+    fat: createNutrient(parseFloat((raw.fat * factor).toFixed(1)), 'g', 'known', [prov]),
+    fiber: createNutrient(raw.fiber != null ? parseFloat((raw.fiber * factor).toFixed(1)) : null, 'g', raw.fiber != null ? 'known' : 'unknown', [prov])
   }
+}
+
+export function getNutritionForGrams(food: RawFoodItem, grams: number): NutritionInfo {
+  const factor = grams / 100
+  return hydrateNutrition(food.nutrition, factor)
 }

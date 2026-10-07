@@ -57,14 +57,14 @@ export function MicronutrientSheet({ isOpen, onClose }: MicronutrientSheetProps)
       let total = 0
 
       for (const food of foods) {
-        const value = food.nutrition[micro.key]
+        const value = (food.nutrition as any)[micro.key] as import('@/types').NutrientValue | undefined
 
-        if (value === null || value === undefined) {
+        if (!value || value.state === 'unknown' || value.value === null) {
           acc[micro.key] = null
           return acc
         }
 
-        total += value
+        total += value.value ?? 0
       }
 
       acc[micro.key] = total

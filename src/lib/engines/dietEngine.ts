@@ -4,6 +4,7 @@
 // ============================================================
 
 import { FOOD_MAP, getNutritionForGrams } from '@/lib/data/indianFoods'
+import { sumNutrients } from '@/lib/nutrition/nutrientValue'
 import type {
   BodyMetrics, DailyDietPlan,
   MealPlanItem, MealSlot,
@@ -248,13 +249,13 @@ function templateToMeal(template: MealTemplate, katoriGrams: number): PlannedMea
     } as MealPlanItem
   }).filter(Boolean) as MealPlanItem[]
 
-  const totals = items.reduce((acc, item) => ({
-    calories: acc.calories + item.nutrition.calories,
-    protein: parseFloat((acc.protein + item.nutrition.protein).toFixed(1)),
-    carbs: parseFloat((acc.carbs + item.nutrition.carbs).toFixed(1)),
-    fat: parseFloat((acc.fat + item.nutrition.fat).toFixed(1)),
-    fiber: parseFloat(((acc.fiber ?? 0) + (item.nutrition.fiber ?? 0)).toFixed(1)),
-  }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
+  const totals = {
+    calories: sumNutrients(items.map(i => i.nutrition.calories), 'kcal'),
+    protein: sumNutrients(items.map(i => i.nutrition.protein), 'g'),
+    carbs: sumNutrients(items.map(i => i.nutrition.carbs), 'g'),
+    fat: sumNutrients(items.map(i => i.nutrition.fat), 'g'),
+    fiber: sumNutrients(items.map(i => i.nutrition.fiber), 'g')
+  }
 
   const cost = items.reduce((acc, item) => acc + ((item as any).estimatedCost || 0), 0)
 
@@ -285,14 +286,13 @@ export function generateDietPlan(profile: UserProfile, _metrics: BodyMetrics): D
 
   const meals = [breakfast, lunch, snack, dinner]
 
-  // Calculate plan totals
-  const totals = meals.reduce((acc, meal) => ({
-    calories: acc.calories + meal.totals.calories,
-    protein: parseFloat((acc.protein + meal.totals.protein).toFixed(1)),
-    carbs: parseFloat((acc.carbs + meal.totals.carbs).toFixed(1)),
-    fat: parseFloat((acc.fat + meal.totals.fat).toFixed(1)),
-    fiber: parseFloat(((acc.fiber ?? 0) + (meal.totals.fiber ?? 0)).toFixed(1)),
-  }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
+  const totals = {
+    calories: sumNutrients(meals.map(m => m.totals.calories), 'kcal'),
+    protein: sumNutrients(meals.map(m => m.totals.protein), 'g'),
+    carbs: sumNutrients(meals.map(m => m.totals.carbs), 'g'),
+    fat: sumNutrients(meals.map(m => m.totals.fat), 'g'),
+    fiber: sumNutrients(meals.map(m => m.totals.fiber), 'g')
+  }
 
   const dailyCost = meals.reduce((acc, meal) => acc + (meal.estimatedCost || 0), 0)
 
@@ -309,12 +309,12 @@ export function generateDietPlan(profile: UserProfile, _metrics: BodyMetrics): D
 // ─── What Should I Eat Now? ───────────────────────────────────
 
 export function getEatNowRecommendation(
-  consumed: { calories: number; protein: number; carbs: number; fat: number; fiber: number },
+  consumed: import('@/types').NutritionInfo,
   targets: BodyMetrics,
   profile: UserProfile
 ): string {
-  const calRemaining = targets.caloricTarget - consumed.calories
-  const proteinRemaining = targets.proteinTarget - consumed.protein
+  const calRemaining = targets.caloricTarget - (consumed.calories.value ?? 0)
+  const proteinRemaining = targets.proteinTarget - (consumed.protein.value ?? 0)
 
   const msgs: string[] = []
 

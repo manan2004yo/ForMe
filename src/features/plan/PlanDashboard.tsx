@@ -11,13 +11,16 @@ import { ChevronDown, ChevronUp, Download, Plus, Save, Trash2 } from 'lucide-rea
 import { useEffect, useState } from 'react'
 import { PlanFoodSearch } from './PlanFoodSearch'
 import { SmartGroceryEngine } from './SmartGroceryEngine'
+import { sumNutrients, formatNutrientValue } from '@/lib/nutrition/nutrientValue'
+import type { NutrientValue } from '@/types'
 
-function NutritionChip({ label, value, unit, colorClass }: { label: string; value: number; unit: string; colorClass: string }) {
+function NutritionChip({ label, value, unit, colorClass }: { label: string; value: NutrientValue; unit: string; colorClass: string }) {
   return (
     <div className="flex flex-col">
       <span className="text-[10px] uppercase tracking-wider text-white/40 mb-1">{label}</span>
       <div className="flex items-baseline gap-1">
-        <span className={clsx("font-semibold text-sm", colorClass)}>{Math.round(value)}</span>
+        {value.state !== 'known' && <span className="font-bold text-white mr-1 text-xs">{value.state === 'conflict' ? '~' : '>'}</span>}
+        <span className={clsx("font-semibold text-sm", colorClass)}>{Math.round(value.value ?? 0)}</span>
         <span className="text-xs text-white/50">{unit}</span>
       </div>
     </div>
@@ -34,13 +37,13 @@ function MealSection({ slot, label, foods, onBrowse }: {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const { removeFoodFromSlot } = usePlanStore()
   
-  const totals: NutritionInfo = foods.reduce((acc, f) => ({
-    calories: acc.calories + f.nutrition.calories,
-    protein: acc.protein + f.nutrition.protein,
-    carbs: acc.carbs + f.nutrition.carbs,
-    fat: acc.fat + f.nutrition.fat,
-    fiber: (acc.fiber ?? 0) + (f.nutrition.fiber ?? 0),
-  }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
+  const totals: NutritionInfo = {
+    calories: sumNutrients(foods.map(f => f.nutrition.calories), 'kcal'),
+    protein: sumNutrients(foods.map(f => f.nutrition.protein), 'g'),
+    carbs: sumNutrients(foods.map(f => f.nutrition.carbs), 'g'),
+    fat: sumNutrients(foods.map(f => f.nutrition.fat), 'g'),
+    fiber: sumNutrients(foods.map(f => f.nutrition.fiber), 'g')
+  }
 
   const hasFood = foods.length > 0
 
@@ -58,8 +61,8 @@ function MealSection({ slot, label, foods, onBrowse }: {
             <h3 className="text-white font-medium">{label}</h3>
             {hasFood && (
               <div className="flex items-center gap-4 mt-1">
-                <span className="text-xs text-white/70 font-semibold">{Math.round(totals.calories)} kcal</span>
-                <span className="text-[10px] text-emerald-400 font-medium">{Math.round(totals.protein)}g Protein</span>
+                <span className="text-xs text-white/70 font-semibold">{formatNutrientValue(totals.calories, true)} kcal</span>
+                <span className="text-[10px] text-emerald-400 font-medium">{formatNutrientValue(totals.protein, true)}g Protein</span>
               </div>
             )}
           </div>
@@ -91,7 +94,7 @@ function MealSection({ slot, label, foods, onBrowse }: {
               <div>
                 <div className="text-sm text-white font-medium">{food.name}</div>
                 <div className="text-xs text-white/50 mt-1">
-                  {food.quantity} {food.unit} - {Math.round(food.nutrition.calories)} kcal
+                  {food.quantity} {food.unit} - {formatNutrientValue(food.nutrition.calories, true)} kcal
                 </div>
               </div>
               {confirmDeleteId === food.id ? (
@@ -148,15 +151,13 @@ export function PlanDashboard() {
   }, [user, loadAll])
   const [browsingSlot, setBrowsingSlot] = useState<MealSlot | null>(null)
 
-  const totals = currentPlan.reduce((acc, slot) => {
-    slot.foods.forEach(f => {
-      acc.calories += f.nutrition.calories
-      acc.protein += f.nutrition.protein
-      acc.carbs += f.nutrition.carbs
-      acc.fat += f.nutrition.fat
-    })
-    return acc
-  }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
+  const totals = {
+    calories: sumNutrients(currentPlan.flatMap(slot => slot.foods.map(f => f.nutrition.calories)), 'kcal'),
+    protein: sumNutrients(currentPlan.flatMap(slot => slot.foods.map(f => f.nutrition.protein)), 'g'),
+    carbs: sumNutrients(currentPlan.flatMap(slot => slot.foods.map(f => f.nutrition.carbs)), 'g'),
+    fat: sumNutrients(currentPlan.flatMap(slot => slot.foods.map(f => f.nutrition.fat)), 'g'),
+    fiber: sumNutrients(currentPlan.flatMap(slot => slot.foods.map(f => f.nutrition.fiber)), 'g')
+  }
 
   const hasFoods = currentPlan.some(slot => slot.foods.length > 0)
 
@@ -225,8 +226,9 @@ export function PlanDashboard() {
             <div>
               <h2 className="text-sm font-medium text-white/50 uppercase tracking-widest mb-1">Planned Calories</h2>
               <div className="flex items-baseline gap-2">
-                <AnimatedNumber value={totals.calories} className="text-4xl font-heading font-bold text-white" />
-                <span className="text-white/40">/ {metrics?.caloricTarget || 0} kcal</span>
+                {totals.calories.state !== 'known' && <span className="text-3xl font-bold text-white mr-1">{totals.calories.state === 'conflict' ? '~' : '>'}</span>}
+                <AnimatedNumber value={totals.calories.value ?? 0} className="text-4xl font-heading font-bold text-white" />
+                <span className="text-white/40">{totals.calories.state === 'unknown' && '+ '} / {metrics?.caloricTarget || 0} kcal</span>
               </div>
             </div>
           </div>
@@ -235,26 +237,29 @@ export function PlanDashboard() {
             <div>
               <div className="text-xs text-white/50 mb-2">Protein ({metrics?.proteinTarget}g)</div>
               <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-lg font-bold text-emerald-400">{Math.round(totals.protein)}</span>
+                {totals.protein.state !== 'known' && <span className="font-bold text-emerald-400 mr-1">{totals.protein.state === 'conflict' ? '~' : '>'}</span>}
+                <span className="text-lg font-bold text-emerald-400">{Math.round(totals.protein.value ?? 0)}</span>
                 <span className="text-xs text-white/40">g</span>
               </div>
-              <ProgressBar value={totals.protein} max={metrics?.proteinTarget || 150} colorClass="bg-emerald-400" heightClass="h-1" className="bg-white/5" />
+              <ProgressBar value={totals.protein.value ?? 0} max={metrics?.proteinTarget || 150} colorClass="bg-emerald-400" heightClass="h-1" className="bg-white/5" />
             </div>
             <div>
               <div className="text-xs text-white/50 mb-2">Carbs ({metrics?.carbTarget}g)</div>
               <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-lg font-bold text-blue-400">{Math.round(totals.carbs)}</span>
+                {totals.carbs.state !== 'known' && <span className="font-bold text-blue-400 mr-1">{totals.carbs.state === 'conflict' ? '~' : '>'}</span>}
+                <span className="text-lg font-bold text-blue-400">{Math.round(totals.carbs.value ?? 0)}</span>
                 <span className="text-xs text-white/40">g</span>
               </div>
-              <ProgressBar value={totals.carbs} max={metrics?.carbTarget || 250} colorClass="bg-blue-400" heightClass="h-1" className="bg-white/5" />
+              <ProgressBar value={totals.carbs.value ?? 0} max={metrics?.carbTarget || 250} colorClass="bg-blue-400" heightClass="h-1" className="bg-white/5" />
             </div>
             <div>
               <div className="text-xs text-white/50 mb-2">Fats ({metrics?.fatTarget}g)</div>
               <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-lg font-bold text-purple-400">{Math.round(totals.fat)}</span>
+                {totals.fat.state !== 'known' && <span className="font-bold text-purple-400 mr-1">{totals.fat.state === 'conflict' ? '~' : '>'}</span>}
+                <span className="text-lg font-bold text-purple-400">{Math.round(totals.fat.value ?? 0)}</span>
                 <span className="text-xs text-white/40">g</span>
               </div>
-              <ProgressBar value={totals.fat} max={metrics?.fatTarget || 80} colorClass="bg-purple-400" heightClass="h-1" className="bg-white/5" />
+              <ProgressBar value={totals.fat.value ?? 0} max={metrics?.fatTarget || 80} colorClass="bg-purple-400" heightClass="h-1" className="bg-white/5" />
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { useToastStore } from '@/store/toastStore'
+import { createNutrient } from '@/lib/nutrition/nutrientValue'
 import type { LoggedFoodItem } from '@/types'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Calculator, Check, Plus, Search } from 'lucide-react'
@@ -100,13 +101,12 @@ export function FamilyRecipeSplitter({ onClose }: { onClose: () => void }) {
       unit: 'serving',
       gramsConsumed: 100 * myServings,
       nutrition: {
-        calories: myMacros.calories,
-        protein: myMacros.protein,
-        carbs: myMacros.carbs,
-        fat: myMacros.fat,
-        fiber: 0
-      },
-      confidence: 'high'
+        calories: createNutrient(myMacros.calories, 'kcal', 'known', []),
+        protein: createNutrient(myMacros.protein, 'g', 'known', []),
+        carbs: createNutrient(myMacros.carbs, 'g', 'known', []),
+        fat: createNutrient(myMacros.fat, 'g', 'known', []),
+        fiber: createNutrient(0, 'g', 'known', [])
+      }
     }
 
     await addFoodEntry(user.uid, 'lunch', [logItem]) // Defaulting to lunch

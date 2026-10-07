@@ -19,17 +19,20 @@ import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-function MacroBar({ label, consumed, target, colorClass }: { label: string; consumed: number; target: number; colorClass: string }) {
+import type { NutrientValue } from '@/types'
+
+function MacroBar({ label, consumed, target, colorClass }: { label: string; consumed: NutrientValue; target: number; colorClass: string }) {
   return (
     <div className="flex-1 flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-medium text-white/50 uppercase tracking-wider">{label}</span>
         <div className="flex items-baseline gap-1">
-          <AnimatedNumber value={consumed} className="font-heading font-bold text-white tabular-nums text-lg" />
-          <span className="text-xs text-white/40">/ {target}g</span>
+          {consumed.state !== 'known' && <span className="text-sm font-bold text-white mr-1">{consumed.state === 'conflict' ? '~' : '>'}</span>}
+          <AnimatedNumber value={consumed.value ?? 0} className="font-heading font-bold text-white tabular-nums text-lg" />
+          <span className="text-xs text-white/40">{consumed.state === 'unknown' && '+ '} / {target}g</span>
         </div>
       </div>
-      <ProgressBar value={consumed} max={target} colorClass={colorClass} heightClass="h-1.5" className="bg-white/5" />
+      <ProgressBar value={consumed.value ?? 0} max={target} colorClass={colorClass} heightClass="h-1.5" className="bg-white/5" />
     </div>
   )
 }
@@ -116,7 +119,7 @@ export function HomeDashboard() {
         yesterday.setDate(yesterday.getDate() - 1)
         const yStr = format(yesterday, 'yyyy-MM-dd')
         const yLogs = logs.filter(l => l.date === yStr)
-        const yCals = yLogs.reduce((acc, l) => acc + (l.totals?.calories || 0), 0)
+        const yCals = yLogs.reduce((acc, l) => acc + (l.totals?.calories?.value || 0), 0)
         setYesterdayCalories(yCals)
       })
     }
@@ -140,10 +143,10 @@ export function HomeDashboard() {
   }
 
   const totals = todayTotals()
-  const calPercent = Math.min(100, Math.round((totals.calories / metrics.caloricTarget) * 100))
+  const calPercent = Math.min(100, Math.round(((totals.calories.value ?? 0) / metrics.caloricTarget) * 100))
 
   const trendIcon = yesterdayCalories !== null
-    ? (totals.calories > yesterdayCalories + 100 ? '↑' : totals.calories < yesterdayCalories - 100 ? '↓' : '→')
+    ? ((totals.calories.value ?? 0) > yesterdayCalories + 100 ? '↑' : (totals.calories.value ?? 0) < yesterdayCalories - 100 ? '↓' : '→')
     : ''
 
   const trendColor =
@@ -151,8 +154,8 @@ export function HomeDashboard() {
     trendIcon === '↓' && metrics.caloricStrategy === 'surplus' ? 'var(--status-bad)' :
     'var(--status-good)'
 
-  const caloriesRemaining = metrics.caloricTarget - totals.calories
-  const proteinRemaining = metrics.proteinTarget - totals.protein
+  const caloriesRemaining = metrics.caloricTarget - (totals.calories.value ?? 0)
+  const proteinRemaining = metrics.proteinTarget - (totals.protein.value ?? 0)
 
   const todayString = format(new Date(), 'yyyy-MM-dd')
   const todayRecoveryLog = getTodayLog()
@@ -172,9 +175,9 @@ export function HomeDashboard() {
     ),
     0
   )
-  const nutritionLogged = totals.calories > 0 || totals.protein > 0 || totals.carbs > 0 || totals.fat > 0
+  const nutritionLogged = (totals.calories.value ?? 0) > 0 || (totals.protein.value ?? 0) > 0 || (totals.carbs.value ?? 0) > 0 || (totals.fat.value ?? 0) > 0
   const nutritionPercent = metrics.caloricTarget > 0
-    ? Math.round((totals.calories / metrics.caloricTarget) * 100)
+    ? Math.round(((totals.calories.value ?? 0) / metrics.caloricTarget) * 100)
     : null
 
   const readinessEvidence = {
@@ -258,7 +261,10 @@ export function HomeDashboard() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <AnimatedNumber value={totals.calories} className="text-3xl font-heading font-bold text-white tracking-tighter" />
+                <div className="flex items-center justify-center">
+                  {totals.calories.state !== 'known' && <span className="text-2xl font-bold text-white mr-1">{totals.calories.state === 'conflict' ? '~' : '>'}</span>}
+                  <AnimatedNumber value={totals.calories.value ?? 0} className="text-3xl font-heading font-bold text-white tracking-tighter" />
+                </div>
                 <span className="text-xs text-white/40 uppercase tracking-widest mt-1 flex items-center gap-1">
                   / {metrics.caloricTarget} kcal
                   {trendIcon && <span style={{ color: trendColor }} className="font-bold">{trendIcon}</span>}

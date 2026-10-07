@@ -4,6 +4,8 @@
 
 import { searchFoods } from '@/lib/services/foodSearchService'
 import type { ScannedProduct } from '@/lib/services/barcodeProductService'
+import { createNutrient } from '@/lib/nutrition/nutrientValue'
+import type { Provenance } from '@/types'
 import { usePlanStore } from '@/store/planStore'
 import type { MealSlot } from '@/types'
 import { Plus, Search, X } from 'lucide-react'
@@ -56,12 +58,14 @@ export function PlanFoodSearch({ slot, onClose }: PlanFoodSearchProps) {
     const product = quickAdd.product
     const multiplier = quickAdd.quantity / 100
 
+
+    const prov: import('@/types').Provenance = { source: 'open_food_facts', timestamp: new Date().toISOString() }
     const nutrition = {
-      calories: product.per100g.calories * multiplier,
-      protein: product.per100g.protein * multiplier,
-      carbs: product.per100g.carbs * multiplier,
-      fat: product.per100g.fat * multiplier,
-      fiber: product.per100g.fiber * multiplier
+      calories: createNutrient(product.per100g.calories * multiplier, 'kcal', 'known', [prov]),
+      protein: createNutrient(product.per100g.protein * multiplier, 'g', 'known', [prov]),
+      carbs: createNutrient(product.per100g.carbs * multiplier, 'g', 'known', [prov]),
+      fat: createNutrient(product.per100g.fat * multiplier, 'g', 'known', [prov]),
+      fiber: createNutrient(product.per100g.fiber * multiplier, 'g', 'known', [prov])
     }
 
     addFoodToSlot(slot, {

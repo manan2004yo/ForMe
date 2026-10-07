@@ -1,3 +1,4 @@
+import { auth } from '@/lib/firebase/config'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -224,7 +225,9 @@ export function BarcodeResultSheet({ product: initialProduct, onLog, onClose, is
 
       const resp = await fetch('/api/read-nutrition-label', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+        'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+ 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: resized }),
       })
       const data = await resp.json()

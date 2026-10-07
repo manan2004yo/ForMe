@@ -21,7 +21,7 @@ export function generateInsights(
     const recentLogs = foodLogs.slice(-7) // Last 7 days
     let daysHitProtein = 0
     recentLogs.forEach(log => {
-      if (log.totals.protein >= metrics.proteinTarget * 0.9) {
+      if ((log.totals.protein.value ?? 0) >= metrics.proteinTarget * 0.9) {
         daysHitProtein++
       }
     })

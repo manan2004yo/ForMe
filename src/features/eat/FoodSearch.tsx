@@ -1,3 +1,4 @@
+import { auth } from '@/lib/firebase/config'
 // ============================================================
 // FORME — Food Search Component
 // Browse and search Indian foods by category
@@ -8,7 +9,8 @@ import { deleteCustomFood } from '@/lib/services/customFoodService'
 import type { ResolvedScannedProduct, ScannedProduct } from '@/lib/services/barcodeProductService'
 import { useAuthStore } from '@/store/authStore'
 import { useFoodLogStore } from '@/store/foodLogStore'
-import type { LoggedFoodItem, MealSlot, NutritionInfo } from '@/types'
+import type { LoggedFoodItem, MealSlot, NutritionInfo, EvidenceSource, Provenance } from '@/types'
+import { createNutrient } from '@/lib/nutrition/nutrientValue'
 import { Plus, Search, X, PlusCircle, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
@@ -60,7 +62,9 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
         try {
           const response = await fetch('/api/estimate-nutrition', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+        'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+ 'Content-Type': 'application/json' },
             body: JSON.stringify({
               name: q.trim(),
               mode: 'meal',
@@ -202,43 +206,32 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
     try {
       const multiplier = qtyGrams / 100
 
+      const sourceMap: Record<string, EvidenceSource> = {
+        'ai_estimate': 'ai_vision',
+        'open_food_facts': 'open_food_facts',
+        'upcitemdb': 'upcitemdb',
+        'user_manual': 'user_manual',
+      }
+      const mappedSource = sourceMap[product.trust.tier] || 'legacy_log'
+      const prov: Provenance = { source: mappedSource, timestamp: new Date().toISOString() }
+
       const nutrition: NutritionInfo = {
-        calories: product.unknownFields.includes('calories')
-          ? 0
-          : product.per100g.calories * multiplier,
-        protein: product.unknownFields.includes('protein')
-          ? 0
-          : product.per100g.protein * multiplier,
-        carbs: product.unknownFields.includes('carbs')
-          ? 0
-          : product.per100g.carbs * multiplier,
-        fat: product.unknownFields.includes('fat')
-          ? 0
-          : product.per100g.fat * multiplier,
-        fiber: product.unknownFields.includes('fiber')
-          ? null
-          : product.per100g.fiber * multiplier,
+        calories: createNutrient(product.per100g.calories * multiplier, 'kcal', product.unknownFields.includes('calories') ? 'unknown' : 'known', [prov]),
+        protein: createNutrient(product.per100g.protein * multiplier, 'g', product.unknownFields.includes('protein') ? 'unknown' : 'known', [prov]),
+        carbs: createNutrient(product.per100g.carbs * multiplier, 'g', product.unknownFields.includes('carbs') ? 'unknown' : 'known', [prov]),
+        fat: createNutrient(product.per100g.fat * multiplier, 'g', product.unknownFields.includes('fat') ? 'unknown' : 'known', [prov]),
+        fiber: createNutrient(product.per100g.fiber * multiplier, 'g', product.unknownFields.includes('fiber') ? 'unknown' : 'known', [prov]),
         ...(product.unknownFields.includes('sugar')
           ? {}
           : product.per100g.sugar !== undefined
-            ? { sugar: product.per100g.sugar * multiplier }
+            ? { sugar: createNutrient(product.per100g.sugar * multiplier, 'g', 'known', [prov]) }
             : {}),
         ...(product.unknownFields.includes('sodium')
           ? {}
           : product.per100g.sodium !== undefined
-            ? { sodium: product.per100g.sodium * multiplier }
+            ? { sodium: createNutrient(product.per100g.sodium * multiplier, 'mg', 'known', [prov]) }
             : {}),
       }
-
-      // ProductTrust confidence is only medium | low.
-      // Normalize both the estimator's high and medium states to moderate
-      // for LoggedFoodItem; low becomes lower.
-      const confidence =
-        product.trust.tier === 'ai_estimate'
-          ? product.trust.confidence === 'low'
-            ? 'lower'
-            : 'moderate'
-          : 'high'
 
       const item: LoggedFoodItem = {
         id: uuidv4(),
@@ -248,7 +241,6 @@ export function FoodSearch({ slot, onClose }: FoodSearchProps) {
         unit: 'gram',
         gramsConsumed: Math.round(qtyGrams),
         nutrition,
-        confidence,
       }
 
       await addFoodEntry(user.uid, slot, [item])

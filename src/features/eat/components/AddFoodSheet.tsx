@@ -4,6 +4,7 @@
 // ============================================================
 
 import { parseNaturalLanguageFoodEntry, convertToLoggedItems } from '@/lib/engines/nlpParser'
+import { sumNutrients, createNutrient } from '@/lib/nutrition/nutrientValue'
 import { getFoodLogsByDate, getSavedMeals, saveSavedMeal } from '@/lib/firebase/dataService'
 import { getAllPortionMemories } from '@/lib/services/portionMemoryService'
 import { startRecording } from '@/components/vybe/VYBEMicButton'
@@ -143,10 +144,10 @@ function NlpView({ onCancel, onFallbackSearch, onFallbackSnap, onConfirm }: NlpV
                 <div>
                   <p className="text-sm text-white font-medium">{item.foodName}</p>
                   <p className="text-xs text-white/40 mt-0.5">
-                    {item.quantity} {item.unit} · {Math.round(item.nutrition.calories)} kcal
+                    {item.quantity} {item.unit} · {Math.round(item.nutrition.calories.value ?? 0)} kcal
                   </p>
                 </div>
-                <span className="text-xs text-emerald-400 font-semibold">P:{Math.round(item.nutrition.protein)}g</span>
+                <span className="text-xs text-emerald-400 font-semibold">P:{Math.round(item.nutrition.protein.value ?? 0)}g</span>
               </div>
             ))}
           </div>
@@ -211,7 +212,7 @@ function RecentFoods({ uid, onLog }: RecentFoodsProps) {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs font-medium hover:bg-white/10 hover:text-white active:scale-95 transition-all"
           >
             {item.foodName}
-            <span className="text-white/30">· {Math.round(item.nutrition.calories)} kcal</span>
+            <span className="text-white/30">· {Math.round(item.nutrition.calories.value ?? 0)} kcal</span>
           </button>
         ))}
       </div>
@@ -352,25 +353,13 @@ export function AddFoodSheet({ slot, onClose, callbacks }: AddFoodSheetProps) {
       return
     }
 
-    const totals = currentMealEntries.reduce(
-      (acc, entry) => ({
-        calories: acc.calories + entry.totals.calories,
-        protein: acc.protein + entry.totals.protein,
-        carbs: acc.carbs + entry.totals.carbs,
-        fat: acc.fat + entry.totals.fat,
-        fiber:
-          acc.fiber === null || entry.totals.fiber === null || entry.totals.fiber === undefined
-            ? null
-            : (acc.fiber ?? 0) + entry.totals.fiber,
-      }),
-      {
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-        fiber: 0 as number | null,
-      }
-    )
+    const totals = {
+      calories: sumNutrients(currentMealEntries.map(e => e.totals.calories), 'kcal'),
+      protein: sumNutrients(currentMealEntries.map(e => e.totals.protein), 'g'),
+      carbs: sumNutrients(currentMealEntries.map(e => e.totals.carbs), 'g'),
+      fat: sumNutrients(currentMealEntries.map(e => e.totals.fat), 'g'),
+      fiber: sumNutrients(currentMealEntries.map(e => e.totals.fiber), 'g')
+    }
 
     const meal: SavedMeal = {
       id: uuidv4(),

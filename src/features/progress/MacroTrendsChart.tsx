@@ -2,6 +2,7 @@ import { StatCard } from '@/components/shared'
 import { useFoodLogStore } from '@/store/foodLogStore'
 import { format, subDays } from 'date-fns'
 import { useMemo } from 'react'
+import { sumNutrients } from '@/lib/nutrition/nutrientValue'
 import { Bar, BarChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 export function MacroTrendsChart({ calTarget }: { calTarget: number }) {
@@ -14,10 +15,10 @@ export function MacroTrendsChart({ calTarget }: { calTarget: number }) {
       const dateStr = format(date, 'yyyy-MM-dd')
       
       const dayEntries = entries.filter(e => e.date === dateStr).flatMap(e => e.foods)
-      const totalCals = dayEntries.reduce((sum, f) => sum + f.nutrition.calories, 0)
-      const totalProtein = dayEntries.reduce((sum, f) => sum + f.nutrition.protein, 0)
-      const totalCarbs = dayEntries.reduce((sum, f) => sum + f.nutrition.carbs, 0)
-      const totalFat = dayEntries.reduce((sum, f) => sum + f.nutrition.fat, 0)
+      const totalCals = sumNutrients(dayEntries.map(f => f.nutrition.calories), 'kcal').value ?? 0
+      const totalProtein = sumNutrients(dayEntries.map(f => f.nutrition.protein), 'g').value ?? 0
+      const totalCarbs = sumNutrients(dayEntries.map(f => f.nutrition.carbs), 'g').value ?? 0
+      const totalFat = sumNutrients(dayEntries.map(f => f.nutrition.fat), 'g').value ?? 0
 
       // Convert macros to calories for stacked bar chart (Protein/Carbs = 4kcal/g, Fat = 9kcal/g)
       return {

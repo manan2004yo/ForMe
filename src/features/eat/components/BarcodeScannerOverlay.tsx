@@ -1,3 +1,4 @@
+import { auth } from '@/lib/firebase/config'
 // ============================================================
 // FORME — Barcode Scanner Overlay
 // ============================================================
@@ -109,7 +110,9 @@ export function BarcodeScannerOverlay({
 
       const response = await fetch('/api/read-nutrition-label', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+        'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+ 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: resized }),
       })
 

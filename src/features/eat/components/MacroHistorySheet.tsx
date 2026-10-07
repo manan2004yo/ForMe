@@ -67,18 +67,18 @@ export function MacroHistorySheet({ isOpen, onClose }: MacroHistorySheetProps) {
         logs.forEach(log => {
           const existing = byDate.get(log.date)
           if (existing) {
-            existing.calories += log.totals.calories
-            existing.protein += log.totals.protein
-            existing.carbs += log.totals.carbs
-            existing.fat += log.totals.fat
+            existing.calories += log.totals.calories.value ?? 0
+            existing.protein += log.totals.protein.value ?? 0
+            existing.carbs += log.totals.carbs.value ?? 0
+            existing.fat += log.totals.fat.value ?? 0
           } else {
             byDate.set(log.date, {
               date: log.date,
               displayDate: format(parseISO(log.date), timeRange === '7' ? 'EEE' : 'MMM d'),
-              calories: Math.round(log.totals.calories),
-              protein: parseFloat(log.totals.protein.toFixed(1)),
-              carbs: parseFloat(log.totals.carbs.toFixed(1)),
-              fat: parseFloat(log.totals.fat.toFixed(1)),
+              calories: Math.round(log.totals.calories.value ?? 0),
+              protein: parseFloat((log.totals.protein.value ?? 0).toFixed(1)),
+              carbs: parseFloat((log.totals.carbs.value ?? 0).toFixed(1)),
+              fat: parseFloat((log.totals.fat.value ?? 0).toFixed(1)),
             })
           }
         })

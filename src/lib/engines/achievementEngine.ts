@@ -33,7 +33,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     color: 'from-rose-400 to-red-500',
     evaluate: (ctx) => {
       const target = ctx.metrics.proteinTarget
-      return ctx.foodLogs.some(log => log.totals.protein >= target * 0.95) // within 5%
+      return ctx.foodLogs.some(log => (log.totals.protein.value ?? 0) >= target * 0.95) // within 5%
     }
   },
   {

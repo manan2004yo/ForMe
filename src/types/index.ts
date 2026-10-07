@@ -99,29 +99,85 @@ export type PortionUnit =
   | 'slice' | 'spoon' | 'tablespoon' | 'teaspoon' | 'gram'
   | 'ml' | 'medium' | 'large' | 'small' | 'serving'
 
-export type NutritionConfidence = 'high' | 'moderate' | 'lower'
+export type EvidenceSource = 'open_food_facts' | 'upcitemdb' | 'ai_vision' | 'user_label_scan' | 'user_manual' | 'legacy_log' | 'verified_database'
+
+export interface Provenance {
+  source: EvidenceSource
+  timestamp: string
+  raw_value?: number
+}
+
+export interface NutrientValue {
+  state: 'known' | 'unknown' | 'trace' | 'conflict'
+  value: number | null
+  unit: string
+  provenance: Provenance[]
+  validationFlags?: {
+    atwater_consistent?: boolean
+  }
+}
 
 export type MealSlot = 'breakfast' | 'lunch' | 'snack' | 'dinner' | 'pre_workout' | 'post_workout'
 
 export interface NutritionInfo {
+  calories: NutrientValue
+  protein: NutrientValue
+  carbs: NutrientValue
+  fat: NutrientValue
+  fiber: NutrientValue
+  saturatedFat?: NutrientValue
+  addedSugar?: NutrientValue
+  calcium?: NutrientValue
+  iron?: NutrientValue
+  vitaminC?: NutrientValue
+  vitaminD?: NutrientValue
+  b12?: NutrientValue
+  sodium?: NutrientValue
+  sugar?: NutrientValue
+  potassium?: NutrientValue
+  magnesium?: NutrientValue
+  zinc?: NutrientValue
+  vitaminA?: NutrientValue
+}
+
+export interface RawNutritionInfo {
   calories: number
-  protein: number  // g
-  carbs: number    // g
-  fat: number      // g
-  fiber?: number | null // g (null or absent = unknown, never 0)
+  protein: number
+  carbs: number
+  fat: number
+  fiber?: number | null
   saturatedFat?: number
   addedSugar?: number
-  calcium?: number // mg
-  iron?: number    // mg
-  vitaminC?: number // mg
-  vitaminD?: number // IU
-  b12?: number     // mcg
-  sodium?: number  // mg
-  sugar?: number   // g (total sugars)
-  potassium?: number // mg
-  magnesium?: number // mg
-  zinc?: number    // mg
-  vitaminA?: number // mcg
+  calcium?: number
+  iron?: number
+  vitaminC?: number
+  vitaminD?: number
+  b12?: number
+  sodium?: number
+  sugar?: number
+  potassium?: number
+  magnesium?: number
+  zinc?: number
+  vitaminA?: number
+}
+
+export interface RawFoodItem {
+  id: string
+  name: string
+  nameHindi?: string
+  nameLocal?: string
+  category: string
+  subcategory?: string
+  region?: string
+  portionUnits: PortionUnit[]
+  defaultPortion: number
+  defaultUnit: PortionUnit
+  gramsPerUnit: Record<string, number>
+  nutrition: RawNutritionInfo
+  tags: string[]
+  aliases: string[]
+  isIndian: boolean
+  estimatedCostPer100g?: number
 }
 
 export interface FoodItem {
@@ -151,7 +207,6 @@ export interface LoggedFoodItem {
   unit: PortionUnit
   gramsConsumed: number
   nutrition: NutritionInfo
-  confidence: NutritionConfidence
   notes?: string
 }
 
@@ -390,7 +445,7 @@ export interface ParsedFoodEntry {
   originalText: string
   parsedItems: {
     rawText: string
-    foodItem?: FoodItem
+    foodItem?: RawFoodItem
     quantity: number
     unit: PortionUnit
     confidence: number

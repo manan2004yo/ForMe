@@ -11,15 +11,17 @@ import { useFoodLogStore } from '@/store/foodLogStore'
 import { useUserStore } from '@/store/userStore'
 import { useVybeStore } from '@/store/vybeStore'
 import type { FoodLogEntry, MealSlot, NutritionInfo } from '@/types'
+import { createNutrient, sumNutrients } from '@/lib/nutrition/nutrientValue'
 import { clsx } from 'clsx'
 import { format } from 'date-fns'
-import { ChevronDown, ChevronUp, Coffee, Leaf, Moon, Plus, Sun, Sunset } from 'lucide-react'
+import { ChevronDown, ChevronUp, Coffee, Leaf, Moon, Plus, Sun, Sunset, Search, Flame } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { EditFoodModal } from './EditFoodModal'
 import { FamilyRecipeSplitter } from './FamilyRecipeSplitter'
 import { FoodSearch } from './FoodSearch'
 import { SnapAndLogModal } from './SnapAndLogModal'
+import { startRecording } from '@/components/vybe/VYBEMicButton'
 import type { SnapNutrients } from './SnapAndLogModal'
 import { BarcodeScannerOverlay } from './components/BarcodeScannerOverlay'
 import { BarcodeResultSheet } from './components/BarcodeResultSheet'
@@ -50,22 +52,23 @@ function buildSnapNutrition(
   core: { calories: number; protein: number; carbs: number; fat: number },
   n: SnapNutrients | undefined
 ): NutritionInfo {
+  const prov: import('@/types').Provenance = { source: 'ai_vision', timestamp: new Date().toISOString() }
   return {
-    calories: core.calories,
-    protein: core.protein,
-    carbs: core.carbs,
-    fat: core.fat,
-    fiber: n?.fiber ?? null,
-    ...(n?.sugar != null && { sugar: n.sugar }),
-    ...(n?.sodium != null && { sodium: n.sodium }),
-    ...(n?.potassium != null && { potassium: n.potassium }),
-    ...(n?.magnesium != null && { magnesium: n.magnesium }),
-    ...(n?.iron != null && { iron: n.iron }),
-    ...(n?.calcium != null && { calcium: n.calcium }),
-    ...(n?.zinc != null && { zinc: n.zinc }),
-    ...(n?.vitaminA != null && { vitaminA: n.vitaminA }),
-    ...(n?.vitaminC != null && { vitaminC: n.vitaminC }),
-    ...(n?.vitaminD != null && { vitaminD: n.vitaminD }),
+    calories: createNutrient(core.calories, 'kcal', 'known', [prov]),
+    protein: createNutrient(core.protein, 'g', 'known', [prov]),
+    carbs: createNutrient(core.carbs, 'g', 'known', [prov]),
+    fat: createNutrient(core.fat, 'g', 'known', [prov]),
+    fiber: createNutrient(n?.fiber ?? 0, 'g', n?.fiber != null ? 'known' : 'unknown', [prov]),
+    ...(n?.sugar != null && { sugar: createNutrient(n.sugar, 'g', 'known', [prov]) }),
+    ...(n?.sodium != null && { sodium: createNutrient(n.sodium, 'mg', 'known', [prov]) }),
+    ...(n?.potassium != null && { potassium: createNutrient(n.potassium, 'mg', 'known', [prov]) }),
+    ...(n?.magnesium != null && { magnesium: createNutrient(n.magnesium, 'mg', 'known', [prov]) }),
+    ...(n?.iron != null && { iron: createNutrient(n.iron, 'mg', 'known', [prov]) }),
+    ...(n?.calcium != null && { calcium: createNutrient(n.calcium, 'mg', 'known', [prov]) }),
+    ...(n?.zinc != null && { zinc: createNutrient(n.zinc, 'mg', 'known', [prov]) }),
+    ...(n?.vitaminA != null && { vitaminA: createNutrient(n.vitaminA, 'mcg', 'known', [prov]) }),
+    ...(n?.vitaminC != null && { vitaminC: createNutrient(n.vitaminC, 'mg', 'known', [prov]) }),
+    ...(n?.vitaminD != null && { vitaminD: createNutrient(n.vitaminD, 'mcg', 'known', [prov]) }),
   }
 }
 
@@ -93,12 +96,13 @@ const MEAL_CONFIG: { slot: MealSlot; label: string; icon: any; time: string }[] 
   { slot: 'post_workout', label: 'Post-Workout', icon: Sunset, time: 'After Training' },
 ]
 
-function NutritionChip({ label, value, unit, colorClass }: { label: string; value: number; unit: string; colorClass: string }) {
+function NutritionChip({ label, value, unit, colorClass }: { label: string; value: import('@/types').NutrientValue; unit: string; colorClass: string }) {
   return (
     <div className="flex flex-col">
       <span className="text-[10px] uppercase tracking-wider text-white/40 mb-1">{label}</span>
       <div className="flex items-baseline gap-1">
-        <span className={clsx("font-semibold text-sm", colorClass)}>{Math.round(value)}</span>
+        {value.state !== 'known' && <span className={clsx("font-semibold text-sm", colorClass)}>{value.state === 'conflict' ? '~' : '>'}</span>}
+        <span className={clsx("font-semibold text-sm", colorClass)}>{Math.round(value.value ?? 0)}</span>
         <span className="text-xs text-white/50">{unit}</span>
       </div>
     </div>
@@ -117,16 +121,13 @@ function MealSection({ config, entries, onDelete, onAddFood, onEdit }: {
   const Icon = config.icon
   
   const hasFood = entries.length > 0
-  const totals: NutritionInfo = entries.reduce((acc, e) => {
-    const t = e.totals || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
-    return {
-      calories: acc.calories + t.calories,
-      protein: acc.protein + t.protein,
-      carbs: acc.carbs + t.carbs,
-      fat: acc.fat + t.fat,
-      fiber: (acc.fiber ?? 0) + (t.fiber ?? 0),
-    }
-  }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
+  const totals: NutritionInfo = {
+    calories: sumNutrients(entries.map(e => e.totals?.calories ?? createNutrient(0, 'kcal', 'known', [])), 'kcal'),
+    protein: sumNutrients(entries.map(e => e.totals?.protein ?? createNutrient(0, 'g', 'known', [])), 'g'),
+    carbs: sumNutrients(entries.map(e => e.totals?.carbs ?? createNutrient(0, 'g', 'known', [])), 'g'),
+    fat: sumNutrients(entries.map(e => e.totals?.fat ?? createNutrient(0, 'g', 'known', [])), 'g'),
+    fiber: sumNutrients(entries.map(e => e.totals?.fiber ?? createNutrient(0, 'g', 'known', [])), 'g')
+  }
 
   return (
     <div className="glass-panel overflow-hidden mb-4 transition-all duration-300 hover:shadow-card-hover">
@@ -145,8 +146,8 @@ function MealSection({ config, entries, onDelete, onAddFood, onEdit }: {
             <h3 className="text-white font-medium">{config.label}</h3>
             {hasFood ? (
               <div className="flex items-center gap-4 mt-1">
-                <span className="text-xs text-white/70 font-semibold">{Math.round(totals.calories)} kcal</span>
-                <span className="text-[10px] text-emerald-400 font-medium">{Math.round(totals.protein)}g Protein</span>
+                <span className="text-xs text-white/70 font-semibold">{Math.round(totals.calories.value ?? 0)} kcal</span>
+                <span className="text-[10px] text-emerald-400 font-medium">{Math.round(totals.protein.value ?? 0)}g Protein</span>
               </div>
             ) : (
               <span className="text-xs text-white/40 mt-1 block">{config.time}</span>
@@ -183,7 +184,7 @@ function MealSection({ config, entries, onDelete, onAddFood, onEdit }: {
                   <div>
                     <div className="text-sm text-white font-medium">{food.foodName}</div>
                     <div className="text-xs text-white/50 mt-1">
-                      {food.quantity} {food.unit} - {Math.round(food.nutrition.calories)} kcal
+                      {food.quantity} {food.unit} - {Math.round(food.nutrition.calories.value ?? 0)} kcal
                     </div>
                   </div>
                   {confirmDeleteId === entry.id ? (
@@ -277,14 +278,12 @@ export function EatDashboard() {
 
   const todayEntries = entries.filter(e => e.date === format(new Date(), 'yyyy-MM-dd'))
 
-  const totals = todayEntries.reduce((acc, entry) => {
-    const t = entry.totals || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
-    acc.calories += t.calories
-    acc.protein += t.protein
-    acc.carbs += t.carbs
-    acc.fat += t.fat
-    return acc
-  }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
+  const totals = {
+    calories: sumNutrients(todayEntries.map(e => e.totals?.calories ?? createNutrient(0, 'kcal', 'known', [])), 'kcal'),
+    protein: sumNutrients(todayEntries.map(e => e.totals?.protein ?? createNutrient(0, 'g', 'known', [])), 'g'),
+    carbs: sumNutrients(todayEntries.map(e => e.totals?.carbs ?? createNutrient(0, 'g', 'known', [])), 'g'),
+    fat: sumNutrients(todayEntries.map(e => e.totals?.fat ?? createNutrient(0, 'g', 'known', [])), 'g')
+  }
 
   // Dynamic targets from User Profile
   const baseProtein = metrics?.proteinTarget || 150
@@ -322,60 +321,150 @@ export function EatDashboard() {
           </div>
         ) : (
           <>
-        {/* Daily Summary */}
-        <div className="glass-panel-intense p-6 mb-8 relative overflow-hidden">
-
+        {/* INTENT CAPTURE HUB */}
+        <div className="glass-panel p-6 mb-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
           
-          <h2 className="text-sm font-medium text-white/50 uppercase tracking-widest mb-6">Daily Totals</h2>
+          <h2 className="text-lg font-medium text-white mb-4">What are you logging?</h2>
+          
+          <div className="grid grid-cols-4 gap-3 mb-4">
+            <button 
+              onClick={() => {
+                const h = new Date().getHours();
+                const slot = h < 11 ? 'breakfast' : h < 15 ? 'lunch' : h < 18 ? 'snack' : 'dinner';
+                startRecording({ mealSlot: slot })
+              }}
+              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 group"
+            >
+              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
+                <div className="w-4 h-4 rounded-full bg-accent animate-pulse" />
+              </div>
+              <span className="text-xs font-medium text-white/70 group-hover:text-white">Speak</span>
+            </button>
+
+            <button 
+              onClick={() => {
+                const h = new Date().getHours();
+                const slot = h < 11 ? 'breakfast' : h < 15 ? 'lunch' : h < 18 ? 'snack' : 'dinner';
+                setScanningSlot(slot); setPendingScanSlot(slot); 
+              }}
+              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 group"
+            >
+              <div className="w-10 h-10 rounded-full bg-blue-400/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M16 7v10"/></svg>
+              </div>
+              <span className="text-xs font-medium text-white/70 group-hover:text-white">Scan</span>
+            </button>
+
+            <button 
+              onClick={() => {
+                const h = new Date().getHours();
+                const slot = h < 11 ? 'breakfast' : h < 15 ? 'lunch' : h < 18 ? 'snack' : 'dinner';
+                setSnappingSlot(slot);
+              }}
+              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 group"
+            >
+              <div className="w-10 h-10 rounded-full bg-purple-400/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+              </div>
+              <span className="text-xs font-medium text-white/70 group-hover:text-white">Snap</span>
+            </button>
+
+            <button 
+              onClick={() => {
+                const h = new Date().getHours();
+                const slot = h < 11 ? 'breakfast' : h < 15 ? 'lunch' : h < 18 ? 'snack' : 'dinner';
+                setAddFoodSlot(slot);
+              }}
+              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 group"
+            >
+              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/70 group-hover:scale-110 transition-transform">
+                <Plus size={20} />
+              </div>
+              <span className="text-xs font-medium text-white/70 group-hover:text-white">Type</span>
+            </button>
+          </div>
+          
+          <button 
+            onClick={() => {
+                const h = new Date().getHours();
+                const slot = h < 11 ? 'breakfast' : h < 15 ? 'lunch' : h < 18 ? 'snack' : 'dinner';
+                setAddFoodSlot(slot);
+            }}
+            className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-between transition-colors border border-white/5 group"
+          >
+            <div className="flex items-center gap-3">
+              <Search size={16} className="text-white/40 group-hover:text-white/70" />
+              <span className="text-sm text-white/50 group-hover:text-white/80 font-medium">Search for food or saved meals...</span>
+            </div>
+            <div className="px-2 py-1 bg-white/10 rounded text-[10px] text-white/40">Search</div>
+          </button>
+        </div>
+
+        {/* DAILY PROGRESS */}
+        <div className="glass-panel p-6 mb-8">
           <div className="flex justify-between items-end mb-6">
-            <div className="flex items-baseline gap-2">
-              <AnimatedNumber value={totals.calories} className="text-4xl font-heading font-bold text-white" />
-              <span className="text-white/40">/ {baseCals} kcal</span>
+            <div>
+              <div className="text-sm text-white/50 uppercase tracking-widest font-medium mb-1">Total Consumed</div>
+              <div className="flex items-baseline gap-2">
+                <AnimatedNumber value={totals.calories.value ?? 0} className="text-4xl font-heading font-bold text-white" />
+                <span className="text-white/40 font-medium">/ {baseCals} kcal</span>
+              </div>
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-6">
             <div>
-              <div className="text-xs text-white/50 mb-2">Protein</div>
-              <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-lg font-bold text-emerald-400">{Math.round(totals.protein)}</span>
-                <span className="text-xs text-white/40">/ {baseProtein}g</span>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-medium text-emerald-400 uppercase tracking-wider">Pro</span>
+                <span className="text-xs font-bold text-white">{Math.round(totals.protein.value ?? 0)}<span className="text-white/40 font-normal">/{baseProtein}</span></span>
               </div>
-              <ProgressBar value={totals.protein} max={baseProtein} colorClass="bg-emerald-400" heightClass="h-1" className="bg-white/5" />
+              <ProgressBar value={totals.protein.value ?? 0} max={baseProtein} colorClass="bg-emerald-400" heightClass="h-1.5" className="bg-white/5" />
             </div>
             <div>
-              <div className="text-xs text-white/50 mb-2 flex items-center gap-1">
-                Carbs
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-medium text-blue-400 uppercase tracking-wider">Carb</span>
+                <span className="text-xs font-bold text-white">{Math.round(totals.carbs.value ?? 0)}<span className="text-white/40 font-normal">/{baseCarbs}</span></span>
               </div>
-              <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-lg font-bold text-blue-400">{Math.round(totals.carbs)}</span>
-                <span className="text-xs text-white/40">/ {baseCarbs}g</span>
-              </div>
-              <ProgressBar value={totals.carbs} max={baseCarbs} colorClass="bg-blue-400" heightClass="h-1" className="bg-white/5" />
+              <ProgressBar value={totals.carbs.value ?? 0} max={baseCarbs} colorClass="bg-blue-400" heightClass="h-1.5" className="bg-white/5" />
             </div>
             <div>
-              <div className="text-xs text-white/50 mb-2">Fats</div>
-              <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-lg font-bold text-purple-400">{Math.round(totals.fat)}</span>
-                <span className="text-xs text-white/40">/ {baseFat}g</span>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-medium text-purple-400 uppercase tracking-wider">Fat</span>
+                <span className="text-xs font-bold text-white">{Math.round(totals.fat.value ?? 0)}<span className="text-white/40 font-normal">/{baseFat}</span></span>
               </div>
-              <ProgressBar value={totals.fat} max={baseFat} colorClass="bg-purple-400" heightClass="h-1" className="bg-white/5" />
+              <ProgressBar value={totals.fat.value ?? 0} max={baseFat} colorClass="bg-purple-400" heightClass="h-1.5" className="bg-white/5" />
             </div>
           </div>
         </div>
 
-        {/* Meal Slots */}
-        <div className="space-y-1">
-          {MEAL_CONFIG.map(config => (
-            <MealSection
-              key={config.slot}
-              config={config}
-              entries={todayEntries.filter(e => e.meal === config.slot)}
-              onDelete={(id) => removeEntry(user?.uid || "demo", id)}
-              onAddFood={setAddFoodSlot}
-              onEdit={(entry) => setEditingEntry(entry)}
-            />
-          ))}
+        {/* ACTUAL NUTRITION LOG */}
+        <div className="space-y-4">
+          <h2 className="text-sm font-medium text-white/50 uppercase tracking-widest pl-1">Today's Log</h2>
+          {MEAL_CONFIG.map(config => {
+            const mealEntries = todayEntries.filter(e => e.meal === config.slot)
+            if (mealEntries.length === 0) return null // Hide empty slots
+            
+            return (
+              <MealSection
+                key={config.slot}
+                config={config}
+                entries={mealEntries}
+                onDelete={(id) => removeEntry(user?.uid || "demo", id)}
+                onAddFood={setAddFoodSlot}
+                onEdit={(entry) => setEditingEntry(entry)}
+              />
+            )
+          })}
+          {todayEntries.length === 0 && (
+            <div className="text-center py-10">
+              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
+                <Flame size={24} className="text-white/20" />
+              </div>
+              <p className="text-white/40 text-sm font-medium">No fuel logged today.</p>
+              <p className="text-white/30 text-xs mt-1">Use the options above to capture intent.</p>
+            </div>
+          )}
         </div>
 
 
@@ -422,7 +511,6 @@ export function EatDashboard() {
                 quantity: data.servings,
                 unit: 'serving',
                 gramsConsumed: data.portionGrams ?? 0,
-                confidence: snapConfidence(data.confidence),
                 nutrition: buildSnapNutrition({ calories: data.calories, protein: data.protein, carbs: data.carbs, fat: data.fat }, data.nutrients)
               }])
               setSnappingSlot(null)
@@ -476,11 +564,34 @@ export function EatDashboard() {
         product={scannedProduct}
         isManualAdd={isManualScan}
         onLog={(product, grams) => {
-          const baseNutrition = calculateNutritionForGrams(product, grams)
-          // Unknown fiber is logged as null, never a false 0
-          const nutrition = product.unknownFields.includes('fiber')
-            ? { ...baseNutrition, fiber: null }
-            : baseNutrition
+          const multiplier = grams / 100
+          const sourceMap: Record<string, import('@/types').EvidenceSource> = {
+            'ai_estimate': 'ai_vision',
+            'open_food_facts': 'open_food_facts',
+            'upcitemdb': 'upcitemdb',
+            'user_manual': 'user_manual',
+          }
+          const mappedSource = sourceMap[product.trust.tier] || 'legacy_log'
+          const prov: import('@/types').Provenance = { source: mappedSource, timestamp: new Date().toISOString() }
+
+          const nutrition: import('@/types').NutritionInfo = {
+            calories: createNutrient(product.per100g.calories * multiplier, 'kcal', product.unknownFields.includes('calories') ? 'unknown' : 'known', [prov]),
+            protein: createNutrient(product.per100g.protein * multiplier, 'g', product.unknownFields.includes('protein') ? 'unknown' : 'known', [prov]),
+            carbs: createNutrient(product.per100g.carbs * multiplier, 'g', product.unknownFields.includes('carbs') ? 'unknown' : 'known', [prov]),
+            fat: createNutrient(product.per100g.fat * multiplier, 'g', product.unknownFields.includes('fat') ? 'unknown' : 'known', [prov]),
+            fiber: createNutrient(product.per100g.fiber * multiplier, 'g', product.unknownFields.includes('fiber') ? 'unknown' : 'known', [prov]),
+            ...(product.unknownFields.includes('sugar')
+              ? {}
+              : product.per100g.sugar !== undefined
+                ? { sugar: createNutrient(product.per100g.sugar * multiplier, 'g', 'known', [prov]) }
+                : {}),
+            ...(product.unknownFields.includes('sodium')
+              ? {}
+              : product.per100g.sodium !== undefined
+                ? { sodium: createNutrient(product.per100g.sodium * multiplier, 'mg', 'known', [prov]) }
+                : {}),
+          }
+
           addFoodEntry(
             user?.uid || 'demo',
             pendingScanSlot,
@@ -491,7 +602,6 @@ export function EatDashboard() {
               quantity: grams,
               unit: 'gram',
               gramsConsumed: grams,
-              confidence: 'high',
               nutrition,
             }],
             `barcode-${product.barcode}`,

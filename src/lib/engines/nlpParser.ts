@@ -4,7 +4,8 @@
 // ============================================================
 
 import { INDIAN_FOODS, getNutritionForGrams } from '@/lib/data/indianFoods'
-import type { FoodItem, LoggedFoodItem, NutritionConfidence, ParsedFoodEntry, PortionUnit } from '@/types'
+import type { FoodItem, LoggedFoodItem, ParsedFoodEntry, PortionUnit, RawFoodItem } from '@/types'
+import { sumNutrients } from '@/lib/nutrition/nutrientValue'
 import { v4 as uuidv4 } from 'uuid'
 
 // ─── Unit Patterns ────────────────────────────────────────────
@@ -122,7 +123,7 @@ function parseSegment(segment: string): ParsedFoodEntry['parsedItems'][0] | null
   }
 }
 
-function findBestFoodMatch(text: string): FoodItem | null {
+function findBestFoodMatch(text: string): RawFoodItem | null {
   if (!text) return null
   const query = text.toLowerCase().trim()
 
@@ -184,7 +185,6 @@ export function convertToLoggedItems(parsed: ParsedFoodEntry, customKatoriGrams 
         unit: item.unit,
         gramsConsumed: Math.round(finalGrams),
         nutrition,
-        confidence: finalGrams > 0 ? 'moderate' : 'lower' as NutritionConfidence,
       }
     })
 }
@@ -192,11 +192,11 @@ export function convertToLoggedItems(parsed: ParsedFoodEntry, customKatoriGrams 
 // ─── Sum Nutrition ────────────────────────────────────────────
 
 export function sumNutrition(items: LoggedFoodItem[]) {
-  return items.reduce((acc, item) => ({
-    calories: Math.round(acc.calories + item.nutrition.calories),
-    protein: parseFloat((acc.protein + item.nutrition.protein).toFixed(1)),
-    carbs: parseFloat((acc.carbs + item.nutrition.carbs).toFixed(1)),
-    fat: parseFloat((acc.fat + item.nutrition.fat).toFixed(1)),
-    fiber: parseFloat(((acc.fiber ?? 0) + (item.nutrition.fiber ?? 0)).toFixed(1)),
-  }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
+  return {
+    calories: sumNutrients(items.map(i => i.nutrition.calories), 'kcal'),
+    protein: sumNutrients(items.map(i => i.nutrition.protein), 'g'),
+    carbs: sumNutrients(items.map(i => i.nutrition.carbs), 'g'),
+    fat: sumNutrients(items.map(i => i.nutrition.fat), 'g'),
+    fiber: sumNutrients(items.map(i => i.nutrition.fiber), 'g')
+  }
 }
