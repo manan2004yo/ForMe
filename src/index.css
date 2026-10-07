@@ -776,8 +776,8 @@ body {
 
 /* ─── Safe Area ──────────────────────────────────────────────── */
 
-.pb-safe { padding-bottom: env(safe-area-bottom, 0px); }
-.pt-safe { padding-top: env(safe-area-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
 
 /* ─── Tailwind v4 Utility Extensions ─────────────────────────── */
 

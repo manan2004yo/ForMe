@@ -24,6 +24,7 @@ import { LandingPage } from '@/features/auth/LandingPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { SignupPage } from '@/features/auth/SignupPage'
 import { EatDashboard } from '@/features/eat/EatDashboard'
+import { TodayExperience } from '@/features/home/TodayExperience'
 import { HomeDashboard } from '@/features/home/HomeDashboard'
 import { OnboardingFlow } from '@/features/onboarding/OnboardingFlow'
 import { PlanDashboard } from '@/features/plan/PlanDashboard'
@@ -109,7 +110,7 @@ function AuthenticatedApp() {
     <AppShell>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<HomeDashboard />} />
+          <Route path="/" element={<TodayExperience />} />
           <Route path="/eat" element={<EatDashboard />} />
           <Route path="/plan" element={<PlanDashboard />} />
           <Route path="/train" element={<TrainDashboard />} />
