@@ -16,8 +16,13 @@ const PRIMARY_NAV_ITEMS = [
   { path: '/profile', label: 'Profile', icon: User },
 ]
 
-const SECONDARY_NAV_ITEMS = [
-  { path: '/plan', label: 'Legacy Plan', icon: BookOpen },
+const DESKTOP_NAV_ITEMS = [
+  { path: '/', label: 'Home', icon: Home },
+  { path: '/eat', label: 'Eat', icon: Flame },
+  { path: '/plan', label: 'Plan', icon: BookOpen },
+  { path: '/train', label: 'Train', icon: Activity },
+  { path: '/progress', label: 'Progress', icon: TrendingUp },
+  { path: '/profile', label: 'Profile', icon: User },
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -60,47 +65,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="flex-1 flex flex-col justify-between px-4 pb-6">
             <nav className="flex flex-col gap-2">
-              {PRIMARY_NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-                const isActive = location.pathname === path
+              <span className="px-4 text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-2 mt-2">Menu</span>
+              {DESKTOP_NAV_ITEMS.map(({ path, label, icon: Icon }) => {
+                const isActive = path === '/' ? location.pathname === '/' : location.pathname.startsWith(path)
                 return (
                   <button
                     key={path}
                     onClick={() => navigate(path)}
                     className={clsx(
-                      "flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95",
+                      "flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-teal-500 active:scale-95",
                       isActive 
-                        ? "bg-white/10 text-white shadow-sm" 
+                        ? "bg-teal-500/10 text-teal-400 border border-teal-500/20 shadow-[0_0_15px_rgba(20,184,166,0.1)]" 
                         : "text-white/50 hover:text-white hover:bg-white/5"
                     )}
                     aria-label={label}
                     aria-current={isActive ? 'page' : undefined}
                   >
-                    <Icon size={20} className={isActive ? 'text-accent' : ''} />
-                    {label}
-                  </button>
-                )
-              })}
-            </nav>
-
-            <nav className="flex flex-col gap-2 mt-12 pt-6 border-t border-white/5">
-              <span className="px-4 text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-1">Tools</span>
-              {SECONDARY_NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-                const isActive = location.pathname === path
-                return (
-                  <button
-                    key={path}
-                    onClick={() => navigate(path)}
-                    className={clsx(
-                      "flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-95",
-                      isActive 
-                        ? "bg-white/10 text-white shadow-sm" 
-                        : "text-white/40 hover:text-white hover:bg-white/5"
-                    )}
-                    aria-label={label}
-                    aria-current={isActive ? 'page' : undefined}
-                  >
-                    <Icon size={20} className={isActive ? 'text-accent' : ''} />
-                    {label}
+                    <Icon size={20} className={isActive ? 'text-teal-400 drop-shadow-[0_0_8px_rgba(45,212,191,0.6)]' : ''} />
+                    <span className="tracking-wide">{label}</span>
                   </button>
                 )
               })}
