@@ -1,3 +1,18 @@
+HISTORICAL / NON-AUTHORITATIVE
+
+This document is preserved for historical/audit reference only.
+
+It has been superseded by the current FORME governance authority in GOVERNANCE.md.
+
+It must NOT be used to define:
+- current roadmap
+- current architecture
+- current gates
+- acceptance criteria
+- implementation authorization
+- Product Architect decisions
+
+============================================================
 # FORME MASTER PLAN v2 — SINGLE SOURCE OF TRUTH
 
 Last updated: 2026-10-01
@@ -150,3 +165,4 @@ Entry, purpose, primary workflow, secondary workflow, persistence, loading state
 - 2026-10-03: Roadmap update approved for Hydration. Hydration / Water Tracking was added to Step 12 Fuel Integration as a real-data feature to build, and Hydration was added as the sixth core readiness evidence signal. Step 12 owns implementation of hydration data and its readiness integration; no hydration value or readiness interpretation is fabricated before that implementation exists.
 - 2026-10-03: Approved Step 9 architectural deviation. Because the roadmap requires an overall Readiness score while also explicitly forbidding invented numbers or formulas, the product owner approved replacing the undefined numeric score with an evidence-qualified qualitative Readiness state. The state must be grounded in real recovery evidence, explain why it was reached, provide what to do next, and return Insufficient Evidence when the available evidence does not justify a conclusion. No fabricated numeric score or formula will be introduced.
 - 2026-10-03: Completed Step 8 (Workout rebuild). Completed the Train home hub, mobile Active Workout flow, persisted session state, one-level undo, workout finish summary with real history/recovery data, and exercise-library GIF integration with graceful fallback when the external exercise service is unavailable. Manual phone testing for undo, finish summary, and GIF integration was intentionally skipped by explicit product-owner approval; clean lint, TypeScript, and production builds were treated as the completion gate.
+

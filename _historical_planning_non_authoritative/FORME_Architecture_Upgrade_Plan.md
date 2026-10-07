@@ -1,3 +1,18 @@
+HISTORICAL / NON-AUTHORITATIVE
+
+This document is preserved for historical/audit reference only.
+
+It has been superseded by the current FORME governance authority in GOVERNANCE.md.
+
+It must NOT be used to define:
+- current roadmap
+- current architecture
+- current gates
+- acceptance criteria
+- implementation authorization
+- Product Architect decisions
+
+============================================================
 # FORME: Core Architecture & UX Upgrade Plan
 
 This document outlines a massive, 10-phase architectural and UX upgrade for the FORME fitness application. The goal is to transform the app into a premium, minimalist, and intelligent fitness system (Eat + Train + Recover) without rewriting the entire existing React/Zustand/Firebase codebase.
@@ -76,3 +91,4 @@ This document outlines a massive, 10-phase architectural and UX upgrade for the 
 *Bringing back the smart assistants and syncing with external devices.*
 1. **The Context-Aware AI Action Agent:** Reintroduce the "Ask FORME" chatbot. Give it the ability to read the user's daily context (calories remaining, sleep score) and perform actions (e.g., automatically logging food when the user types a sentence).
 2. **True Health Integrations (Google Fit / Apple Health):** Replace the mocked health screens with real API connections to pull active calories burned and step counts. Ensure this dynamically updates the user's daily caloric targets.
+

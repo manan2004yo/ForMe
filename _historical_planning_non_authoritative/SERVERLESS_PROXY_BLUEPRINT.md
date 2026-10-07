@@ -1,3 +1,18 @@
+HISTORICAL / NON-AUTHORITATIVE
+
+This document is preserved for historical/audit reference only.
+
+It has been superseded by the current FORME governance authority in GOVERNANCE.md.
+
+It must NOT be used to define:
+- current roadmap
+- current architecture
+- current gates
+- acceptance criteria
+- implementation authorization
+- Product Architect decisions
+
+============================================================
 # The Serverless Proxy Blueprint
 **Also known as the "Spotify Strategy"**
 
@@ -85,3 +100,4 @@ export default defineConfig({
 ```
 
 By following this blueprint, ForMe can securely integrate with **any** strict API in the world without ever facing browser security blocks.
+

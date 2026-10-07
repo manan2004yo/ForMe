@@ -1,3 +1,18 @@
+HISTORICAL / NON-AUTHORITATIVE
+
+This document is preserved for historical/audit reference only.
+
+It has been superseded by the current FORME governance authority in GOVERNANCE.md.
+
+It must NOT be used to define:
+- current roadmap
+- current architecture
+- current gates
+- acceptance criteria
+- implementation authorization
+- Product Architect decisions
+
+============================================================
 # FORME RECOVERY PLAN
 
 ## 🔴 P0 — Make the existing core genuinely usable
@@ -184,3 +199,4 @@ Repair and harden the existing product, not rebuild FORME from zero.
 38. Advanced charts
 39. Visual refinement
 40. Final regression testing
+
