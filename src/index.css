@@ -783,9 +783,9 @@ body {
 
 .font-sans { font-family: var(--font-family-sans); }
 
-.flex { display: flex; }
+/* .flex { display: flex; } */
 .grid { display: grid; }
-.hidden { display: none; }
+/* .hidden { display: none; } */
 .block { display: block; }
 .inline-flex { display: inline-flex; }
 .inline-block { display: inline-block; }
