@@ -38,10 +38,10 @@ export function PrivacySettingsModal({ onClose }: { onClose: () => void }) {
           entry.date,
           entry.meal,
           `"${item.foodName.replace(/"/g, '""')}"`,
-          Math.round(item.nutrition.calories),
-          item.nutrition.protein,
-          item.nutrition.carbs,
-          item.nutrition.fat,
+          Math.round(item.nutrition.calories.value ?? 0),
+          item.nutrition.protein.value ?? 0,
+          item.nutrition.carbs.value ?? 0,
+          item.nutrition.fat.value ?? 0,
         ].join(',')
         csvContent += row + '\n'
       })
