@@ -4,7 +4,7 @@ import { useFoodLogStore } from '@/store/foodLogStore'
 import { useProgressStore } from '@/store/progressStore'
 import { useUserStore } from '@/store/userStore'
 import { useWaterStreakStore } from '@/store/waterStreakStore'
-import { format } from 'date-fns'
+import { getTodayDateString } from '@/lib/dateUtils'
 import { useEffect, useMemo } from 'react'
 import { Activity, Flame, Heart, RefreshCw, TrendingUp, Zap } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -199,7 +199,7 @@ export function useTodayContext() {
   const context = useMemo<TodayContext | null>(() => {
     if (!profile || !metrics) return null
 
-    const todayString = format(new Date(), 'yyyy-MM-dd')
+    const todayString = getTodayDateString()
     const timeOfDay = getGreetingTime()
     const firstName = profile.name.split(' ')[0].slice(0, 15)
 

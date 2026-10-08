@@ -17,9 +17,7 @@ interface CnsState {
   fetchLogs: (uid: string) => Promise<void>
 }
 
-function getTodayDateString() {
-  return new Date().toISOString().split('T')[0]
-}
+import { getTodayDateString } from '@/lib/dateUtils'
 
 export const useCnsStore = create<CnsState>()(
   persist(
@@ -30,16 +28,18 @@ export const useCnsStore = create<CnsState>()(
           Object.entries(log).filter(([_key, value]) => value !== undefined)
         ) as CnsLog
 
+        const v2Key = `v2_${date}`
+
         set((state) => ({
           logs: {
             ...state.logs,
-            [date]: cleanLog
+            [v2Key]: cleanLog
           }
         }))
 
         if (uid) {
           try {
-            await setDoc(doc(db, 'users', uid, 'cns', date), cleanLog)
+            await setDoc(doc(db, 'users', uid, 'cns_v2', date), cleanLog)
           } catch (error) {
             console.error('Failed to sync recovery signals to Firestore:', error)
           }
@@ -47,34 +47,50 @@ export const useCnsStore = create<CnsState>()(
       },
       getTodayLog: () => {
         const today = getTodayDateString()
-        return get().logs[today] || null
+        return get().logs[`v2_${today}`] || get().logs[today] || null
       },
       fetchLogs: async (uid: string) => {
         if (uid === 'demo') return
         try {
           const today = getTodayDateString()
+          let v2Data = null
+          let legacyData = null
+
+          const docRefV2 = doc(db, 'users', uid, 'cns_v2', today)
+          const docSnapV2 = await getDoc(docRefV2)
+          if (docSnapV2.exists()) {
+            v2Data = docSnapV2.data()
+          }
+          
           const docRef = doc(db, 'users', uid, 'cns', today)
           const docSnap = await getDoc(docRef)
           if (docSnap.exists()) {
-            const data = docSnap.data()
-            if (
-              typeof data.sleepHours === 'number' &&
-              typeof data.fatigueLevel === 'number' &&
-              typeof data.sorenessLevel === 'number'
-            ) {
-              set((state) => ({
-                logs: {
-                  ...state.logs,
-                  [today]: {
-                    date: today,
-                    sleepHours: data.sleepHours,
-                    fatigueLevel: data.fatigueLevel,
-                    sorenessLevel: data.sorenessLevel,
-                  }
-                }
-              }))
-            }
+            legacyData = docSnap.data()
           }
+          
+          set((state) => {
+            const newLogs = { ...state.logs }
+            
+            if (legacyData && typeof legacyData.sleepHours === 'number') {
+              newLogs[today] = {
+                date: today,
+                sleepHours: legacyData.sleepHours,
+                fatigueLevel: legacyData.fatigueLevel,
+                sorenessLevel: legacyData.sorenessLevel,
+              }
+            }
+            
+            if (v2Data && typeof v2Data.sleepHours === 'number') {
+              newLogs[`v2_${today}`] = {
+                date: today,
+                sleepHours: v2Data.sleepHours,
+                fatigueLevel: v2Data.fatigueLevel,
+                sorenessLevel: v2Data.sorenessLevel,
+              }
+            }
+            
+            return { logs: newLogs }
+          })
         } catch (error) {
           console.error('Error fetching CNS logs:', error)
         }

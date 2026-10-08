@@ -5,6 +5,8 @@
 // ============================================================
 
 import type { DietTemplate, PlannedMealSlot } from '@/store/planStore'
+import { toLocalDateString } from '@/lib/dateUtils'
+import { subDays } from 'date-fns'
 import type { WorkoutTemplate } from '@/store/trainStore'
 import type {
   DailyDietPlan,
@@ -128,9 +130,8 @@ export async function deleteFoodLog(uid: string, entryId: string): Promise<void>
 export async function getRecentFoodLogs(uid: string, days = 30): Promise<FoodLogEntry[]> {
   try {
     const ref = collection(db, 'users', uid, 'foodLogs')
-    const d = new Date()
-    d.setDate(d.getDate() - days)
-    const q = query(ref, where('date', '>=', d.toISOString().split('T')[0]), orderBy('date', 'desc'))
+    const boundDate = toLocalDateString(subDays(new Date(), days))
+    const q = query(ref, where('date', '>=', boundDate), orderBy('date', 'desc'))
     const snap = await getDocs(q)
     return snap.docs.map(d => d.data() as FoodLogEntry)
   } catch {

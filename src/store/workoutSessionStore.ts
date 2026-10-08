@@ -25,6 +25,7 @@ import type { MuscleGroup, WorkoutLogEntry, PlannedExercise } from '@/types'
 import type { ExerciseEntry } from '@/lib/data/exerciseDatabase'
 import { useTrainStore } from '@/store/trainStore'
 import { getExerciseById, getMergedLibrary } from '@/lib/data/exerciseSearch'
+import { toLocalDateString } from '@/lib/dateUtils'
 
 // ─── Session-level types ──────────────────────────────────────
 
@@ -322,7 +323,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
         const logEntry: WorkoutLogEntry = {
           id: session.sessionId,
           userId: useAuthStore.getState().user?.uid ?? 'demo',
-          date: new Date(session.startedAt).toISOString().split('T')[0],
+          date: toLocalDateString(session.startedAt),
           planDayLabel: session.label,
           exercises: session.exercises.map(ex => ({
             exerciseId: ex.exerciseId,

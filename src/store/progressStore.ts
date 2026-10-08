@@ -24,6 +24,7 @@ import type {
 } from '@/types'
 import { v4 as uuidv4 } from 'uuid'
 import { create } from 'zustand'
+import { getTodayDateString } from '@/lib/dateUtils'
 
 interface ProgressState {
   workoutPlan: WorkoutPlan | null
@@ -111,7 +112,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     const entry: WeightEntry = {
       id: uuidv4(),
       userId: uid,
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayDateString(),
       weightKg,
       notes,
     }
@@ -127,7 +128,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     const entry: WaistEntry = {
       id: uuidv4(),
       userId: uid,
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayDateString(),
       waistCm,
       notes,
       ...extra,

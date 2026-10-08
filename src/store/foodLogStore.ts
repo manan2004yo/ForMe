@@ -8,12 +8,12 @@ import { useAuthStore } from '@/store/authStore'
 import { recordPortionUsage } from '@/lib/services/portionMemoryService'
 import type { ScannedProduct } from '@/lib/services/barcodeProductService'
 import type { FoodLogEntry, LoggedFoodItem, MealSlot, NutritionInfo } from '@/types'
-import { format } from 'date-fns'
+import { getTodayDateString } from '@/lib/dateUtils'
 import { v4 as uuidv4 } from 'uuid'
 import { create } from 'zustand'
 import { getEmptyNutrition, sumNutrients } from '@/lib/nutrition/nutrientValue'
 
-const today = () => format(new Date(), 'yyyy-MM-dd')
+const today = () => getTodayDateString()
 
 const emptyNutrition = (): NutritionInfo => getEmptyNutrition()
 

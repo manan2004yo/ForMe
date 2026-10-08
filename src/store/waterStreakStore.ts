@@ -5,9 +5,11 @@
 
 import { create } from 'zustand'
 
+import { getTodayDateString } from '@/lib/dateUtils'
+
 // Local storage keys
-const WATER_KEY = 'forme_water_'
-const STREAK_KEY = 'forme_streak'
+const WATER_KEY = 'forme_water_v2_'
+const STREAK_KEY = 'forme_streak_v2'
 
 interface StreakData {
   currentStreak: number
@@ -33,11 +35,11 @@ interface WaterState {
 }
 
 function todayKey() {
-  return WATER_KEY + new Date().toISOString().split('T')[0]
+  return WATER_KEY + getTodayDateString()
 }
 
 function getToday() {
-  return new Date().toISOString().split('T')[0]
+  return getTodayDateString()
 }
 
 function daysBetween(d1: string, d2: string): number {
@@ -62,7 +64,26 @@ export const useWaterStreakStore = create<WaterState>((set, get) => ({
   },
 
   loadStreak: () => {
-    const stored = localStorage.getItem(STREAK_KEY)
+    let stored = localStorage.getItem(STREAK_KEY)
+    
+    if (!stored) {
+      const legacyStored = localStorage.getItem('forme_streak')
+      if (legacyStored) {
+        try {
+          const legacyData: StreakData = JSON.parse(legacyStored)
+          const newData: StreakData = {
+            currentStreak: legacyData.currentStreak,
+            longestStreak: legacyData.longestStreak,
+            lastLoggedDate: legacyData.lastLoggedDate
+          }
+          stored = JSON.stringify(newData)
+          localStorage.setItem(STREAK_KEY, stored)
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     if (stored) {
       try {
         const data: StreakData = JSON.parse(stored)
