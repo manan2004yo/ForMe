@@ -358,7 +358,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
             useToastStore.getState().success('Workout saved!')
           } catch {
             useToastStore.getState().error(
-              'Workout saved locally. Cloud sync will retry automatically.'
+              'Workout saved locally. Sync pending.'
             )
           }
         }

@@ -74,7 +74,7 @@ export const useTrainStore = create<TrainState>()(
         // Use the existing saveWorkoutTemplates pattern as a reference
         // when you wire Firestore persistence in a later step
       } catch {
-        useToastStore.getState().error('Custom exercise saved locally. Cloud sync will retry.')
+        useToastStore.getState().error('Custom exercise saved locally. Sync pending..')
       }
     }
   },
@@ -107,7 +107,7 @@ export const useTrainStore = create<TrainState>()(
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
       try { await saveManualWorkoutPlan(uid, newPlan) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Sync pending.') }
     }
   },
 
@@ -119,7 +119,7 @@ export const useTrainStore = create<TrainState>()(
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
       try { await saveManualWorkoutPlan(uid, newPlan) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Sync pending.') }
     }
   },
 
@@ -131,7 +131,7 @@ export const useTrainStore = create<TrainState>()(
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
       try { await saveManualWorkoutPlan(uid, newPlan) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Sync pending.') }
     }
   },
 
@@ -144,7 +144,7 @@ export const useTrainStore = create<TrainState>()(
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
       try { await saveWorkoutTemplates(uid, newTemplates) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Sync pending.') }
     }
   },
 
@@ -158,7 +158,7 @@ export const useTrainStore = create<TrainState>()(
       const uid = useAuthStore.getState().user?.uid
       if (uid) {
       try { await saveManualWorkoutPlan(uid, newPlan) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Sync pending.') }
     }
     }
   },
@@ -169,7 +169,7 @@ export const useTrainStore = create<TrainState>()(
     const uid = useAuthStore.getState().user?.uid
     if (uid) {
       try { await saveManualWorkoutPlan(uid, newPlan) }
-      catch { useToastStore.getState().error('Your data is saved on this device. Cloud sync will retry automatically.') }
+      catch { useToastStore.getState().error('Your data is saved on this device. Sync pending.') }
     }
   }
     }),

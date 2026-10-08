@@ -35,6 +35,8 @@ import { ProgressDashboard } from '@/features/progress/ProgressDashboard'
 import { TrainDashboard } from '@/features/train/TrainDashboard'
 
 
+import { useSyncStore } from '@/store/syncStore'
+
 function AuthenticatedApp() {
   const { user, logout } = useAuthStore()
   const { profile, loadProfile, error } = useUserStore()
@@ -49,8 +51,22 @@ function AuthenticatedApp() {
       useTrainStore.getState().loadAll(user.uid)
       useFoodLogStore.getState().loadLogs(user.uid)
       useCnsStore.getState().fetchLogs(user.uid)
+      
+      useSyncStore.getState().processQueue()
     }
   }, [user, loadProfile])
+
+  useEffect(() => {
+    const handleOnline = () => useSyncStore.getState().processQueue()
+    window.addEventListener('online', handleOnline)
+    const intervalId = setInterval(() => {
+      if (navigator.onLine) useSyncStore.getState().processQueue()
+    }, 60000)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      clearInterval(intervalId)
+    }
+  }, [])
 
   if (error) {
     return (

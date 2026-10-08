@@ -1,5 +1,6 @@
 import { db } from '@/lib/firebase/config'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { useSyncStore } from './syncStore'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
@@ -38,10 +39,16 @@ export const useCnsStore = create<CnsState>()(
         }))
 
         if (uid) {
-          try {
-            await setDoc(doc(db, 'users', uid, 'cns_v2', date), cleanLog)
-          } catch (error) {
-            console.error('Failed to sync recovery signals to Firestore:', error)
+          const ref = doc(db, 'users', uid, 'cns_v2', date)
+          if (!navigator.onLine) {
+            useSyncStore.getState().enqueue({ ownerUid: uid, operation: 'set', documentPath: ref.path, payload: cleanLog })
+          } else {
+            try {
+              await setDoc(ref, cleanLog)
+            } catch (error: any) {
+              console.error('Failed to sync recovery signals to Firestore:', error)
+              useSyncStore.getState().enqueue({ ownerUid: uid, operation: 'set', documentPath: ref.path, payload: cleanLog, lastError: error?.message })
+            }
           }
         }
       },

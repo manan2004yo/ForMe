@@ -5,6 +5,7 @@
 import { useUserStore } from '@/store/userStore'
 import { clsx } from 'clsx'
 import { Activity, BookOpen, Flame, Home, ShieldAlert, TrendingUp, User } from 'lucide-react'
+import { SyncStatusIndicator } from './SyncStatusIndicator'
 
 import { useLocation, useNavigate } from 'react-router-dom'
 
@@ -49,6 +50,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span className="text-xs font-semibold tracking-wide uppercase">Incognito Mode Active — Data syncing paused</span>
         </div>
       )}
+      <div className="fixed top-4 right-4 z-50 pointer-events-none">
+        <SyncStatusIndicator />
+      </div>
       <div className="flex flex-1">
         {/* --- DESKTOP SIDEBAR --- */}
         <aside className="hidden md:flex flex-col w-64 lg:w-72 border-r border-white/5 bg-[#0a0a0a] sticky top-0 h-[100dvh] overflow-y-auto shrink-0 z-10">

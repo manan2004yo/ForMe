@@ -30,8 +30,19 @@ import {
   where
 } from 'firebase/firestore'
 import { db } from './config'
+import { useSyncStore } from '@/store/syncStore'
 
 // Helper to remove undefined properties before sending to Firestore
+function handleSyncError(uid: string, operation: 'set' | 'delete', documentPath: string, payload?: any, error?: any) {
+  useSyncStore.getState().enqueue({
+    ownerUid: uid,
+    operation,
+    documentPath,
+    payload: payload ? JSON.parse(JSON.stringify(payload)) : undefined
+  })
+  throw error || new Error('offline')
+}
+
 function sanitizeForFirestore(obj: any): any {
   if (obj === null || typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(sanitizeForFirestore);
@@ -56,7 +67,7 @@ export async function saveUserProfile(uid: string, profile: Partial<UserProfile>
   try {
     await setDoc(ref, sanitizeForFirestore({
       ...profile,
-      updatedAt: serverTimestamp(),
+      updatedAt: new Date().toISOString(),
     }), { merge: true })
   } catch (error) {
     console.warn('Firestore write error (saveUserProfile):', error)
@@ -92,7 +103,7 @@ export async function saveFoodLog(uid: string, entry: FoodLogEntry): Promise<voi
   saveLocalFoodLog(uid, entry)
   if (!navigator.onLine) throw new Error('offline')
   try {
-    await setDoc(ref, { ...entry, updatedAt: serverTimestamp() })
+    await setDoc(ref, { ...entry, updatedAt: new Date().toISOString() })
   } catch (error) {
     console.warn('Firestore write error (saveFoodLog):', error)
     throw error
@@ -182,12 +193,13 @@ export async function saveWeightEntry(uid: string, entry: WeightEntry): Promise<
   updated.push(entry)
   localStorage.setItem(`forme_weight_${uid}`, JSON.stringify(updated))
 
-  if (!navigator.onLine) throw new Error('offline')
+  const payload = sanitizeForFirestore(entry)
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, sanitizeForFirestore(entry))
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error (saveWeightEntry):', error)
-    throw error
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -224,12 +236,13 @@ export async function saveWaistEntry(uid: string, entry: WaistEntry): Promise<vo
   updated.push(entry)
   localStorage.setItem(`forme_waist_${uid}`, JSON.stringify(updated))
 
-  if (!navigator.onLine) throw new Error('offline')
+  const payload = sanitizeForFirestore(entry)
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, sanitizeForFirestore(entry))
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error (saveWaistEntry):', error)
-    throw error
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -265,12 +278,13 @@ export async function saveWorkoutLog(uid: string, entry: WorkoutLogEntry): Promi
   updated.push(entry)
   localStorage.setItem(`forme_workouts_${uid}`, JSON.stringify(updated))
 
-  if (!navigator.onLine) throw new Error('offline')
+  const payload = sanitizeForFirestore(entry)
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, sanitizeForFirestore(entry))
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error (saveWorkoutLog):', error)
-    throw error
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -307,12 +321,13 @@ export async function saveSavedMeal(uid: string, meal: SavedMeal): Promise<void>
   updated.push(meal)
   localStorage.setItem(`forme_savedmeals_${uid}`, JSON.stringify(updated))
 
-  if (!navigator.onLine) throw new Error('offline')
+  const payload = sanitizeForFirestore(meal)
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, sanitizeForFirestore(meal))
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error (saveSavedMeal):', error)
-    throw error
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -339,12 +354,13 @@ function getLocalSavedMeals(uid: string): SavedMeal[] {
 
 export async function saveFamilyRecipe(uid: string, recipe: any): Promise<void> {
   const ref = doc(db, 'users', uid, 'familyRecipes', recipe.id)
-  if (!navigator.onLine) throw new Error('offline')
+  const payload = sanitizeForFirestore(recipe)
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, sanitizeForFirestore(recipe))
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error (saveFamilyRecipe):', error)
-    throw error
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
   const local = getLocalFamilyRecipes(uid)
   const updated = local.filter((r: any) => r.id !== recipe.id)
@@ -378,12 +394,13 @@ function getLocalFamilyRecipes(uid: string): any[] {
 export async function saveWorkoutPlan(uid: string, plan: WorkoutPlan): Promise<void> {
   const ref = doc(db, 'users', uid, 'workoutPlan', 'current')
   localStorage.setItem(`forme_workoutplan_${uid}`, JSON.stringify(plan))
-  if (!navigator.onLine) throw new Error('offline')
+  const payload = sanitizeForFirestore(plan)
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, sanitizeForFirestore(plan))
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error (saveWorkoutPlan):', error)
-    throw error
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -407,12 +424,13 @@ function getLocalWorkoutPlan(uid: string): WorkoutPlan | null {
 export async function saveDietPlan(uid: string, plan: DailyDietPlan): Promise<void> {
   const ref = doc(db, 'users', uid, 'dietPlan', 'current')
   localStorage.setItem(`forme_dietplan_${uid}`, JSON.stringify(plan))
-  if (!navigator.onLine) throw new Error('offline')
+  const payload = sanitizeForFirestore(plan)
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, sanitizeForFirestore(plan))
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error (saveDietPlan):', error)
-    throw error
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -471,11 +489,13 @@ export async function deleteUserData(uid: string): Promise<void> {
 export async function saveManualDietPlan(uid: string, plan: PlannedMealSlot[]): Promise<void> {
   const ref = doc(db, 'users', uid, 'manualDietPlan', 'current')
   localStorage.setItem(`forme_manual_diet_${uid}`, JSON.stringify(plan))
-  if (!navigator.onLine) return
+  const payload = { plan: sanitizeForFirestore(plan) }
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, { plan: sanitizeForFirestore(plan) })
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error:', error)
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -502,11 +522,13 @@ function getLocalManualDietPlan(uid: string): PlannedMealSlot[] | null {
 export async function saveDietTemplates(uid: string, templates: DietTemplate[]): Promise<void> {
   const ref = doc(db, 'users', uid, 'dietTemplates', 'all')
   localStorage.setItem(`forme_diet_templates_${uid}`, JSON.stringify(templates))
-  if (!navigator.onLine) return
+  const payload = { templates: sanitizeForFirestore(templates) }
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, { templates: sanitizeForFirestore(templates) })
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error:', error)
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -535,11 +557,13 @@ function getLocalDietTemplates(uid: string): DietTemplate[] {
 export async function saveManualWorkoutPlan(uid: string, plan: ManualWorkoutDay[]): Promise<void> {
   const ref = doc(db, 'users', uid, 'manualWorkoutPlan', 'current')
   localStorage.setItem(`forme_manual_workout_${uid}`, JSON.stringify(plan))
-  if (!navigator.onLine) return
+  const payload = { plan: sanitizeForFirestore(plan) }
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, { plan: sanitizeForFirestore(plan) })
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error:', error)
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -566,11 +590,13 @@ function getLocalManualWorkoutPlan(uid: string): ManualWorkoutDay[] | null {
 export async function saveWorkoutTemplates(uid: string, templates: WorkoutTemplate[]): Promise<void> {
   const ref = doc(db, 'users', uid, 'workoutTemplates', 'all')
   localStorage.setItem(`forme_workout_templates_${uid}`, JSON.stringify(templates))
-  if (!navigator.onLine) return
+  const payload = { templates: sanitizeForFirestore(templates) }
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, { templates: sanitizeForFirestore(templates) })
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error:', error)
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -599,11 +625,13 @@ function getLocalWorkoutTemplates(uid: string): WorkoutTemplate[] {
 export async function saveAchievements(uid: string, achievements: any[]): Promise<void> {
   const ref = doc(db, 'users', uid, 'achievements', 'current')
   localStorage.setItem(`forme_achievements_${uid}`, JSON.stringify(achievements))
-  if (!navigator.onLine) return
+  const payload = { achievements: sanitizeForFirestore(achievements) }
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, { achievements: sanitizeForFirestore(achievements) })
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error:', error)
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
