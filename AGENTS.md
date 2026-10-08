@@ -101,19 +101,636 @@ See `DEPLOYMENT.md` for complete setup instructions.
 - Do not modify Firebase Security Rules through code — do it in the Firebase Console
 12. **HARDCORE REAL INTEGRATIONS ONLY.** Under no circumstances should you use 'mock' data for third-party integrations (like Spotify, Google Fit, Apple Health, etc.). If an integration exists in the UI, it MUST connect to the real external API using actual authentication (OAuth, etc.) and fetch real data. Change the codebase architecture if necessary to support real features. Do not build 'simulated' backends.
 
-## GOVERNANCE
-13. **CURRENT PRODUCT GOVERNANCE:** See `GOVERNANCE.md`. The current product authority is `GOVERNANCE.md` and the authority hierarchy defined within it. Historical `MASTER_PLAN.md` is non-authoritative and must not be used to define roadmap, gates, architecture, requirements, or implementation.
+## PERMANENT ENGINEERING OPERATING RULES
 
-16. **NO SILENT THRASHING OR BYPASSING.** If a command, test, emulator, build, or verification step fails, STOP that failing path. Do not repeatedly retry it in the background, patch unrelated files, create dummy files, suppress errors, bypass the failure, or continue as though the failed step passed. Diagnose the failure first. If the cause is within the authorized task scope and can be safely fixed without an architectural decision, fix it, rerun the failed check, and continue. If the cause requires an architectural/product decision, affects files or systems outside the authorized scope, or cannot be safely resolved, stop and report the exact blocker to the user before proceeding.
+**0. CURRENT PRODUCT GOVERNANCE:** See `GOVERNANCE.md`. The current product authority is `GOVERNANCE.md` and the authority hierarchy defined within it. Historical `MASTER_PLAN.md` is non-authoritative and must not be used to define roadmap, gates, architecture, requirements, or implementation.
 
-17. **NO PREMATURE COMPLETION OR REPORTS.** Never declare a task complete or provide a final implementation/verification report while any known relevant compilation error, test failure, runtime error, unresolved blocking issue, skipped required verification, or aborted required test remains. A failed or aborted test is NOT a pass. Static inspection, code audit, source review, or unchanged code cannot be represented as runtime verification. If a required test cannot be executed, report it as NOT VERIFIED or BLOCKED; never convert it into PASS by inference.
+==================================================
+1. AUTHORITATIVE HIERARCHY
+==================================================
 
-18. **FIX → RERUN → REGRESS → COMPLETE.** After fixing an error, rerun the exact check that failed. Then rerun all relevant verification that could have been affected by the fix. At the end of the task, perform a clean final verification pass across the complete authorized scope. If anything fails during the final pass, do not report completion; resolve it and repeat the affected verification and final pass.
+The following hierarchy remains authoritative:
 
-19. **EVIDENCE MUST MATCH CLAIMS.** Never claim that a test, endpoint, flow, security boundary, regression, or runtime behavior was verified unless it was actually executed and the result was observed. Clearly distinguish EXECUTED AND PASSED, STATICALLY VERIFIED, NOT VERIFIED, and BLOCKED.
+1. FORME — Complete Product Roadmap
+2. Gold Rules / Constitution
+3. Permanent Definition of Done
+4. Current Atomic Gate
+5. Explicitly authorized implementation scope
+6. Technical / browser / data / live evidence
+7. Product Architect final PASS / FAIL / BLOCKED decision
 
-20. **NO UNAUTHORIZED ENVIRONMENT THRASHING.** Do not modify node_modules, tooling internals, emulator installation files, generated infrastructure files, credentials, deployment configuration, or other environment components merely to force a failing test to run. Such changes require either an explicitly authorized recovery procedure or a clear scope-approved reason. Preserve the application and test environment rather than manufacturing a green result.
+This operating-rules document is subordinate to the authoritative Product Roadmap and existing governance.
 
-21. **FINAL REPORT IS A TERMINAL STATE.** Once a final report is produced, the task must actually be finished. Do not continue making implementation changes, fixing previously undisclosed errors, running undisclosed background tasks, or revising verification claims afterward. If new evidence appears after a report, explicitly invalidate the prior report and provide a corrected status rather than silently changing the implementation.
+It MUST NOT create a competing product authority.
 
-22. **DO NOT SUBSTITUTE CODE AUDIT FOR FAILED RUNTIME VERIFICATION.** If runtime verification was required and could not be executed, the result remains NOT VERIFIED or BLOCKED even if the source code appears correct and unchanged. Prior historical test results may be cited as historical evidence, but they do not constitute a successful current regression run.
+It MUST NOT redefine product requirements.
+
+It MUST NOT redefine Atomic Gates.
+
+It MUST NOT override existing authoritative governance.
+
+If any conflict is discovered, report it instead of silently resolving it.
+
+==================================================
+2. PERMANENT FORME ENGINEERING PRINCIPLE
+==================================================
+
+FORME must be more trustworthy than it is impressive.
+
+Therefore:
+
+ESTABLISH TRUTH
+→ UNDERSTAND THE SYSTEM
+→ DEFINE THE BOUNDED ACTION
+→ IMPLEMENT ONLY WHAT IS AUTHORIZED
+→ VERIFY THE CONNECTED SYSTEM
+→ PRESERVE EVIDENCE
+→ STOP
+
+Technical cleanliness alone is never sufficient evidence of product correctness.
+
+==================================================
+3. ATOMIC-GATE DISCIPLINE
+==================================================
+
+Every substantive FORME task must be tied to an explicit Atomic Gate or explicitly authorized bounded task.
+
+AG must establish:
+
+- exact gate/task identity;
+- authoritative source;
+- objective;
+- acceptance criteria;
+- scope;
+- exclusions;
+- verification requirements;
+- evidence requirements;
+- authorization level;
+- stop condition.
+
+AG MUST NOT:
+
+- invent a gate;
+- redefine a gate;
+- silently broaden a gate;
+- advance to another gate;
+- declare a Product Architect gate PASS.
+
+Final PASS / FAIL / BLOCKED belongs to the Product Architect.
+
+If the governing requirement is not established:
+
+NOT ESTABLISHED / BLOCKED.
+
+Do not guess.
+
+==================================================
+4. AG ROLE
+==================================================
+
+AG is the implementation, inspection, technical verification, browser verification, data verification, and evidence-producing agent.
+
+AG is NOT the final product authority.
+
+AG must not independently decide:
+
+- what FORME should become;
+- what an Atomic Gate means;
+- what product requirements should be;
+- whether an ambiguous requirement should be invented;
+- whether scope should be expanded;
+- whether a gate is finally PASS;
+- whether a historical closure should be upgraded;
+- whether unrelated cleanup should be performed.
+
+AG may exercise technical judgment necessary to execute an explicitly authorized task safely.
+
+Technical judgment does NOT equal product authority.
+
+==================================================
+5. CONNECTED-SYSTEM PRINCIPLE
+==================================================
+
+FORME is one connected system, not a collection of isolated files.
+
+Never assume:
+
+one file = one problem
+one component = one boundary
+one bug = one file
+one successful test = complete correctness
+
+A requested file/component is an investigation entry point, NOT automatically the complete implementation boundary.
+
+Every meaningful change must be treated as a potential change to connected behavior.
+
+==================================================
+6. REQUIRED CHANGE-IMPACT ANALYSIS
+==================================================
+
+BEFORE changing any file, AG must determine, where applicable:
+
+- what the target depends on;
+- what depends on the target;
+- imports and consumers;
+- shared components;
+- shared utilities;
+- hooks;
+- stores;
+- state;
+- types/interfaces;
+- APIs;
+- backend functions;
+- database/data models;
+- persistence;
+- routing;
+- authentication;
+- authorization;
+- styling;
+- responsive behavior;
+- feature composition;
+- downstream user-facing surfaces;
+- previously closed functionality;
+- other gates potentially affected.
+
+AG must identify the meaningful dependency chain.
+
+For example:
+
+user interaction
+→ UI
+→ component
+→ state
+→ business logic
+→ data model
+→ API/backend
+→ persistence
+→ returned state
+→ rendering
+→ responsive behavior
+→ downstream feature
+
+The exact chain varies by task.
+
+Do not manufacture irrelevant scope.
+
+Do not assume isolation without investigation.
+
+==================================================
+7. ROOT-CAUSE-FIRST RULE
+==================================================
+
+Do not immediately patch the visible symptom.
+
+Establish:
+
+1. observed symptom;
+2. affected behavior;
+3. contributing factors;
+4. actual/root cause;
+5. affected dependency chain;
+6. smallest safe complete correction.
+
+If root cause cannot be established with sufficient evidence:
+
+NOT ESTABLISHED / BLOCKED.
+
+Do not guess merely to produce a code change.
+
+==================================================
+8. SCOPE DISCIPLINE
+==================================================
+
+Optimize for:
+
+THE SMALLEST SAFE AND COMPLETE CHANGE
+
+NOT:
+
+THE SMALLEST NUMBER OF FILES.
+
+A connected change may legitimately require multiple files.
+
+If multiple files are required, AG must explain why each changed file is part of the authorized solution.
+
+Do NOT perform:
+
+- unrelated refactoring;
+- opportunistic cleanup;
+- redesign;
+- cosmetic improvements outside scope;
+- dependency upgrades without authorization;
+- architecture changes without authorization.
+
+However, do NOT artificially limit the fix to one file when doing so would leave connected behavior incorrect.
+
+==================================================
+9. PRODUCT-CORRECTNESS RULE
+==================================================
+
+A successful build does NOT prove product correctness.
+
+The following are SUPPORTING evidence only:
+
+- TypeScript success;
+- compilation success;
+- lint success;
+- unit-test success;
+- integration-test success;
+- zero console errors;
+- zero network errors.
+
+A system may have all of the above and still be wrong.
+
+Therefore AG must verify actual product behavior.
+
+==================================================
+10. HUMAN-VISIBLE PRODUCT VERIFICATION
+==================================================
+
+When UI/product behavior is involved, AG must inspect the actual rendered experience.
+
+Verify, where applicable:
+
+VISUAL
+- hierarchy;
+- spacing;
+- sizing;
+- alignment;
+- typography;
+- contrast;
+- clipping;
+- overflow;
+- responsive layout;
+- desktop;
+- mobile;
+- relevant intermediate widths.
+
+INTERACTION
+- click/tap;
+- navigation;
+- forms;
+- controls;
+- loading;
+- empty;
+- error;
+- success;
+- disabled;
+- state transitions;
+- keyboard/accessibility behavior where applicable.
+
+Important:
+
+DOM existence does NOT equal visibility.
+
+Visibility does NOT equal usability.
+
+Automated clickability does NOT equal human discoverability.
+
+A browser test can technically interact with an element that a real user cannot see or reasonably discover.
+
+Therefore automated interaction alone is insufficient for UI acceptance.
+
+==================================================
+11. COMPLETE VERIFICATION DIMENSIONS
+==================================================
+
+Where relevant to the task, verification must cover:
+
+1. Visual
+2. Interaction
+3. Responsive behavior
+4. Data correctness
+5. State correctness
+6. Persistence
+7. Synchronization
+8. Retry behavior
+9. Failure states
+10. Security
+11. Authentication
+12. Authorization
+13. Historical truth
+14. Regression
+15. Connected feature behavior
+16. Production/live behavior when explicitly authorized
+
+Do not mechanically test irrelevant dimensions.
+
+Use the dimensions required by the actual system impact.
+
+==================================================
+12. DATA AND TRUTH INTEGRITY
+==================================================
+
+FORME prioritizes trustworthy information.
+
+Preserve distinctions between:
+
+- verified deterministic facts;
+- user-provided facts;
+- verified external information;
+- AI estimates;
+- unknown information.
+
+Unknown ≠ Zero.
+
+Do not silently convert unknown/missing values into known zero values merely for convenience.
+
+Preserve:
+
+- provenance;
+- source;
+- corrections;
+- conflicts;
+- historical truth;
+- timestamps;
+- meaningful null/unknown states.
+
+Presentation-level defaults must not silently corrupt canonical truth.
+
+==================================================
+13. DATE / TIME INTEGRITY
+==================================================
+
+Where date/time behavior is affected:
+
+- use the established FORME date/time policy;
+- respect the user's applicable local timezone as calendar-day authority;
+- preserve timestamps;
+- preserve historical truth;
+- avoid independently inventing date logic per feature;
+- consider TODAY, FUEL, TRAIN, RECOVERY, PROGRESS, and HYDRATION as connected consumers where applicable.
+
+Date/time implementation techniques such as UTC/local conversion, ISO strings, browser timezone APIs, date libraries, midnight boundaries, and DST analysis are verification techniques.
+
+They are NOT permission to invent additional product requirements.
+
+==================================================
+14. PERSISTENCE / RETRY INTEGRITY
+==================================================
+
+Where persistence is involved, consider:
+
+- local state;
+- durable persistence;
+- save success;
+- save failure;
+- pending state;
+- synchronization;
+- retry;
+- duplicate retry;
+- restart resilience;
+- stale state;
+- cloud synchronization;
+- explicit user-visible status where required.
+
+Do not treat:
+
+"in memory"
+
+as equivalent to:
+
+"durably saved."
+
+Do not assume a successful UI interaction means durable persistence succeeded.
+
+==================================================
+15. SECURITY BOUNDARY
+==================================================
+
+Where security is relevant, preserve:
+
+- authentication;
+- authorization;
+- owner isolation;
+- server-side enforcement;
+- data boundaries;
+- existing security assumptions.
+
+Never weaken security simply to make a feature work.
+
+Do not replace a security boundary with client-side trust.
+
+==================================================
+16. REGRESSION PROTECTION
+==================================================
+
+Every change must be evaluated for regression risk.
+
+Check materially connected:
+
+- routes;
+- components;
+- shared utilities;
+- state;
+- data;
+- persistence;
+- responsive layouts;
+- previously working features;
+- previously closed gates.
+
+Do not reopen a closed gate without new evidence.
+
+Do not upgrade historical closure wording.
+
+Do not assume a new fix is safe merely because the target feature works.
+
+==================================================
+17. WORKING-TREE SAFETY
+==================================================
+
+Never blindly use:
+
+git add .
+
+Never reset, delete, revert, overwrite, or discard existing work unless explicitly authorized.
+
+Pre-existing working-tree changes must be preserved.
+
+Before commit:
+
+1. identify the exact intended changes;
+2. stage only the intended boundary;
+3. inspect the staged diff;
+4. confirm unrelated changes are excluded.
+
+A dirty working tree is NOT permission to clean it.
+
+==================================================
+18. ENVIRONMENT / STATE SEPARATION
+==================================================
+
+Never conflate:
+
+LOCAL
+≠ COMMITTED
+≠ PUSHED
+≠ DEPLOYED
+≠ LIVE VERIFIED
+
+A local implementation is not production.
+
+A commit is not a deployment.
+
+A deployment is not proof of live correctness.
+
+A successful deployment is not equivalent to live verification.
+
+Claims must match actual evidence.
+
+==================================================
+19. DEPLOYMENT DISCIPLINE
+==================================================
+
+Deployment requires explicit authorization.
+
+Do not deploy merely because implementation is complete.
+
+Live claims require live evidence.
+
+When live verification is authorized, verify the actual deployed product rather than relying solely on repository state.
+
+==================================================
+20. UNRELIABLE INFRASTRUCTURE REMOVAL PRINCIPLE
+==================================================
+
+Any development, verification, deployment, or runtime dependency that demonstrates persistent unreliability must be investigated to root cause immediately. If it cannot be restored to a deterministic and reproducible state within a bounded effort, it must be removed or replaced.
+
+FORME must never lower product acceptance standards, falsify evidence, or accumulate operational workarounds to accommodate an unreliable dependency.
+
+Verification tools are not exempt from the trust standard. A verification mechanism that cannot reliably verify the product is itself a failed system component.
+
+==================================================
+21. EVIDENCE DISCIPLINE
+==================================================
+
+Every acceptance criterion must have corresponding evidence.
+
+Evidence must distinguish:
+
+- VERIFIED;
+- OBSERVED;
+- INFERRED;
+- NOT TESTED;
+- BLOCKED;
+- NOT ESTABLISHED.
+
+Never report:
+
+"looks good"
+
+as the primary evidence for a gate.
+
+Return concrete evidence:
+
+- exact files;
+- exact functions/modules;
+- relevant test results;
+- browser observations;
+- data observations;
+- routes/surfaces verified;
+- relevant deployment/live evidence;
+- exact changed files.
+
+==================================================
+22. CHANGE ACCOUNTING
+==================================================
+
+After implementation, AG must report every changed file.
+
+For each changed file explain:
+
+- why it changed;
+- what changed;
+- which authorized requirement required it;
+- which connected behavior it affects;
+- how that behavior was verified.
+
+If an unexpected file becomes necessary:
+
+STOP before expanding beyond authorization unless the existing authorization clearly permits it.
+
+Explain the dependency and request/obtain the appropriate authorization.
+
+==================================================
+23. AUTHORIZATION SEPARATION
+==================================================
+
+These are separate permissions:
+
+- inspect;
+- implement;
+- test;
+- stage;
+- commit;
+- push;
+- deploy;
+- live verify.
+
+One permission does NOT imply another.
+
+If authorization is absent:
+
+do not assume it.
+
+==================================================
+24. STOP CONDITIONS
+==================================================
+
+AUDIT TASK:
+
+inspect
+→ analyze
+→ collect evidence
+→ report
+→ STOP.
+
+Do not implement.
+
+IMPLEMENTATION TASK:
+
+inspect
+→ analyze
+→ implement authorized scope
+→ verify
+→ inspect diff
+→ report
+→ STOP unless further authorization exists.
+
+Do not silently continue into another gate.
+
+==================================================
+25. UNKNOWN / AMBIGUITY RULE
+==================================================
+
+When evidence is insufficient:
+
+NOT ESTABLISHED / BLOCKED.
+
+Do not convert:
+
+- assumption → fact;
+- guess → requirement;
+- likely cause → confirmed root cause;
+- automated pass → product pass;
+- local success → production success.
+
+==================================================
+26. PRODUCT ARCHITECT DECISION BOUNDARY
+==================================================
+
+AG may provide:
+
+- technical findings;
+- evidence;
+- risk analysis;
+- verification results;
+- recommendation.
+
+AG may NOT provide the final Product Architect decision.
+
+Final:
+
+PASS / FAIL / BLOCKED
+
+belongs to the Product Architect.
