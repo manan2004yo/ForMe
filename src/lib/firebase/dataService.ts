@@ -63,15 +63,13 @@ export async function saveUserProfile(uid: string, profile: Partial<UserProfile>
   const existing = getLocalProfile(uid)
   localStorage.setItem(`forme_profile_${uid}`, JSON.stringify({ ...existing, ...profile, updatedAt: new Date().toISOString() }))
 
-  if (!navigator.onLine) throw new Error('offline')
+  const payload = sanitizeForFirestore({ ...profile, updatedAt: new Date().toISOString() })
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, sanitizeForFirestore({
-      ...profile,
-      updatedAt: new Date().toISOString(),
-    }), { merge: true })
+    await setDoc(ref, payload, { merge: true })
   } catch (error) {
     console.warn('Firestore write error (saveUserProfile):', error)
-    throw error
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -101,12 +99,13 @@ function getLocalProfile(uid: string): UserProfile | null {
 export async function saveFoodLog(uid: string, entry: FoodLogEntry): Promise<void> {
   const ref = doc(db, 'users', uid, 'foodLogs', entry.id)
   saveLocalFoodLog(uid, entry)
-  if (!navigator.onLine) throw new Error('offline')
+  const payload = sanitizeForFirestore({ ...entry, updatedAt: new Date().toISOString() })
+  if (!navigator.onLine) handleSyncError(uid, 'set', ref.path, payload)
   try {
-    await setDoc(ref, { ...entry, updatedAt: new Date().toISOString() })
+    await setDoc(ref, payload)
   } catch (error) {
     console.warn('Firestore write error (saveFoodLog):', error)
-    throw error
+    handleSyncError(uid, 'set', ref.path, payload, error)
   }
 }
 
@@ -129,12 +128,13 @@ export async function getFoodLogsByDate(uid: string, date: string): Promise<Food
 
 export async function deleteFoodLog(uid: string, entryId: string): Promise<void> {
   deleteLocalFoodLog(uid, entryId)
-  if (!navigator.onLine) throw new Error('offline')
+  const ref = doc(db, 'users', uid, 'foodLogs', entryId)
+  if (!navigator.onLine) handleSyncError(uid, 'delete', ref.path)
   try {
-    await deleteDoc(doc(db, 'users', uid, 'foodLogs', entryId))
+    await deleteDoc(ref)
   } catch (error) {
     console.warn('Firestore write error (deleteFoodLog):', error)
-    throw error
+    handleSyncError(uid, 'delete', ref.path, undefined, error)
   }
 }
 
