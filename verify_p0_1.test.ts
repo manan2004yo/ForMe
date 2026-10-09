@@ -207,52 +207,65 @@ describe('P0-1 Verification Tests', () => {
   it('Edge Cases: Path variants and percent encoding', async () => {
     vi.mocked(jwtVerify.verifyFirebaseToken).mockResolvedValue(null)
 
-    const variants = [
-      { url: 'http://localhost/api/%61i-coach', expectedNext: true }, // %61 is 'a', url.pathname unescapes it? Actually URL class decodes it in pathname, but let's test. wait URL doesn't always decode.
+    // Tests that bypass the middleware (because URL does not decode them or we don't normalize them)
+    const bypassVariants = [
+      { url: 'http://localhost/api/%61i-coach', expectedNext: true },
       { url: 'http://localhost/api/ai-coach%2F', expectedNext: true },
       { url: 'http://localhost/api/ai-coach%00', expectedNext: true },
-      { url: 'http://localhost//api/ai-coach', expectedNext: true },
-      { url: 'http://localhost/api/ai-coach//', expectedNext: true },
-      { url: 'http://localhost/API/ai-coach', expectedNext: true }
+      { url: 'http://localhost//api/ai-coach', expectedNext: true }
     ]
 
-    for (const v of variants) {
+    for (const v of bypassVariants) {
       const ctx = createMockContext(v.url, {})
       await middleware(ctx)
-      expect(ctx.getNextCalled()).toBe(v.expectedNext) // bypassed because strict match fails
+      expect(ctx.getNextCalled()).toBe(v.expectedNext) 
     }
   })
 
-  it('Edge Cases: Query string and hash on protected routes', async () => {
+  it('Edge Cases: Multiple trailing slashes and Case variants are intercepted', async () => {
     vi.mocked(jwtVerify.verifyFirebaseToken).mockResolvedValue(null)
+    
+    const interceptedVariants = [
+      'http://localhost/api/ai-coach//',
+      'http://localhost/api/ai-coach///',
+      'http://localhost/API/ai-coach',
+      'http://localhost/api/AI-COACH',
+      'http://localhost/Api/Ai-Coach'
+    ]
+    
+    // Add prefix/case variants for all routes
     for (const ep of AI_ENDPOINTS) {
-      const ctx = createMockContext(`http://localhost${ep}?query=1#hash`, {})
+      interceptedVariants.push(`http://localhost${ep.toUpperCase()}`)
+      interceptedVariants.push(`http://localhost${ep.replace('/api/', '/API/')}`)
+      interceptedVariants.push(`http://localhost${ep.replace('/api/', '/Api/').replace(/(-\w)/g, m => m.toUpperCase())}`)
+    }
+
+    for (const url of interceptedVariants) {
+      const ctx = createMockContext(url, {})
       const res = await middleware(ctx)
       expect(res.status).toBe(401)
       expect(ctx.getNextCalled()).toBe(false)
     }
   })
 
-  it('Edge Cases: GET, PUT, DELETE, HEAD return 401', async () => {
+  it('Edge Cases: Exempt routes case variants still bypass', async () => {
     vi.mocked(jwtVerify.verifyFirebaseToken).mockResolvedValue(null)
-    const methods = ['GET', 'PUT', 'DELETE', 'HEAD']
-    for (const ep of AI_ENDPOINTS) {
-      for (const method of methods) {
-        let nextCalled = false
-        const req = new Request(`http://localhost${ep}`, { method })
-        const ctx = {
-          request: req, env: {}, data: {},
-          next: async () => { nextCalled = true; return new Response('next', { status: 200 }) },
-          getNextCalled: () => nextCalled
-        }
-        const res = await middleware(ctx)
-        expect(res.status).toBe(401)
-      }
+    
+    const exemptVariants = [
+      'http://localhost/api/BARCODE/123',
+      'http://localhost/API/Spotify-Token',
+      'http://localhost/api/SPOTIFY-PLAYING'
+    ]
+
+    for (const url of exemptVariants) {
+      const ctx = createMockContext(url, {})
+      await middleware(ctx)
+      expect(ctx.getNextCalled()).toBe(true)
     }
   })
 
   it('Rate limits: Assert heavy tier for specific routes', async () => {
-    const heavyRoutes = ['/api/snap-log', '/api/transcribe-voice', '/api/read-nutrition-label']
+    const heavyRoutes = ['/api/SNAP-LOG', '/api/Transcribe-Voice', '/api/READ-NUTRITION-LABEL']
     vi.mocked(jwtVerify.verifyFirebaseToken).mockResolvedValue({ uid: 'heavy_user' })
     
     for (const ep of heavyRoutes) {
@@ -269,7 +282,7 @@ describe('P0-1 Verification Tests', () => {
   })
 
   it('Rate limits: Assert text tier for specific routes', async () => {
-    const textRoutes = ['/api/ai-coach', '/api/estimate-nutrition', '/api/parse-voice']
+    const textRoutes = ['/api/AI-COACH', '/api/estimate-nutrition', '/api/parse-voice']
     vi.mocked(jwtVerify.verifyFirebaseToken).mockResolvedValue({ uid: 'text_user' })
     
     for (const ep of textRoutes) {

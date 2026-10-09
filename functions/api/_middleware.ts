@@ -18,7 +18,7 @@ export async function onRequest(context: any) {
     return next()
   }
 
-  const path = url.pathname.replace(/\/$/, '')
+  const path = url.pathname.toLowerCase().replace(/\/+$/, '')
   const protectedRoutes = [
     '/api/ai-coach',
     '/api/estimate-nutrition',
@@ -68,7 +68,7 @@ export async function onRequest(context: any) {
   }
 
   const windowHour = Math.floor(Date.now() / WINDOW_MS)
-  const isHeavyOp = isHeavy(url.pathname)
+  const isHeavyOp = isHeavy(path)
   const limit = isHeavyOp ? HEAVY_LIMIT : TEXT_LIMIT
   const key = `rl:${uid}:${isHeavyOp ? 'heavy' : 'text'}:${windowHour}`
 
