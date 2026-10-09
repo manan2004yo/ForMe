@@ -1,3 +1,4 @@
+import { auth } from '@/lib/firebase/config'
 import { useVybeStore } from '@/store/vybeStore';
 import { cancelRecording, stopRecording } from '@/components/vybe/VYBEMicButton';
 import { Mic, Square, X, Check, Loader2 } from 'lucide-react';
@@ -55,7 +56,9 @@ export function VYBEOverlay() {
 
         const response = await fetch('/api/estimate-nutrition', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+        'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+ 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: q, mode: 'meal' }),
         })
         const data = await response.json()

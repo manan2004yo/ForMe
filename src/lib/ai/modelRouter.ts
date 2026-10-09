@@ -1,3 +1,4 @@
+import { auth } from '@/lib/firebase/config'
 // ============================================================
 // FORME — AI Model Router Abstraction
 // Implements PRD Section 5: AI Model Architecture
@@ -99,6 +100,8 @@ export async function askForme(query: string, context: AIContext, provider: AIPr
         const res = await fetch('/api/ai-coach', {
           method: 'POST',
           headers: {
+        'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({

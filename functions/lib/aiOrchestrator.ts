@@ -114,6 +114,7 @@ export async function generateText(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(8000),
       })
 
       const data = await response.json() as any
@@ -174,6 +175,7 @@ export async function generateStructuredOutput<T = any>(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(8000),
       })
 
       const data = await response.json() as any
@@ -240,6 +242,7 @@ export async function processAudio(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(8000),
       })
 
       const data = await response.json() as any
@@ -299,6 +302,7 @@ export async function analyzeImage(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(8000),
       })
 
       const data = await response.json() as any

@@ -1,3 +1,4 @@
+import { auth } from '@/lib/firebase/config'
 import { Mic, X } from 'lucide-react';
 import { useVybeStore, VybeContext } from '@/store/vybeStore';
 import { clsx } from 'clsx';
@@ -199,7 +200,9 @@ export async function startRecording(context?: VybeContext): Promise<void> {
         const apiMimeType = normaliseMimeForApi(actualMimeType || 'audio/mp4')
         const transcriptionResponse = await fetch('/api/transcribe-voice', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+        'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+ 'Content-Type': 'application/json' },
           body: JSON.stringify({ audioBase64, mimeType: apiMimeType }),
         })
         console.log(
@@ -234,7 +237,9 @@ export async function startRecording(context?: VybeContext): Promise<void> {
 
         const parseResponse = await fetch('/api/parse-voice', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+        'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+ 'Content-Type': 'application/json' },
           body: JSON.stringify({ transcript }),
         })
 
