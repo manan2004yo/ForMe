@@ -734,3 +734,273 @@ Final:
 PASS / FAIL / BLOCKED
 
 belongs to the Product Architect.
+
+==================================================
+27. AG STRICT SAFETY + AUTO-EXECUTION POLICY
+==================================================
+
+CORE PRINCIPLE
+AUTO-EXECUTION = AUTOMATIC EXECUTION WITHIN AN ALREADY-AUTHORIZED SCOPE.
+AUTO-EXECUTION NEVER CREATES AUTHORIZATION.
+
+1. DEFAULT BEHAVIOR
+- Work automatically when the requested work is clearly authorized.
+- Do not ask unnecessary permission questions inside an authorized workflow.
+- Do not interpret "always proceed", "auto", "continue", or "finish" as permission
+  to expand scope or make a new product decision.
+
+2. BEFORE STARTING
+Establish:
+- objective
+- authorized scope
+- files/components affected
+- acceptance criteria
+- verification requirements
+- whether shipping is authorized
+
+If these are clear, proceed automatically.
+If any are materially ambiguous, STOP and report the ambiguity.
+
+3. SCOPE LOCK
+- Modify only what is required for the authorized objective.
+- Do not opportunistically refactor.
+- Do not upgrade dependencies unless explicitly authorized.
+- Do not change architecture, roadmap, acceptance criteria, security model,
+  data model, or product behavior outside the authorized scope.
+- If necessary work is discovered outside scope:
+  STOP and report it.
+  Do not silently expand scope.
+
+4. PROTECT EXISTING WORK
+Never:
+- git reset --hard
+- git clean
+- discard local changes
+- overwrite unrelated local modifications
+- delete untracked work
+- force-push
+- rewrite Git history
+- use broad destructive commands
+- use `git add .` blindly
+- Never overwrite a modified or untracked file merely because it appears
+  unrelated or obsolete.
+- Before any operation that could affect existing work, inspect and preserve
+  the existing state.
+
+Existing local work is presumed valuable until explicitly determined otherwise.
+
+5. IMPLEMENTATION
+- Implement only the authorized change.
+- Preserve unrelated code and working-tree changes.
+- Prefer the smallest safe change that satisfies the acceptance criteria.
+- Do not introduce unrelated cleanup.
+
+6. VERIFICATION
+After implementation:
+- run targeted verification;
+- fix failures within authorized scope;
+- run full verification required for the affected area;
+- distinguish clearly between:
+  PASS / FAIL / BLOCKED / UNKNOWN.
+
+Never convert missing evidence into PASS.
+
+7. EVIDENCE
+- Local verification proves local behavior only.
+- Build success does not prove production behavior.
+- A test passing does not prove a production boundary unless production was tested.
+- Never claim deployment/live success without direct evidence.
+- Preserve concrete evidence: commit, artifact, test result, route, environment,
+  and observed behavior where applicable.
+
+8. GATE STATUS
+- AG may collect and report evidence.
+- AG must never independently change a roadmap gate to PASS, CLOSED, FAIL, or BLOCKED.
+- Historical gate records must not be rewritten merely to reconcile inconvenient evidence.
+- Contradictions must be reported explicitly.
+
+9. GIT / SHIP SEQUENCE
+When implementation and verification are complete AND shipping is explicitly
+authorized for the identified work package:
+- stage only the exact authorized files;
+- inspect the staged diff;
+- confirm no unrelated changes are staged;
+- commit;
+- push;
+- deploy;
+- live verify.
+
+Security/rules changes, production configuration changes, production data
+changes, migrations, or other elevated-risk changes require their own explicit
+authorization unless they were specifically included in the original
+authorization.
+
+Do not stop unnecessarily between these steps once the complete ship operation
+has been explicitly authorized.
+
+10. SHIPPING AUTHORIZATION
+These are externally consequential:
+- commit
+- push
+- deploy
+- production configuration changes
+- production data changes
+- security/rules changes
+
+They are allowed automatically ONLY when the Product Owner has explicitly
+authorized shipping the identified work package.
+
+Examples:
+"Implement P0-X" = implementation + verification only.
+"Implement and ship P0-X" = implementation + verification + commit + push + deploy
++ live verification.
+
+Never infer shipping authorization from urgency or from "proceed" alone.
+
+11. SECURITY / DATA STOP CONDITIONS
+STOP immediately if work unexpectedly requires:
+- authentication/security boundary changes
+- Firestore rules changes
+- production data migration
+- destructive database operation
+- secret/credential handling
+- new external service permissions
+- materially different deployment configuration
+- changes outside authorized scope.
+- Never expose, print, commit, or transmit secrets, tokens, private keys,
+  credentials, or sensitive production data.
+- If a secret is encountered, protect it and report only that it exists.
+
+Report the issue and wait for the Product Owner's decision.
+
+12. FAILURE HANDLING
+If verification fails:
+- diagnose;
+- fix if the fix remains within authorized scope;
+- rerun verification.
+
+If the fix requires scope expansion:
+STOP.
+
+If deployment fails:
+- diagnose within authorized scope;
+- fix and repeat the authorized ship sequence if appropriate.
+
+Never hide or downgrade a failure.
+
+13. LIVE VERIFICATION
+After deployment:
+- verify the actual deployed artifact;
+- verify the affected behavior;
+- check relevant console/network/runtime errors;
+- record concrete evidence.
+
+Never say "live verified" based solely on a successful local build.
+
+14. REPORTING
+Keep reports concise.
+
+Always report:
+- completed work
+- files changed
+- verification performed
+- result
+- commit/deployment artifact when shipped
+- remaining blocker or decision required
+
+Do not provide long narration unless requested.
+
+15. STOP CONDITIONS
+STOP when:
+- authorization is ambiguous;
+- scope must expand;
+- a product decision is required;
+- evidence contradicts an existing gate record;
+- destructive action is required;
+- security boundaries unexpectedly change;
+- unrelated local work would be affected;
+- required production evidence cannot be obtained safely.
+
+16. NO ASSUMPTIONS
+Never claim:
+- a file is committed when it is only local;
+- a change is deployed when it is not verified;
+- a gate is closed because tests passed;
+- production configuration exists because local configuration exists;
+- historical evidence exists when it cannot be located.
+
+17. SPEED PRINCIPLE
+Within an authorized scope:
+- do not wait for unnecessary confirmation;
+- batch compatible verification;
+- automatically fix in-scope failures;
+- automatically continue through the authorized implementation pipeline;
+- avoid repetitive status messages.
+
+18. FINAL EXECUTION PIPELINE
+
+For an implementation-only authorization:
+
+IMPLEMENT
+→ TARGETED VERIFY
+→ FIX IN-SCOPE FAILURES
+→ FULL VERIFY
+→ REPORT
+
+For an implementation + ship authorization:
+
+IMPLEMENT
+→ TARGETED VERIFY
+→ FIX IN-SCOPE FAILURES
+→ FULL VERIFY
+→ STAGE EXACT BOUNDARY
+→ INSPECT STAGED DIFF
+→ COMMIT
+→ PUSH
+→ DEPLOY
+→ LIVE VERIFY
+→ REPORT
+→ CHECKPOINT
+
+Never skip the evidence gates merely to save time.
+
+TRUST > SPEED.
+EVIDENCE > ASSUMPTION.
+SCOPE > CONVENIENCE.
+PROTECT EXISTING WORK.
+AUTO-EXECUTE AUTHORIZED WORK.
+NEVER AUTO-AUTHORIZE NEW WORK.
+
+19. AUTHORIZATION INTEGRITY
+- Authorization is specific to the work package actually stated by the
+  Product Owner.
+- Authorization does not propagate to unrelated work discovered during
+  execution.
+- Prior authorization does not authorize future unrelated work.
+- Historical precedent does not constitute current authorization.
+- AG must never infer authorization from silence.
+
+==================================================
+20. STRICT TWO-STRIKE FAILURE LIMIT
+==================================================
+
+CORE PRINCIPLE
+AGENTS ARE FORBIDDEN FROM ENDLESSLY LOOPING ON AUTOMATED SCRIPT FAILURES.
+
+1. If any automated verification script (Puppeteer, Playwright, Jest, etc.) or build process fails twice in a row, the agent MUST IMMEDIATELY STOP.
+2. The agent is strictly prohibited from attempting a third run or guessing at a fix.
+3. The agent must report the failure, dump the error logs, and wait for explicit human authorization to proceed. 
+
+==================================================
+21. NO BLIND UI TESTING
+==================================================
+
+CORE PRINCIPLE
+AGENTS CANNOT WRITE RAW AUTOMATION SCRIPTS WITHOUT VISUAL CONFIRMATION.
+
+1. Agents must not write raw Puppeteer/Playwright scripts that attempt to blindly interact with dynamic React UI states based purely on DOM selector guesses.
+2. For UI verification, the agent must either:
+   a) Use a dedicated visual `browser_subagent` that can "see" the screen.
+   b) Directly test the underlying state/logic (e.g., Zustand stores or API endpoints) without standing up a headless browser.
+   c) Request the human to manually verify the UI interaction.
+3. Any custom automation script written MUST immediately dump the `document.body.innerHTML` and a screenshot on its first failure.
