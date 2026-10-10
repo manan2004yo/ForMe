@@ -27,7 +27,7 @@
 - **P0-3 (Canonical Date / Time Boundary):** CLOSED / PASS — `a12d2c5`.
 - **P0-4 (Persistence / Retry Integrity):** CLOSED / PASS (Product Owner/Architect decision, 2026-10-09).
 - **P0-4 Evidence:** OBSERVED manually by the Owner on Production with a dedicated test user: offline log, pending badge, reconnect flush, and the item seen in the Firestore console. NOT verified: retention after clearing the local cache, a duplicate-document check, and idempotent retry. The automated authenticated Puppeteer attempt was inconclusive and its cause is not established. The test user and its data still exist in Production, and cleanup is deferred.
-- **P0 Audit:** PENDING — prerequisite satisfied, not started.
+- **P0 Audit:** CLOSED / PASS (Product Owner/Architect decision, 2026-10-10).
 
 ## 5. Security & Working Environment
 - **Environment Variables:** All `VITE_FIREBASE_*` variables are required for normal execution. Without them, the application falls back to read-only Demo Mode.
@@ -37,7 +37,7 @@
 ## 6. What Claude Must Know First
 - You are operating under strict **Atomic Gate Discipline**. Never redefine a gate, broaden scope, or advance to the next gate without explicit authorization.
 - **Do NOT assume a code change equals completeness.** Live verification of Visual, Interaction, Data, and Truth dimensions is required.
-- **Read `FORME_OPEN_PROBLEM.md` immediately.** You are blocked at P0-4 and need to establish a verified test identity before proceeding.
+- **Read `FORME_OPEN_PROBLEM.md` immediately.** Next step: post-P0: Owner to authorize the next stage.
 
 ## 7. What Claude Must Not Assume
 - Do not assume "looks good" or "compiles successfully" constitutes a Product PASS.

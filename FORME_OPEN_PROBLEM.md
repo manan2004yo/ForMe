@@ -1,9 +1,6 @@
 # FORME_OPEN_PROBLEM
 
-## The Core Blocker: P0 Completion Audit
-
-**Gate:** P0 Audit
-**Status:** PENDING — prerequisite satisfied, not started.
+## The Core Blocker: none; awaiting Owner direction.
 
 ### Previous Blocker Resolved
 **Gate:** P0-4 (Persistence / Retry Integrity)
